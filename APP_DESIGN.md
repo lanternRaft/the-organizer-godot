@@ -1,6 +1,41 @@
 # The Organizer — Godot Implementation
 
 A canvas-based whiteboarding tool for world building — notes, flow charts, and relational diagrams. Built in **Godot 4.7** using GDScript
+
+## Current Implementation Status
+
+The following are the features currently built vs. those documented below as planned:
+
+| Feature | Status | Notes |
+|---|---|---|
+| Oval placement via toolbar | ✅ Built | First canvas feature. Click Oval button → click canvas. |
+| Toolbar with Oval toggle | ✅ Built | Bottom-center, toggle highlight, crosshair cursor. |
+| InfoBar hints | ✅ Built | Shows "Click the canvas to place an oval" when oval mode active. |
+| Escape deactivates tool | ✅ Built | Same as toggling the toolbar button off. |
+| Canvas scene structure | ✅ Built | Main → Canvas(ElementLayer) + UI(Toolbar, InfoBar) + Camera2D |
+| Camera2D at origin | ✅ Built | Enables scrolling, no pan/zoom controls yet. |
+| All other features below | 🚧 Planned | See the respective sections below. |
+
+### Current Scene Tree
+
+```
+Main (Node) — Main.gd
+├── Canvas (Node2D)
+│   └── ElementLayer (Node2D)         — ovals are parented here
+├── UI (CanvasLayer)                  — screen-space, not affected by camera
+│   ├── Toolbar (Control) — Toolbar.gd
+│   │   └── OvalButton (Button)
+│   └── InfoBar (Label)              — centered bottom hint text
+└── MainCamera (Camera2D)             — positioned at origin
+```
+
+### Differences from Architecture Below
+
+- **No autoloads** (`State`, `EventBus`) exist yet — state is local to `Main.gd`.
+- **No `Area2D` on `LabelShape`** — `LabelShape` is a plain `Node2D` with `_draw()`. Click hit-testing will be added with selection later.
+- **No `GridOverlay`**, **`AnchorLayer`**, **`PreviewLine`**, **`SelectionMenu`**, **`ColorPalette`**, **`LegendPanel`**, **`ZoomControls`**, **`HamburgerMenu`**, **`ConfirmDialog`**, or **`TextEditOverlay`** exist yet.
+- The architecture documentation below describes the full planned feature set.
+
 ## Technology Stack
 
 - **Godot 4.7** — Open-source game engine with built-in 2D rendering, input handling, signals, and scene system
