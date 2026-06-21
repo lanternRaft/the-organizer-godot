@@ -137,8 +137,8 @@ The `EventBus` autoload relays signals:
 `LabelShape` scene (Node2D with custom `_draw()`):
 
 - **Two shape modes** (set via `@export var shape_mode: String`):
-  - **Oval**: Default size `rx=40`, `ry=25`
-  - **Circle**: Default size `rx=40`, `ry=40`
+  - **Oval**: Default size `rx=80`, `ry=50`
+  - **Circle**: Default size `rx=80`, `ry=80`
 - **Colorable**: Default fill `#3b82f6` (stored as `Color(0.231, 0.51, 0.965)`)
 - **Opacity**: 0.9
 - **Resize**: 4 corner handles (ColorRect children) appear on selection; drag to resize (snaps to 10px increments)
@@ -163,8 +163,8 @@ extends Node2D
 
 @export var fill_color: Color = Color(0.231, 0.51, 0.965)
 @export var shape_mode: String = "oval"  # "oval" or "circle"
-@export var rx: float = 40.0
-@export var ry: float = 25.0
+@export var rx: float = 80.0
+@export var ry: float = 50.0
 @export var text_content: String = ""
 @export var text_node: Label = null
 
@@ -462,6 +462,12 @@ Handled via `InputEventScreenDrag` / `InputEventScreenTouch` / `InputEventMagnif
 ### Coordinate Transforms
 
 All pointer coordinate conversions use `get_global_mouse_position()` (automatically accounts for camera transform) and `to_local()` / `to_global()` for element-local coordinates.
+
+### Resize Handle Interaction Fix
+
+The 4 corner `ColorRect` resize handles previously did not respond to click-and-drag because Control nodes process input via `_gui_input` (GUI phase) **before** `_unhandled_input` reaches the `ClickHandler`. With the default `mouse_filter = MOUSE_FILTER_STOP`, handles absorbed mouse events in the GUI phase, preventing them from reaching `ClickHandler._unhandled_input`.
+
+**Fix**: All 4 handle `ColorRect` nodes have `mouse_filter = MOUSE_FILTER_IGNORE`, which passes mouse events straight through to the `Area2D` child beneath, allowing the ClickHandler's physics query to find the `LabelShape` and dispatch the click/drag pipeline normally.
 
 ### Resize Behaviour
 

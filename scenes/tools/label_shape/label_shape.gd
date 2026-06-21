@@ -8,14 +8,14 @@ extends Node2D
 ## Emitted from handle_click before drag-begin is evaluated.
 signal clicked(input_event: InputEvent, shape: Node)
 
-@export var rx: float = 40.0:
+@export var rx: float = 80.0:
 	set(value):
 		rx = value
 		queue_redraw()
 		_update_collision_shape()
 		_update_handle_positions()
 
-@export var ry: float = 25.0:
+@export var ry: float = 50.0:
 	set(value):
 		ry = value
 		queue_redraw()
@@ -49,7 +49,7 @@ var _drag_start_position: Vector2 = Vector2.ZERO
 @onready var _handle_br: ColorRect = $HandleBR
 
 ## Handle size in pixels.
-const HANDLE_SIZE: float = 8.0
+const HANDLE_SIZE: float = 32.0
 
 
 func _ready() -> void:
