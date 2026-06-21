@@ -1,18 +1,10 @@
 # The Organizer — Godot Implementation
 
-A canvas-based whiteboarding tool for world building — notes, flow charts, and relational diagrams. Built in **Godot 4.7** using GDScript and the built-in rendering engine.
-
-This document is a translation of the canonical SVG DOM specification (`../SPECIFICATIONS.md`) into Godot terms. It is the **canonical contract** for the Godot implementation.
-
----
-
+A canvas-based whiteboarding tool for world building — notes, flow charts, and relational diagrams. Built in **Godot 4.7** using GDScript
 ## Technology Stack
 
 - **Godot 4.7** — Open-source game engine with built-in 2D rendering, input handling, signals, and scene system
 - **GDScript** — All game logic scripts
-- **`editor` export mode** for development; runs natively on macOS, Windows, Linux
-
----
 
 ## Scene Tree Architecture
 
@@ -23,10 +15,10 @@ Main (Node)
 ├── Canvas (Node2D)
 │   ├── GridOverlay (Node2D)            — background grid
 │   ├── ElementLayer (Node2D)           — all shapes, nodes, arrows
-│   │   ├── LabelShape (Node2D)*        — ellipse labels
-│   │   ├── CircleNode (Area2D)*        — small circle nodes
-│   │   ├── TriangleNode (Area2D)*      — small triangle nodes
-│   │   └── Arrow (Node2D)*             — arrow curves
+│   │   ├── LabelShape (Node2D)         — ellipse labels
+│   │   ├── CircleNode (Area2D)         — small circle nodes
+│   │   ├── TriangleNode (Area2D)       — small triangle nodes
+│   │   └── Arrow (Node2D).             — arrow curves
 │   ├── AnchorLayer (Node2D)            — anchor dot markers
 │   └── PreviewLine (Line2D)            — dashed arrow preview during drag
 ├── UI (CanvasLayer)                    — pinned to screen
@@ -42,26 +34,6 @@ Main (Node)
 ├── MainCamera (Camera2D)               — pan/zoom via camera transforms
 └── EventBus (Node)                     — signal relay for cross-system events
 ```
-
-### Key Godot Concepts
-
-| SVG DOM Concept | Godot Equivalent |
-|---|---|
-| SVG `<ellipse>` element | `Node2D` with `draw_circle()` / `draw_ellipse()` via `_draw()` |
-| SVG `<polygon>` element | `Node2D` with `draw_colored_polygon()` via `_draw()` |
-| SVG `<path>` element | `Line2D` node or `draw_polyline()` via `_draw()` |
-| SVG `<text>` / `<tspan>` | `RichTextLabel` or `Label` node as child |
-| SVG `<marker>` defs | Custom `_draw()` arrowhead rendering at line endpoints |
-| SVG `<g>` group | `Node2D` parent |
-| SVG `viewBox` | `Camera2D` position and zoom |
-| CSS styles / selectors | `.theme` files or `@export` variables |
-| `mousedown` / `mousemove` / `mouseup` | `_input()` / `_unhandled_input()` / `Area2D` signals |
-| `localStorage` | `ConfigFile` or `ResourceSaver` to `user://` |
-| `getBoundingClientRect()` | `get_viewport().get_camera_2d()` + `get_global_mouse_position()` |
-| `createSVGPoint()` + `getScreenCTM()` | `get_global_mouse_position()` (automatic camera transform) |
-| JS `Set` / `Map` | GDScript `Array` / `Dictionary` |
-
----
 
 ## Tool Modes
 
@@ -527,142 +499,10 @@ The dropdown closes on outside click and on `PopupMenu.index_pressed`.
 
 ## Confirmation Dialog
 
-An `AcceptDialog` (`#confirm_dialog`) with:
+An with:
 - Title: `"Clear Canvas"`
 - Message: `"This will delete everything on the canvas. This cannot be undone."`
 - Cancel button (dismisses)
 - Clear button (executes `clear_and_save()` and closes)
 
 Closable via: Cancel button, dialog close button, or Escape key.
-
----
-
-## File Structure (Godot)
-
-| File | Role |
-|---|---|
-| `project.godot` | Godot project configuration |
-| `icon.svg` | Project icon |
-| `export_presets.cfg` | Export settings |
-| `autoload/State.gd` | Shared state singleton (tool mode, selection sets, references) |
-| `autoload/EventBus.gd` | Signal relay for cross-system communication |
-| `scenes/main.tscn` | Main scene — assembles all nodes |
-| `scenes/main.gd` | Main script — top-level event wiring, keyboard shortcuts, toolbar |
-| `scripts/SaveManager.gd` | Serialization, deserialization, clear canvas |
-| `scripts/LabelShape.gd` | Shape (ellipse) creation, `_draw()`, text edit, resize handles |
-| `scripts/CircleNode.gd` | Circle node creation, `_draw()` |
-| `scripts/TriangleNode.gd` | Triangle node creation, `_draw()` |
-| `scripts/Arrow.gd` | Arrow creation, waypoints, direction, `_draw()` with bezier curves |
-| `scripts/ArrowManager.gd` | Arrow drag-from-anchor logic, preview, snap |
-| `scripts/AnchorManager.gd` | Anchor dot creation, visibility, highlighting, `find_anchor_near()` |
-| `scripts/SelectionManager.gd` | Click-to-select, Shift+click, marquee, multi-drag, handles |
-| `scripts/SelectionMenu.gd` | Floating menu: delete, color palette, direction buttons |
-| `scripts/ZoomManager.gd` | Pan & zoom logic, scroll wheel, pinch, middle-click pan |
-| `scripts/GridOverlay.gd` | Background grid `_draw()` |
-| `scripts/LegendPanel.gd` | Color legend panel in bottom-left |
-| `scripts/ExportManager.gd` | PNG export via temporary Viewport |
-| `scripts/ColorPalette.gd` | 8-swatch color popup |
-| `scripts/TextEditOverlay.gd` | Inline text editor for label shapes |
-| `scenes/label_shape.tscn` | LabelShape scene template |
-| `scenes/circle_node.tscn` | CircleNode scene template |
-| `scenes/triangle_node.tscn` | TriangleNode scene template |
-| `scenes/arrow.tscn` | Arrow scene template |
-| `themes/` | Theme resource files (light/dark) |
-| `SPECIFICATIONS.md` | **Canonical specification for Godot implementation** |
-| `GAME_DESIGN.md` | Game design document (separate project if applicable) |
-
----
-
-## Signals and Communication
-
-Godot's signal system replaces the SVG DOM's event delegation:
-
-| Source | Signal | Connected To | Purpose |
-|---|---|---|---|
-| `LabelShape` / `CircleNode` / `TriangleNode` | `input_event` | `SelectionManager` | Detect clicks on elements |
-| `AnchorManager` anchors | `input_event` | `ArrowManager` | Detect anchor dot clicks for arrow creation |
-| `SelectionManager` | `selection_changed` | `SelectionMenu`, `LegendPanel`, `InfoBar` | Update UI on selection change |
-| `EventBus` | `canvas_changed` | `SaveManager` | Trigger auto-save |
-| `Toolbar` buttons | `pressed` | `Main` | Switch tool modes |
-| `HamburgerMenu` | `id_pressed` | `Main` | Export PNG, Clear |
-| `ColorPalette` | `color_selected` | `SelectionManager` | Apply color change |
-| `TextEditOverlay` | `text_submitted` / `text_changed` | `LabelShape` | Commit/cancel text edit |
-| `Main` (zoom buttons) | `pressed` | `ZoomManager` | Zoom in/out/reset |
-
----
-
-## `_`-prefixed Properties / Metadata
-
-In the Godot implementation, element-specific data is stored using `set_meta()` / `get_meta()` instead of attaching JS properties to DOM nodes:
-
-| Meta Key | Node Type | Purpose |
-|---|---|---|
-| `"node_shape"` | CircleNode, TriangleNode | `"circle"` or `"triangle"` |
-| `"text_content"` | LabelShape | Label text string |
-| `"shape_mode"` | LabelShape | `"oval"` or `"circle"` |
-| `"points"` | Arrow | `PackedVector2Array` waypoints |
-| `"anchors"` | Arrow | `Array[{"end": String, "shape": Node, "label": String}]` |
-| `"direction"` | Arrow | `"mono"`, `"dual"`, or `"none"` |
-| `"vis_line"` | Arrow | Reference to visible Line2D child |
-| `"hit_line"` | Arrow | Reference to invisible hit-test Line2D child |
-| `"parent_shape"` | Anchor dot | The shape/node this anchor belongs to |
-| `"anchor_label"` | Anchor dot | `"top"`, `"left"`, `"bottom"`, `"right"` |
-| `"fill_color"` | LabelShape, CircleNode, TriangleNode, Arrow | Base color |
-| `"ignore_next_input"` | Any selectable | Suppress the next input event after a drag |
-
----
-
-## Constants (Global)
-
-```gdscript
-# In State.gd or a separate Constants.gd autoload
-const NODE_RADIUS: float = 8.0
-const NODE_SIZE: float = 8.0
-const ANCHOR_OFFSET: float = 5.0
-const ANCHOR_SNAP_RADIUS: float = 15.0
-const ANCHOR_HOVER_RADIUS: float = 20.0
-const ANCHOR_DOT_RADIUS: float = 4.0
-const ANCHOR_HIGHLIGHT_RADIUS: float = 7.0
-const ARROWHEAD_ANCHOR_EXT: float = 15.0
-const SNAP_INCREMENT: float = 10.0
-const MIN_ZOOM: float = 0.1
-const MAX_ZOOM: float = 20.0
-const GRID_SPACING: float = 40.0
-const EXPORT_PADDING: float = 40.0
-const EXPORT_SCALE: float = 2.0
-const SAVE_PATH: String = "user://canvas.save"
-const CONFIG_PATH: String = "user://config.cfg"
-```
-
----
-
-## Development Workflow
-
-1. Open the project in the Godot Editor
-2. Run the main scene (`scenes/main.tscn`) via **F5** (Play)
-3. Use `--editor` export for testing with debug features
-4. For distribution, export via Godot's Export dialog → macOS/Windows/Linux
-
----
-
-## SVG `_`-prefixed Properties Reference (For Migration Understanding)
-
-The following SVG DOM properties from the original implementation have Godot equivalents:
-
-| SVG Property | Godot Equivalent |
-|---|---|
-| `_nodeShape` | `set_meta("node_shape", value)` |
-| `_text` | `set_meta("text_content", value)` or `text_node.text` |
-| `_textEl` | `text_node` (Label child) |
-| `_textLines` | Computed at draw time from `text_node` dimensions |
-| `_ignoreNextClick` | `set_meta("ignore_next_input", true)` |
-| `_points` | `set_meta("points", PackedVector2Array)` |
-| `_x1, _y1, _x2, _y2` | `points[0]` and `points[-1]` |
-| `_offset` | Computed from bezier control points, not stored directly |
-| `_anchors` | `set_meta("anchors", Array)` |
-| `_arrowDirection` | `set_meta("direction", "mono"\|"dual"\|"none")` |
-| `_visPath` | `vis_line` (Line2D child) |
-| `_hitPath` | `hit_line` (Line2D child) |
-| `_arrowGroup` | Arrow node itself |
-| `_anchorEllipse` | `get_meta("parent_shape")` |
-| `_anchorLabel` | `get_meta("anchor_label")` |

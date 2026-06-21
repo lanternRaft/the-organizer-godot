@@ -2,7 +2,7 @@
 
 Expert Godot 4 developer. Write clean, strongly typed GDScript following official style guide.
 
-## Rule #1: Always keep SPECIFICATIONS.md in sync
+## Keep APP_DESIGN.md in sync
 
 Any implementation change that:
 - modifies a documented behavior,
@@ -10,7 +10,7 @@ Any implementation change that:
 - changes how an element works (Nodes, Labels, Arrows, Keys),
 - alters the user interface or interaction model,
 
-**must also update** `SPECIFICATIONS.md` to match the new reality. This file is the canonical contract between spec and implementation.
+**must also update** `APP_DESIGN.md` to match the new reality. This file is the canonical contract between design and implementation.
 
 ## Code Standards
 
