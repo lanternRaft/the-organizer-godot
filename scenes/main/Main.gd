@@ -26,6 +26,7 @@ var primary_selection: LabelShape = null
 @onready var oval_button: Button = $UI/Toolbar/HBox/OvalButton
 @onready var select_button: Button = $UI/Toolbar/HBox/SelectButton
 @onready var click_handler: Node = $ClickHandler
+@onready var confirm_dialog: AcceptDialog = $UI/ConfirmDialog
 
 
 func _ready() -> void:
@@ -49,6 +50,23 @@ func _unhandled_input(event: InputEvent) -> void:
 			clear_selection()
 			get_viewport().set_input_as_handled()
 			return
+
+
+## Removes all children from ElementLayer and clears selection.
+func clear_all_elements() -> void:
+	for child: Node in element_layer.get_children():
+		child.queue_free()
+	clear_selection()
+
+
+## Opens the confirmation dialog when the hamburger Clear item is selected.
+func _on_hamburger_clear_requested() -> void:
+	confirm_dialog.popup_centered()
+
+
+## Called when the Clear button in the confirmation dialog is pressed.
+func _on_confirm_dialog_confirmed() -> void:
+	clear_all_elements()
 
 
 ## Creates a new oval at the given world position and parents it to ElementLayer.

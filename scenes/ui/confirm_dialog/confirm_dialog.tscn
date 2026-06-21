@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/confirm_dialog/confirm_dialog.gd" id="1_d2e7v"]
+
+[node name="ConfirmDialog" type="AcceptDialog"]
+title = "Clear Canvas"
+dialog_text = "This will delete everything on the canvas. This cannot be undone."
+dialog_autowrap = true
+ok_button_text = "Clear"
+script = ExtResource("1_d2e7v")

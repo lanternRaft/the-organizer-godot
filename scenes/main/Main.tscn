@@ -2,7 +2,9 @@
 
 [ext_resource type="Script" uid="uid://cqtwhi748ckqn" path="res://scenes/main/main.gd" id="1_iuonh"]
 [ext_resource type="PackedScene" path="res://scenes/tools/toolbar.tscn" id="2_k2fmo"]
-[ext_resource type="Script" path="res://scenes/main/click_handler/click_handler.gd" id="3_j8xj4"]
+[ext_resource type="Script" uid="uid://bd533w6oacfor" path="res://scenes/main/click_handler/click_handler.gd" id="3_j8xj4"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hamburger_menu/hamburger_menu.tscn" id="4_yjhnb"]
+[ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog/confirm_dialog.tscn" id="5_v0whc"]
 
 [node name="Main" type="Node" unique_id=917290182]
 script = ExtResource("1_iuonh")
@@ -13,10 +15,16 @@ unique_name_in_owner = true
 [node name="ElementLayer" type="Node2D" parent="Canvas" unique_id=233815462]
 unique_name_in_owner = true
 
-[node name="ClickHandler" type="Node" parent="."]
+[node name="ClickHandler" type="Node" parent="." unique_id=1134584325]
 script = ExtResource("3_j8xj4")
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1279264914]
+
+[node name="HamburgerMenu" parent="UI" unique_id=142848687 instance=ExtResource("4_yjhnb")]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="ConfirmDialog" parent="UI" unique_id=2050487245 instance=ExtResource("5_v0whc")]
 
 [node name="Toolbar" parent="UI" unique_id=909619702 instance=ExtResource("2_k2fmo")]
 layout_mode = 3
@@ -31,10 +39,10 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -200.0
-offset_top = -36.0
-offset_right = 200.0
-offset_bottom = -8.0
+offset_left = -196.0
+offset_top = -78.0
+offset_right = 204.0
+offset_bottom = -50.0
 grow_horizontal = 2
 grow_vertical = 0
 horizontal_alignment = 1
@@ -42,5 +50,7 @@ vertical_alignment = 1
 
 [node name="MainCamera" type="Camera2D" parent="." unique_id=314705835]
 
+[connection signal="clear_requested" from="UI/HamburgerMenu" to="." method="_on_hamburger_clear_requested"]
+[connection signal="confirmed" from="UI/ConfirmDialog" to="." method="_on_confirm_dialog_confirmed"]
 [connection signal="oval_mode_toggled" from="UI/Toolbar" to="." method="_on_oval_mode_toggled"]
 [connection signal="select_mode_toggled" from="UI/Toolbar" to="." method="_on_select_mode_toggled"]

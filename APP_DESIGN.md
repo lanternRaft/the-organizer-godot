@@ -31,7 +31,9 @@ Main (Node) — Main.gd
 │   │   ├── HBox (HBoxContainer)
 │   │   │   ├── SelectButton (Button, toggle)
 │   │   │   └── OvalButton (Button, toggle)
-│   └── InfoBar (Label)              — centered bottom hint text
+│   ├── InfoBar (Label)              — centered bottom hint text
+│   ├── HamburgerMenu (Control)      — top-left ☰ button + PopupMenu
+│   └── ConfirmDialog (AcceptDialog) — Clear Canvas confirmation dialog
 └── MainCamera (Camera2D)             — positioned at origin
 ```
 
@@ -40,7 +42,7 @@ Main (Node) — Main.gd
 - **No autoloads** (`State`, `EventBus`) exist yet — state is local to `Main.gd`.
 - **`Area2D` on `LabelShape`** — ✅ Built. CollisionShape2D sized to rx/ry. Emits `clicked` signal.
 - **`ClickHandler`** — ✅ Built. Child of Main that unifies all pointer input (mouse+ touch) into a single dispatch pipeline. Routes clicks to the topmost element via physics point query. See [ClickHandler Architecture](#clickhandler-architecture) below.
-- **No `GridOverlay`**, **`AnchorLayer`**, **`PreviewLine`**, **`SelectionMenu`**, **`ColorPalette`**, **`LegendPanel`**, **`ZoomControls`**, **`HamburgerMenu`**, **`ConfirmDialog`**, or **`TextEditOverlay`** exist yet.
+- **No `GridOverlay`**, **`AnchorLayer`**, **`PreviewLine`**, **`SelectionMenu`**, **`ColorPalette`**, **`LegendPanel`**, **`ZoomControls`**, or **`TextEditOverlay`** exist yet.
 - The architecture documentation below describes the full planned feature set.
 
 ## Technology Stack
