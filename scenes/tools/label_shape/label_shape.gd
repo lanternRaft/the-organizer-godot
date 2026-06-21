@@ -45,7 +45,7 @@ const HANDLE_SIZE: float = 8.0
 
 func _ready() -> void:
 	modulate.a = 0.9
-	_area_2d.set("mouse_filter", 1)  # MOUSE_FILTER_STOP
+	_area_2d.set("mouse_filter", 0)  # MOUSE_FILTER_STOP
 	_update_collision_shape()
 	_update_handle_positions()
 	_set_handles_visible(false)
@@ -55,10 +55,11 @@ func _ready() -> void:
 ## Forwards left-click events from the Area2D to the clicked signal.
 ## Marks the event as handled so it doesn't reach _unhandled_input in Main.
 func _on_area_2d_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
-	var mb: InputEventMouseButton = event as InputEventMouseButton
-	if mb and mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
-		clicked.emit(event, self)
-		get_viewport().set_input_as_handled()
+	if event is InputEventMouseButton:
+		var mouse_event: InputEventMouseButton = event
+		if mouse_event and mouse_event.button_index == MOUSE_BUTTON_LEFT and mouse_event.pressed:
+			clicked.emit(event, self)
+			get_viewport().set_input_as_handled()
 
 
 func _draw() -> void:
@@ -102,13 +103,18 @@ func _update_handle_positions() -> void:
 	if not is_node_ready():
 		return
 	var half: float = HANDLE_SIZE / 2.0
+	var handle_color: Color = Color(0.85, 0.9, 1.0)  # Light blue for visibility
 	_handle_tl.position = Vector2(-rx - half, -ry - half)
+	_handle_tl.color = handle_color
 	_handle_tr.position = Vector2(rx - half, -ry - half)
+	_handle_tr.color = handle_color
 	_handle_bl.position = Vector2(-rx - half, ry - half)
+	_handle_bl.color = handle_color
 	_handle_br.position = Vector2(rx - half, ry - half)
+	_handle_br.color = handle_color
 
 
-func _input(event: InputEvent) -> void:
+func _unhandled_input(event: InputEvent) -> void:
 	if not is_selected:
 		return
 

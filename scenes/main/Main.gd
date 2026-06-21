@@ -54,9 +54,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			place_oval(element_layer.get_global_mouse_position())
 
 	## Clear selection on empty canvas click in Select mode (without Shift).
+	## Only clears when no LabelShape's Area2D is under the cursor, so shape-
+	## specific clicks are left for label_shape to handle via its Area2D input.
 	if select_mode_active and event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
+			if _is_click_on_label_shape(element_layer.get_global_mouse_position()):
+				# Let label_shape's Area2D handle it — don't touch selection.
+				return
 			if not Input.is_key_pressed(KEY_SHIFT):
 				clear_selection()
 			get_viewport().set_input_as_handled()
@@ -199,6 +204,18 @@ func clear_selection() -> void:
 	selected_set.clear()
 	primary_selection = null
 	update_info_bar()
+
+
+## Returns true if the given world position overlaps any LabelShape's Area2D.
+## Used by _unhandled_input to distinguish empty-canvas clicks from shape clicks.
+func _is_click_on_label_shape(world_pos: Vector2) -> bool:
+	var space_state: PhysicsDirectSpaceState2D = element_layer.get_world_2d().direct_space_state
+	var query: PhysicsPointQueryParameters2D = PhysicsPointQueryParameters2D.new()
+	query.position = world_pos
+	query.collision_mask = 1
+	query.collide_with_areas = true
+	var results: Array[Dictionary] = space_state.intersect_point(query)
+	return not results.is_empty()
 
 
 ## Updates the info bar hint text based on current state.
