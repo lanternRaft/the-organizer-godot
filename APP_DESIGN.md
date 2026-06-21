@@ -10,8 +10,11 @@ The following are the features currently built vs. those documented below as pla
 |---|---|---|
 | Oval placement via toolbar | ✅ Built | First canvas feature. Click Oval button → click canvas. |
 | Toolbar with Oval toggle | ✅ Built | Bottom-center, toggle highlight, crosshair cursor. |
-| InfoBar hints | ✅ Built | Shows "Click the canvas to place an oval" when oval mode active. |
-| Escape deactivates tool | ✅ Built | Same as toggling the toolbar button off. |
+| Select tool + click-to-select | ✅ Built | Select button, click oval to select, Shift+click additive, Escape deselects. |
+| Resize handles on selection | ✅ Built | 4 corner ColorRect handles; drag to resize with 10px snap, [20, 500] clamp. |
+| Auto-switch to Select after placement | ✅ Built | Placing an oval switches to Select mode and selects the new oval. |
+| InfoBar hints | ✅ Built | Contextual: oval mode, select mode, selection active. |
+| Escape deactivates tool / clears selection | ✅ Built | Oval mode: deactivates tool. Select mode: clears selection. |
 | Canvas scene structure | ✅ Built | Main → Canvas(ElementLayer) + UI(Toolbar, InfoBar) + Camera2D |
 | Camera2D at origin | ✅ Built | Enables scrolling, no pan/zoom controls yet. |
 | All other features below | 🚧 Planned | See the respective sections below. |
@@ -24,7 +27,9 @@ Main (Node) — Main.gd
 │   └── ElementLayer (Node2D)         — ovals are parented here
 ├── UI (CanvasLayer)                  — screen-space, not affected by camera
 │   ├── Toolbar (Control) — Toolbar.gd
-│   │   └── OvalButton (Button)
+│   │   ├── HBox (HBoxContainer)
+│   │   │   ├── SelectButton (Button, toggle)
+│   │   │   └── OvalButton (Button, toggle)
 │   └── InfoBar (Label)              — centered bottom hint text
 └── MainCamera (Camera2D)             — positioned at origin
 ```
@@ -32,7 +37,7 @@ Main (Node) — Main.gd
 ### Differences from Architecture Below
 
 - **No autoloads** (`State`, `EventBus`) exist yet — state is local to `Main.gd`.
-- **No `Area2D` on `LabelShape`** — `LabelShape` is a plain `Node2D` with `_draw()`. Click hit-testing will be added with selection later.
+- **`Area2D` on `LabelShape`** — ✅ Built. CollisionShape2D sized to rx/ry. Emits `clicked` signal.
 - **No `GridOverlay`**, **`AnchorLayer`**, **`PreviewLine`**, **`SelectionMenu`**, **`ColorPalette`**, **`LegendPanel`**, **`ZoomControls`**, **`HamburgerMenu`**, **`ConfirmDialog`**, or **`TextEditOverlay`** exist yet.
 - The architecture documentation below describes the full planned feature set.
 

@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://bsfyaibg1kn0w"]
+
+[ext_resource type="Script" uid="uid://bf1jgkunuphg6" path="res://scenes/tools/label_shape/label_shape.gd" id="1_83qsp"]
+
+[node name="LabelShape" type="Node2D" unique_id=449812529]
+script = ExtResource("1_83qsp")
+
+[node name="Area2D" type="Area2D" parent="." unique_id=748719646]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=1641542613]
+
+[node name="HandleTL" type="ColorRect" parent="." unique_id=119866394]
+offset_right = 8.0
+offset_bottom = 8.0
+
+[node name="HandleTR" type="ColorRect" parent="." unique_id=483099290]
+offset_right = 8.0
+offset_bottom = 8.0
+
+[node name="HandleBL" type="ColorRect" parent="." unique_id=2000169933]
+offset_right = 8.0
+offset_bottom = 8.0
+
+[node name="HandleBR" type="ColorRect" parent="." unique_id=1524568872]
+offset_right = 8.0
+offset_bottom = 8.0

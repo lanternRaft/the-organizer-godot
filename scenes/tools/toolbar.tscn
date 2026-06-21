@@ -1,0 +1,40 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://bnl4uti5cdwlo" path="res://scenes/tools/toolbar.gd" id="1_i1fuw"]
+
+[node name="Toolbar" type="Control"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -115.0
+offset_top = -48.0
+offset_right = 115.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("1_i1fuw")
+
+[node name="HBox" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SelectButton" type="Button" parent="HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Select"
+toggle_mode = true
+
+[node name="OvalButton" type="Button" parent="HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Oval"
+toggle_mode = true
+
+[connection signal="toggled" from="HBox/SelectButton" to="." method="_on_select_button_toggled"]
+[connection signal="toggled" from="HBox/OvalButton" to="." method="_on_oval_button_toggled"]
