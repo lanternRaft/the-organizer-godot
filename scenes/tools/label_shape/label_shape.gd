@@ -4,7 +4,8 @@ extends Node2D
 ## Oval shape rendered via custom drawing (ellipse fill + stroke).
 ## Supports click-to-select via Area2D child and resize via 4 corner handles.
 
-## Emitted when the oval is clicked (left mouse button press) in Select mode.
+## Emitted when the oval is clicked in Select mode.
+## Emitted from handle_click before drag-begin is evaluated.
 signal clicked(input_event: InputEvent, shape: Node)
 
 @export var rx: float = 40.0:
@@ -29,10 +30,18 @@ signal clicked(input_event: InputEvent, shape: Node)
 ## Whether this shape is currently selected. Controls stroke style and handle visibility.
 var is_selected: bool = false
 
-## Handle being dragged, or "" if none.
+## Current drag mode: "handle", "body", or "" if idle.
+var _drag_mode: String = ""
+
+## Handle being dragged, or "" if none (only valid when _drag_mode == "handle").
 var _dragging_handle: String = ""
 
-@onready var _area_2d: Area2D = $Area2D
+## World position where the current drag started.
+var _drag_start_world: Vector2 = Vector2.ZERO
+
+## Shape position when the current body-drag started.
+var _drag_start_position: Vector2 = Vector2.ZERO
+
 @onready var _collision_shape: CollisionShape2D = $Area2D/CollisionShape2D
 @onready var _handle_tl: ColorRect = $HandleTL
 @onready var _handle_tr: ColorRect = $HandleTR
@@ -44,22 +53,11 @@ const HANDLE_SIZE: float = 8.0
 
 
 func _ready() -> void:
+	add_to_group("clickable")
 	modulate.a = 0.9
-	_area_2d.set("mouse_filter", 0)  # MOUSE_FILTER_STOP
 	_update_collision_shape()
 	_update_handle_positions()
 	_set_handles_visible(false)
-	_area_2d.input_event.connect(_on_area_2d_input_event)
-
-
-## Forwards left-click events from the Area2D to the clicked signal.
-## Marks the event as handled so it doesn't reach _unhandled_input in Main.
-func _on_area_2d_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
-	if event is InputEventMouseButton:
-		var mouse_event: InputEventMouseButton = event
-		if mouse_event and mouse_event.button_index == MOUSE_BUTTON_LEFT and mouse_event.pressed:
-			clicked.emit(event, self)
-			get_viewport().set_input_as_handled()
 
 
 func _draw() -> void:
@@ -114,25 +112,43 @@ func _update_handle_positions() -> void:
 	_handle_br.color = handle_color
 
 
-func _unhandled_input(event: InputEvent) -> void:
+# ClickHandler interface methods
+## Called by ClickHandler when a pointer-down hits this shape's Area2D.
+## Detects handle vs. body hit, emits clicked signal, and returns true.
+func handle_click(event: Dictionary) -> bool:
+	var local_pos: Vector2 = event.get("local_pos", Vector2.ZERO)
+	var handle: String = handle_at_pos(local_pos)
+
+	if handle != "":
+		_dragging_handle = handle
+		_drag_mode = "handle"
+	else:
+		_dragging_handle = ""
+		_drag_mode = "body"
+
+	clicked.emit(event["original_event"], self)
+	return true
+
+
+## Called by ClickHandler after handle_click, same pointer-down cycle.
+## Returns true only if the shape is selected and a drag mode is set.
+func handle_drag_begin(event: Dictionary) -> bool:
 	if not is_selected:
-		return
+		return false
+	if _drag_mode == "":
+		return false
 
-	if event is InputEventMouseButton:
-		var mb: InputEventMouseButton = event
-		if mb.button_index == MOUSE_BUTTON_LEFT:
-			if mb.pressed:
-				var local_pos: Vector2 = to_local(get_global_mouse_position())
-				_dragging_handle = _handle_at_pos(local_pos)
-				if _dragging_handle != "":
-					get_viewport().set_input_as_handled()
-			else:
-				if _dragging_handle != "":
-					_dragging_handle = ""
-					get_viewport().set_input_as_handled()
+	_drag_start_world = event.get("world_pos", Vector2.ZERO)
+	_drag_start_position = position
+	return true
 
-	if event is InputEventMouseMotion and _dragging_handle != "":
-		var local_pos: Vector2 = to_local(get_global_mouse_position())
+
+## Called by ClickHandler on mouse move while drag is active.
+func handle_drag_move(event: Dictionary) -> void:
+	var local_pos: Vector2 = event.get("local_pos", Vector2.ZERO)
+	var world_pos: Vector2 = event.get("world_pos", Vector2.ZERO)
+
+	if _drag_mode == "handle":
 		var new_rx: float = rx
 		var new_ry: float = ry
 
@@ -152,12 +168,22 @@ func _unhandled_input(event: InputEvent) -> void:
 
 		rx = clamp(new_rx, 20.0, 500.0)
 		ry = clamp(new_ry, 20.0, 500.0)
-		get_viewport().set_input_as_handled()
+
+	elif _drag_mode == "body":
+		var delta: Vector2 = world_pos - _drag_start_world
+		position = (_drag_start_position + delta).snapped(Vector2(10.0, 10.0))
+
+
+## Called by ClickHandler on pointer up while drag is active.
+func handle_drag_end(_event: Dictionary) -> void:
+	_drag_mode = ""
+	_dragging_handle = ""
+	queue_redraw()
 
 
 ## Returns the handle name ("tl", "tr", "bl", "br") if local_pos is within a handle rect,
 ## or an empty string if no handle is hit.
-func _handle_at_pos(local_pos: Vector2) -> String:
+func handle_at_pos(local_pos: Vector2) -> String:
 	var half: float = HANDLE_SIZE / 2.0
 	var corners: Dictionary[String, Vector2] = {
 		"tl": Vector2(-rx - half, -ry - half),

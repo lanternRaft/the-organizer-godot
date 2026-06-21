@@ -25,17 +25,21 @@ var primary_selection: LabelShape = null
 @onready var canvas: Node2D = %Canvas
 @onready var oval_button: Button = $UI/Toolbar/HBox/OvalButton
 @onready var select_button: Button = $UI/Toolbar/HBox/SelectButton
+@onready var click_handler: Node = $ClickHandler
 
 
 func _ready() -> void:
 	## Clip canvas rendering to the viewport bounds.
 	canvas.clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW
+	## Connect ClickHandler's empty-canvas signal for mode-specific actions.
+	click_handler.connect("empty_canvas_clicked", _on_empty_canvas_clicked)
 	## Start in Select mode by default.
 	activate_select_mode()
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	## Handle Escape to deactivate Oval mode or clear selection.
+	## Keyboard-only — all pointer input is handled by ClickHandler.
 	if event.is_action_pressed("ui_cancel"):
 		if oval_mode_active:
 			deactivate_oval_mode()
@@ -45,26 +49,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			clear_selection()
 			get_viewport().set_input_as_handled()
 			return
-		return
-
-	## Place oval on left-click when in Oval mode.
-	if oval_mode_active and event is InputEventMouseButton:
-		var mb: InputEventMouseButton = event
-		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
-			place_oval(element_layer.get_global_mouse_position())
-
-	## Clear selection on empty canvas click in Select mode (without Shift).
-	## Only clears when no LabelShape's Area2D is under the cursor, so shape-
-	## specific clicks are left for label_shape to handle via its Area2D input.
-	if select_mode_active and event is InputEventMouseButton:
-		var mb: InputEventMouseButton = event
-		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
-			if _is_click_on_label_shape(element_layer.get_global_mouse_position()):
-				# Let label_shape's Area2D handle it — don't touch selection.
-				return
-			if not Input.is_key_pressed(KEY_SHIFT):
-				clear_selection()
-			get_viewport().set_input_as_handled()
 
 
 ## Creates a new oval at the given world position and parents it to ElementLayer.
@@ -77,7 +61,6 @@ func place_oval(pos: Vector2) -> void:
 
 	# Connect the click signal for selection.
 	shape.clicked.connect(_on_shape_clicked)
-
 	# Auto-switch to Select mode and select the new shape.
 	deactivate_oval_mode()
 	activate_select_mode()
@@ -142,7 +125,17 @@ func _on_select_mode_toggled(active: bool) -> void:
 		deactivate_select_mode()
 
 
+## Called by ClickHandler when a pointer-down lands on empty canvas.
+## Routes to the appropriate mode action (placement, selection clear).
+func _on_empty_canvas_clicked(world_pos: Vector2) -> void:
+	if oval_mode_active:
+		place_oval(world_pos)
+	elif select_mode_active and not Input.is_key_pressed(KEY_SHIFT):
+		clear_selection()
+
+
 ## Handles a click on a shape. Connected to LabelShape.clicked signal.
+## Shift-click toggles additive; single click re-selects.
 func _on_shape_clicked(_event: InputEvent, shape: LabelShape) -> void:
 	if not select_mode_active:
 		# In Oval mode, ignore clicks on existing shapes.
@@ -168,8 +161,6 @@ func _on_shape_clicked(_event: InputEvent, shape: LabelShape) -> void:
 			clear_selection()
 			select_shape(shape, false)
 			set_primary_selection(shape)
-
-
 ## Adds the shape to the selection set. If additive is false, clears first.
 func select_shape(shape: LabelShape, additive: bool = false) -> void:
 	if not additive:
@@ -204,18 +195,6 @@ func clear_selection() -> void:
 	selected_set.clear()
 	primary_selection = null
 	update_info_bar()
-
-
-## Returns true if the given world position overlaps any LabelShape's Area2D.
-## Used by _unhandled_input to distinguish empty-canvas clicks from shape clicks.
-func _is_click_on_label_shape(world_pos: Vector2) -> bool:
-	var space_state: PhysicsDirectSpaceState2D = element_layer.get_world_2d().direct_space_state
-	var query: PhysicsPointQueryParameters2D = PhysicsPointQueryParameters2D.new()
-	query.position = world_pos
-	query.collision_mask = 1
-	query.collide_with_areas = true
-	var results: Array[Dictionary] = space_state.intersect_point(query)
-	return not results.is_empty()
 
 
 ## Updates the info bar hint text based on current state.

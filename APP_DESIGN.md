@@ -25,7 +25,8 @@ The following are the features currently built vs. those documented below as pla
 Main (Node) — Main.gd
 ├── Canvas (Node2D)
 │   └── ElementLayer (Node2D)         — ovals are parented here
-├── UI (CanvasLayer)                  — screen-space, not affected by camera
+├── ClickHandler (Node)                — unified pointer input dispatch
+├── UI (CanvasLayer)                   — screen-space, not affected by camera
 │   ├── Toolbar (Control) — Toolbar.gd
 │   │   ├── HBox (HBoxContainer)
 │   │   │   ├── SelectButton (Button, toggle)
@@ -38,6 +39,7 @@ Main (Node) — Main.gd
 
 - **No autoloads** (`State`, `EventBus`) exist yet — state is local to `Main.gd`.
 - **`Area2D` on `LabelShape`** — ✅ Built. CollisionShape2D sized to rx/ry. Emits `clicked` signal.
+- **`ClickHandler`** — ✅ Built. Child of Main that unifies all pointer input (mouse+ touch) into a single dispatch pipeline. Routes clicks to the topmost element via physics point query. See [ClickHandler Architecture](#clickhandler-architecture) below.
 - **No `GridOverlay`**, **`AnchorLayer`**, **`PreviewLine`**, **`SelectionMenu`**, **`ColorPalette`**, **`LegendPanel`**, **`ZoomControls`**, **`HamburgerMenu`**, **`ConfirmDialog`**, or **`TextEditOverlay`** exist yet.
 - The architecture documentation below describes the full planned feature set.
 
@@ -347,6 +349,46 @@ An auto-generated legend panel in the bottom-left corner that lists colors curre
 - Default names: `Group 1`, `Group 2`, etc.
 - Custom names are stored in `State.legend_colors` Dictionary and persist until the color is no longer in use
 - Hidden when no colors are in use
+
+---
+
+## ClickHandler Architecture
+
+All pointer input (mouse and touch) is unified through a single **ClickHandler** node (plain `Node`, child of `Main`). It replaces the previous split handling where `Main._unhandled_input` and `LabelShape._on_area_2d_input_event` each partially owned pointer logic.
+
+### Pipeline
+
+1. **`_unhandled_input`** catches `InputEventMouseButton` and `InputEventMouseMotion` (touch is emulated as mouse by Godot on desktop).
+2. **On pointer down**: Runs a physics point query (`PhysicsPointQueryParameters2D`) on `ElementLayer`'s space to find the topmost `Area2D`.
+3. **Walks up** from the `Area2D` to the owning element node (e.g., `LabelShape`).
+4. **Calls `handle_click(event)`** on the target. Returns `true` if the click is consumed.
+5. **Calls `handle_drag_begin(event)`** on the target. Returns `true` if a drag should start.
+6. **On pointer move** (past a 5px drag threshold): calls `handle_drag_move(event)`.
+7. **On pointer up**: calls `handle_drag_end(event)` and resets drag state.
+8. **On empty canvas**: emits `empty_canvas_clicked(world_pos)` signal that `Main` connects to for placement / selection clearing.
+
+### Clickable Interface
+
+Any element node that implements `handle_click(event: Dictionary) -> bool` is auto-discovered by ClickHandler via `has_method("handle_click")`. A fallback group `"clickable"` is checked for nodes that need group-based discovery.
+
+### PointerEvent Dictionary
+
+Events are normalised into a common dictionary:
+
+| Key | Type | Description |
+|---|---|---|
+| `world_pos` | Vector2 | Pointer position in world space |
+| `local_pos` | Vector2 | Position relative to the hit element's local space |
+| `pressed` | bool | Whether the pointer is down |
+| `dragged` | bool | Whether this is a drag move event |
+| `button_index` | int | Mouse button index |
+| `original_event` | InputEvent | The raw Godot input event |
+
+### Current Implementors
+
+| Node | Methods |
+|---|---|
+| `LabelShape` | `handle_click`, `handle_drag_begin`, `handle_drag_move`, `handle_drag_end` |
 
 ---
 
