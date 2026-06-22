@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://c0r5whgxbsfe4"]
+
+[ext_resource type="Script" path="res://scenes/ui/selection_menu/selection_menu.gd" id="1_lqehh"]
+[ext_resource type="Script" path="res://scenes/ui/selection_menu/color_palette.gd" id="2_btb3i"]
+
+[node name="SelectionMenu" type="PanelContainer" node_paths=PackedStringArray("delete_button", "color_button", "color_palette")]
+script = ExtResource("1_lqehh")
+custom_minimum_size = Vector2(120, 40)
+size = Vector2(120, 40)
+theme_override_constants/separation = 0
+mouse_filter = 2
+
+[node name="HBox" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="DeleteButton" type="Button" parent="HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Del"
+
+[node name="ColorButton" type="Button" parent="HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Color"
+
+[node name="ColorPalette" type="Control" parent="."]
+unique_name_in_owner = true
+script = ExtResource("2_btb3i")
+visible = false
+mouse_filter = 2

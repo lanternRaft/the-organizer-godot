@@ -50,6 +50,7 @@ var selected_arrow: Node = null
 @onready var ui_layer: CanvasLayer = $UI
 @onready var _main_camera: Camera2D = %MainCamera
 @onready var _text_overlay: TextEditOverlay = TEXT_OVERLAY_SCENE.instantiate()
+@onready var selection_menu: Node = $UI/SelectionMenu
 
 
 func _ready() -> void:
@@ -76,6 +77,11 @@ func _ready() -> void:
 
 	## Track zoom changes for the info bar.
 	camera_controller.connect("zoom_changed", _on_zoom_changed)
+
+	## --- Selection Menu Setup ---
+	selection_menu.connect("delete_requested", _on_menu_delete_requested)
+	selection_menu.connect("color_selected", _on_menu_color_selected)
+	camera_controller.connect("zoom_changed", _on_menu_zoom_changed)
 
 	## --- Text Edit Overlay Setup ---
 	ui_layer.add_child(_text_overlay)
@@ -114,7 +120,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
-	## Delete/Backspace key removes the selected arrow (or selected shape).
+	## Delete/Backspace key removes the selected arrow or shape.
 	if event is InputEventKey:
 		var key_event: InputEventKey = event as InputEventKey
 		if not key_event.pressed or key_event.echo:
@@ -125,10 +131,16 @@ func _unhandled_input(event: InputEvent) -> void:
 			if _text_overlay.get("is_open"):
 				return
 			if selected_arrow != null:
-				arrow_manager.call("delete_arrow", selected_arrow)
+				var to_delete: Node = selected_arrow
 				selected_arrow = null
+				arrow_manager.call("delete_arrow", to_delete)
+				_update_selection_menu()
 				update_info_bar()
 				save_canvas()
+				get_viewport().set_input_as_handled()
+				return
+			if primary_selection != null:
+				_delete_shape(primary_selection)
 				get_viewport().set_input_as_handled()
 				return
 
@@ -307,6 +319,7 @@ func select_shape(shape: LabelShape, additive: bool = false) -> void:
 	if not shape in selected_set:
 		selected_set.append(shape)
 	shape.set_selected(true)
+	_update_selection_menu()
 	update_info_bar()
 
 
@@ -319,12 +332,14 @@ func _deselect_shape(shape: LabelShape) -> void:
 			primary_selection = null
 		else:
 			primary_selection = selected_set[-1]
+	_update_selection_menu()
 	update_info_bar()
 
 
 ## Sets the primary (last-clicked) selection.
 func set_primary_selection(shape: LabelShape) -> void:
 	primary_selection = shape
+	_update_selection_menu()
 
 
 ## Clears all selection.
@@ -333,6 +348,7 @@ func clear_selection() -> void:
 		shape.set_selected(false)
 	selected_set.clear()
 	primary_selection = null
+	selection_menu.call("dismiss")
 	update_info_bar()
 
 
@@ -384,6 +400,7 @@ func open_text_editor(shape: LabelShape) -> void:
 	)
 
 	_text_overlay.call("open", shape, screen_rect)
+	_update_selection_menu()
 	update_info_bar()
 
 
@@ -404,11 +421,13 @@ func _on_text_committed(shape: Node, text: String) -> void:
 		if label_shape != null:
 			label_shape.text_content = text
 	save_canvas()
+	_update_selection_menu()
 	update_info_bar()
 
 
 ## Called when text editing is cancelled. No changes are saved.
 func _on_text_cancelled(_shape: Node) -> void:
+	_update_selection_menu()
 	update_info_bar()
 
 
@@ -561,6 +580,7 @@ func _select_arrow(arrow: Variant) -> void:
 		selected_arrow.set("is_selected", false)
 	selected_arrow = arrow_n
 	arrow_n.set("is_selected", true)
+	_update_selection_menu()
 	update_info_bar()
 
 
@@ -569,4 +589,62 @@ func _deselect_arrow() -> void:
 	if selected_arrow != null:
 		selected_arrow.set("is_selected", false)
 		selected_arrow = null
+	_update_selection_menu()
 	update_info_bar()
+
+
+# ----- Selection Menu ----------------------------------------------------------
+
+## Shows/hides the selection menu based on current selection state.
+func _update_selection_menu() -> void:
+	if not select_mode_active:
+		selection_menu.call("dismiss")
+		return
+	if _text_overlay.get("is_open"):
+		selection_menu.call("dismiss")
+		return
+	if selected_set.size() == 1 and primary_selection != null:
+		selection_menu.call("show_for_element", primary_selection)
+	elif selected_arrow != null:
+		selection_menu.call("show_for_element", selected_arrow)
+	else:
+		selection_menu.call("dismiss")
+
+
+## Deletes the currently selected element via the menu's Delete button.
+func _on_menu_delete_requested() -> void:
+	if selected_arrow != null:
+		var to_delete: Node = selected_arrow
+		selected_arrow = null
+		arrow_manager.call("delete_arrow", to_delete)
+		_update_selection_menu()
+		update_info_bar()
+		save_canvas()
+	elif primary_selection != null and selected_set.size() == 1:
+		_delete_shape(primary_selection)
+
+
+## Removes a LabelShape and any connected arrows from the canvas.
+func _delete_shape(shape: LabelShape) -> void:
+	if not is_instance_valid(shape):
+		return
+	arrow_manager.call("delete_arrows_for_shape", shape)
+	selected_set.erase(shape)
+	if primary_selection == shape:
+		primary_selection = null
+	shape.queue_free()
+	_update_selection_menu()
+	update_info_bar()
+	save_canvas()
+
+
+## Applies the selected color from the palette to the currently selected element.
+func _on_menu_color_selected(color: Color) -> void:
+	if primary_selection != null and selected_set.size() == 1:
+		primary_selection.fill_color = color
+		save_canvas()
+
+
+## Repositions the selection menu when the camera zooms.
+func _on_menu_zoom_changed(_level: float) -> void:
+	selection_menu.call("refresh_position")

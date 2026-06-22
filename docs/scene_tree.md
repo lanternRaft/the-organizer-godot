@@ -19,7 +19,12 @@ Main (Node) — Main.gd
 │   ├── ZoomControls (Control)        — bottom-right zoom buttons
 │   ├── InfoBar (Label)              — centered bottom hint text
 │   ├── HamburgerMenu (Control)      — top-left ☰ button + PopupMenu
-│   └── ConfirmDialog (AcceptDialog) — Clear Canvas confirmation dialog
+│   ├── ConfirmDialog (AcceptDialog) — Clear Canvas confirmation dialog
+│   └── SelectionMenu (PanelContainer) — contextual menu below single selection
+│       ├── HBox (HBoxContainer)
+│       │   ├── DeleteButton (Button)
+│       │   └── ColorButton (Button)
+│       └── ColorPalette (Control)     — 8-swatch color picker popup
 ├── ArrowManager (Node)               — hover, drag, creation, deletion
 ├── CameraController (Node)            — camera pan/zoom logic
 │   └── (references MainCamera)

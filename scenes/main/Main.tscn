@@ -9,6 +9,7 @@
 [ext_resource type="Script" uid="uid://d0o5xb1imq4xn" path="res://scenes/main/camera_controller/camera_controller.gd" id="7_mpbl4"]
 [ext_resource type="PackedScene" path="res://scenes/ui/zoom_controls/zoom_controls.tscn" id="8_i6qj"]
 [ext_resource type="PackedScene" uid="uid://b6focqgpm4moj" path="res://scenes/arrow_manager/arrow_manager.tscn" id="9_53fq2"]
+[ext_resource type="PackedScene" path="res://scenes/ui/selection_menu/selection_menu.tscn" id="10_4mh8d"]
 
 [node name="Main" type="Node" unique_id=917290182]
 script = ExtResource("1_iuonh")
@@ -75,6 +76,10 @@ grow_horizontal = 2
 grow_vertical = 0
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="SelectionMenu" parent="UI" instance=ExtResource("10_4mh8d")]
+visible = false
+anchors_preset = 0
 
 [node name="CameraController" type="Node" parent="." unique_id=586209481]
 script = ExtResource("7_mpbl4")
