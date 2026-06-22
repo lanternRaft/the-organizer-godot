@@ -15,6 +15,9 @@ const DRAG_THRESHOLD: float = 5.0
 ## Emitted when a pointer-down lands on empty canvas area (no clickable element found).
 signal empty_canvas_clicked(world_pos: Vector2)
 
+## Emitted when a pointer-up occurs while no drag is active (used by ArrowManager).
+signal pointer_up(world_pos: Vector2)
+
 ## Reference to the element container used for physics queries.
 @onready var element_layer: Node2D = %ElementLayer
 
@@ -117,16 +120,32 @@ func _handle_pointer_down(event: InputEventMouseButton) -> void:
 
 		if click_consumed or drag_started:
 			get_viewport().set_input_as_handled()
-	else:
-		## Empty canvas — let Main decide what to do.
+		return
+
+	## -- Secondary path: arrow hit detection ---------------------------------
+	## If the physics query found nothing (no Area2D), try arrow and anchor dots.
+	var main: Node = get_parent()
+	var handled: bool = false
+
+	if main.has_method("_on_arrow_clicked_at"):
+		handled = main.call("_on_arrow_clicked_at", world_pos)
+
+	if not handled and main.has_method("_on_anchor_dot_mousedown"):
+		# ArrowManager checks if click is on an anchor dot to begin arrow drag.
+		handled = main.call("_on_anchor_dot_mousedown", world_pos)
+
+	if not handled:
+		## Truly empty canvas — let Main decide what to do.
 		empty_canvas_clicked.emit(world_pos)
-		get_viewport().set_input_as_handled()
+
+	get_viewport().set_input_as_handled()
 
 
 ## Responds to left-button release: ends the drag if one is active.
 func _handle_pointer_up(event: InputEventMouseButton) -> void:
+	var world_pos: Vector2 = element_layer.get_global_mouse_position()
+
 	if _drag_active and _drag_target != null:
-		var world_pos: Vector2 = element_layer.get_global_mouse_position()
 		var local_pos: Vector2 = _drag_target.to_local(world_pos)
 		var pointer_event: Dictionary = {
 			"world_pos": world_pos,
@@ -143,6 +162,10 @@ func _handle_pointer_up(event: InputEventMouseButton) -> void:
 		_drag_active = false
 		_drag_threshold_met = false
 		get_viewport().set_input_as_handled()
+		return
+
+	# Notify ArrowManager of pointer-up (to end arrow drag).
+	pointer_up.emit(world_pos)
 
 
 ## Responds to mouse motion while a drag is active.

@@ -8,6 +8,10 @@ extends Node2D
 ## Emitted from handle_click before drag-begin is evaluated.
 signal clicked(input_event: InputEvent, shape: Node)
 
+## Emitted when rx, ry, or position changes (after drag-end or resize).
+## ArrowManager uses this to update connected arrows.
+signal anchor_changed()
+
 ## Shape sub-mode: "oval" or "circle". When set to "circle", rx and ry are
 ## constrained to equal dimensions. Mode conversion snaps dimensions:
 ## oval → circle uses max(rx, ry); circle → oval keeps rx and resets ry=50.
@@ -28,6 +32,13 @@ signal clicked(input_event: InputEvent, shape: Node)
 		queue_redraw()
 		_update_collision_shape()
 		_update_handle_positions()
+		if Engine.is_editor_hint():
+			return
+		if not is_inside_tree():
+			return
+		if not anchor_changed.is_connected(Callable()):
+			# Delay emission to avoid mid-setter issues
+			call_deferred("emit_signal", "anchor_changed")
 
 @export var ry: float = 50.0:
 	set(value):
@@ -35,6 +46,12 @@ signal clicked(input_event: InputEvent, shape: Node)
 		queue_redraw()
 		_update_collision_shape()
 		_update_handle_positions()
+		if Engine.is_editor_hint():
+			return
+		if not is_inside_tree():
+			return
+		if not anchor_changed.is_connected(Callable()):
+			call_deferred("emit_signal", "anchor_changed")
 
 @export var fill_color: Color = Color(0.231, 0.51, 0.965):
 	set(value):
@@ -161,6 +178,7 @@ func handle_drag_begin(event: Dictionary) -> bool:
 func handle_drag_move(event: Dictionary) -> void:
 	var local_pos: Vector2 = event.get("local_pos", Vector2.ZERO)
 	var world_pos: Vector2 = event.get("world_pos", Vector2.ZERO)
+	var did_change: bool = false
 
 	if _drag_mode == "handle":
 		var new_rx: float = rx
@@ -188,10 +206,15 @@ func handle_drag_move(event: Dictionary) -> void:
 
 		rx = clamp(new_rx, 20.0, 500.0)
 		ry = clamp(new_ry, 20.0, 500.0)
+		did_change = true
 
 	elif _drag_mode == "body":
 		var delta: Vector2 = world_pos - _drag_start_world
 		position = _drag_start_position + delta
+		did_change = true
+
+	if did_change:
+		anchor_changed.emit()
 
 
 ## Called by ClickHandler on pointer up while drag is active.
@@ -201,6 +224,8 @@ func handle_drag_end(_event: Dictionary) -> void:
 	_drag_mode = ""
 	_dragging_handle = ""
 	queue_redraw()
+	# Notify downstream systems (arrows) that anchor positions may have changed.
+	emit_signal("anchor_changed")
 
 
 ## Returns the handle name ("tl", "tr", "bl", "br") if local_pos is within a handle rect,

@@ -6,7 +6,10 @@
 Main (Node) — Main.gd
 ├── Canvas (Node2D)
 │   ├── GridBackground (ColorRect)     — shader-based infinite grid
-│   └── ElementLayer (Node2D)          — ovals are parented here
+│   ├── ElementLayer (Node2D)          — shapes and arrows parented here
+│   │   ├── LabelShape (Node2D)        — ellipse labels
+│   │   └── Arrow (Node2D)             — arrow curves (rendered below shapes)
+│   └── AnchorLayer (Node2D)           — anchor dot markers
 ├── ClickHandler (Node)                — unified pointer input dispatch
 ├── UI (CanvasLayer)                   — screen-space, not affected by camera
 │   ├── Toolbar (Control) — Toolbar.gd
@@ -17,6 +20,7 @@ Main (Node) — Main.gd
 │   ├── InfoBar (Label)              — centered bottom hint text
 │   ├── HamburgerMenu (Control)      — top-left ☰ button + PopupMenu
 │   └── ConfirmDialog (AcceptDialog) — Clear Canvas confirmation dialog
+├── ArrowManager (Node)               — hover, drag, creation, deletion
 ├── CameraController (Node)            — camera pan/zoom logic
 │   └── (references MainCamera)
 └── MainCamera (Camera2D)             — positioned at origin, controlled by CameraController

@@ -143,7 +143,7 @@ Every shape/node has anchor points. Two sets of positions are maintained:
 - `bottom`: `Vector2(cx, cy + ry + 5)`
 - `right`: `Vector2(cx + rx + 5, cy)`
 
-**Triangle nodes**: Each dot is offset 5px outward from the vertex along the direction from center to that vertex.
+**Triangle nodes** (not yet implemented): Each dot is offset 5px outward from the vertex along the direction from center to that vertex.
 
 `find_anchor_near(pos: Vector2, radius: float = 15.0)` snaps based on dot positions but returns the edge position.
 

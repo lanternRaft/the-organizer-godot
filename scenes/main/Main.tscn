@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://dg8nopt5kevjk" path="res://scenes/main/grid/grid_background.tscn" id="6_qdpx4"]
 [ext_resource type="Script" uid="uid://d0o5xb1imq4xn" path="res://scenes/main/camera_controller/camera_controller.gd" id="7_mpbl4"]
 [ext_resource type="PackedScene" path="res://scenes/ui/zoom_controls/zoom_controls.tscn" id="8_i6qj"]
+[ext_resource type="PackedScene" uid="uid://b6focqgpm4moj" path="res://scenes/arrow_manager/arrow_manager.tscn" id="9_53fq2"]
 
 [node name="Main" type="Node" unique_id=917290182]
 script = ExtResource("1_iuonh")
@@ -27,6 +28,9 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="ElementLayer" type="Node2D" parent="Canvas" unique_id=233815462]
+unique_name_in_owner = true
+
+[node name="AnchorLayer" type="Node2D" parent="Canvas" unique_id=684920315]
 unique_name_in_owner = true
 
 [node name="ClickHandler" type="Node" parent="." unique_id=1134584325]
@@ -77,6 +81,9 @@ script = ExtResource("7_mpbl4")
 
 [node name="MainCamera" type="Camera2D" parent="." unique_id=314705835]
 unique_name_in_owner = true
+
+[node name="ArrowManager" parent="." instance=ExtResource("9_53fq2")]
+unique_id=914802573
 
 [connection signal="clear_requested" from="UI/HamburgerMenu" to="." method="_on_hamburger_clear_requested"]
 [connection signal="confirmed" from="UI/ConfirmDialog" to="." method="_on_confirm_dialog_confirmed"]

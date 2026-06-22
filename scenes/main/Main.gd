@@ -29,6 +29,9 @@ var selected_set: Array[LabelShape] = []
 ## Last-clicked (primary) selection.
 var primary_selection: LabelShape = null
 
+## Currently selected arrow node (if any).
+var selected_arrow: Node = null
+
 @onready var element_layer: Node2D = %ElementLayer
 @onready var info_bar: Label = %InfoBar
 @onready var canvas: Node2D = %Canvas
@@ -38,12 +41,15 @@ var primary_selection: LabelShape = null
 @onready var grid_background: ColorRect = %GridBackground
 @onready var camera_controller: Node = $CameraController
 @onready var zoom_controls: Control = $UI/ZoomControls
+@onready var arrow_manager: Node = $ArrowManager
 @onready var _viewport: Viewport = get_viewport()
 
 
 func _ready() -> void:
 	## Connect ClickHandler's empty-canvas signal for mode-specific actions.
 	click_handler.connect("empty_canvas_clicked", _on_empty_canvas_clicked)
+	## Connect ClickHandler's pointer-up signal (used by ArrowManager to end arrow drags).
+	click_handler.connect("pointer_up", _on_pointer_up)
 	## Start in Select mode by default.
 	activate_select_mode()
 
@@ -73,6 +79,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			deactivate_shape_mode()
 			get_viewport().set_input_as_handled()
 			return
+		if selected_arrow != null:
+			_deselect_arrow()
+			get_viewport().set_input_as_handled()
+			return
 		if select_mode_active and not selected_set.is_empty():
 			clear_selection()
 			get_viewport().set_input_as_handled()
@@ -84,8 +94,19 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
+	## Delete/Backspace key removes the selected arrow (or selected shape).
 	if event is InputEventKey:
 		var key_event: InputEventKey = event as InputEventKey
+		if not key_event.pressed or key_event.echo:
+			return
+		if key_event.keycode == KEY_DELETE or key_event.keycode == KEY_BACKSPACE:
+			if selected_arrow != null:
+				arrow_manager.call("delete_arrow", selected_arrow)
+				selected_arrow = null
+				update_info_bar()
+				get_viewport().set_input_as_handled()
+				return
+
 		if (
 			key_event.keycode == KEY_G
 			and not key_event.ctrl_pressed
@@ -106,9 +127,14 @@ func _on_grid_toggled(enabled: bool) -> void:
 
 ## Removes all children from ElementLayer and clears selection.
 func clear_all_elements() -> void:
+	arrow_manager.call("delete_all_arrows")
 	for child: Node in element_layer.get_children():
+		if child.is_in_group("arrows"):
+			continue  # Already removed above.
 		child.queue_free()
 	clear_selection()
+	selected_arrow = null
+	update_info_bar()
 
 
 ## Opens the confirmation dialog when the hamburger Clear item is selected.
@@ -133,6 +159,8 @@ func place_shape(world_pos: Vector2) -> void:
 
 	# Connect the click signal for selection.
 	shape.clicked.connect(_on_shape_clicked)
+	# Connect anchor_changed so ArrowManager updates connected arrows.
+	shape.anchor_changed.connect(_on_shape_anchor_changed.bind(shape))
 	# Auto-switch to Select mode and select the new shape.
 	deactivate_shape_mode()
 	activate_select_mode()
@@ -311,4 +339,68 @@ func _on_zoom_reset_requested() -> void:
 ## Updates the cached zoom level and refreshes the info bar.
 func _on_zoom_changed(level: float) -> void:
 	current_zoom = level
+	update_info_bar()
+
+
+# ----- Arrow System Interface ------------------------------------------------
+
+## Called by ClickHandler as a secondary path when no Area2D shape was hit.
+## Checks whether the click is on an arrow path. Returns true if consumed.
+func _on_arrow_clicked_at(world_pos: Vector2) -> bool:
+	if not select_mode_active:
+		return false
+	if arrow_manager == null:
+		return false
+	var arrow: Variant = arrow_manager.call("get_arrow_near", world_pos)
+	if arrow != null:
+		_select_arrow(arrow)
+		return true
+	return false
+
+
+## Called by ClickHandler as a secondary path after arrow check fails.
+## Checks whether the click is on an anchor dot (to begin arrow drag).
+func _on_anchor_dot_mousedown(world_pos: Vector2) -> bool:
+	if not select_mode_active:
+		return false
+	if arrow_manager == null:
+		return false
+	return arrow_manager.call("handle_dot_mousedown", world_pos)
+
+
+## Called by ClickHandler's pointer_up signal to notify ArrowManager.
+func _on_pointer_up(_world_pos: Vector2) -> void:
+	if arrow_manager == null:
+		return
+	arrow_manager.call("handle_dot_mouseup")
+
+
+## Called by Main when a shape emits anchor_changed (resized or moved).
+func _on_shape_anchor_changed(shape: LabelShape) -> void:
+	if arrow_manager == null:
+		return
+	arrow_manager.call("update_arrows_for_shape", shape)
+
+
+## Selects an arrow, deselecting any shapes.
+func _select_arrow(arrow: Variant) -> void:
+	if not select_mode_active:
+		return
+	clear_selection()
+	@warning_ignore("unsafe_cast")
+	var arrow_n: Node = arrow as Node
+	if arrow_n == null:
+		return
+	if selected_arrow != null:
+		selected_arrow.set("is_selected", false)
+	selected_arrow = arrow_n
+	arrow_n.set("is_selected", true)
+	update_info_bar()
+
+
+## Deselects the current arrow.
+func _deselect_arrow() -> void:
+	if selected_arrow != null:
+		selected_arrow.set("is_selected", false)
+		selected_arrow = null
 	update_info_bar()
