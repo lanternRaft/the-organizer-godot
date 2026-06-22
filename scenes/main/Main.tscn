@@ -5,11 +5,15 @@
 [ext_resource type="Script" uid="uid://bd533w6oacfor" path="res://scenes/main/click_handler/click_handler.gd" id="3_j8xj4"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hamburger_menu/hamburger_menu.tscn" id="4_yjhnb"]
 [ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog/confirm_dialog.tscn" id="5_v0whc"]
+[ext_resource type="PackedScene" uid="uid://dg8nopt5kevjk" path="res://scenes/main/grid/grid_background.tscn" id="6_qdpx4"]
 
 [node name="Main" type="Node" unique_id=917290182]
 script = ExtResource("1_iuonh")
 
 [node name="Canvas" type="Node2D" parent="." unique_id=811039160]
+unique_name_in_owner = true
+
+[node name="GridBackground" parent="Canvas" unique_id=1234567890 instance=ExtResource("6_qdpx4")]
 unique_name_in_owner = true
 
 [node name="ElementLayer" type="Node2D" parent="Canvas" unique_id=233815462]
@@ -23,6 +27,10 @@ script = ExtResource("3_j8xj4")
 [node name="HamburgerMenu" parent="UI" unique_id=142848687 instance=ExtResource("4_yjhnb")]
 layout_mode = 3
 anchors_preset = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 40.0
+offset_bottom = 40.0
 
 [node name="ConfirmDialog" parent="UI" unique_id=2050487245 instance=ExtResource("5_v0whc")]
 

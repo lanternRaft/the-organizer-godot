@@ -14,6 +14,9 @@ var select_mode_active: bool = false
 ## Reference to the last placed shape (useful for future undo / selection).
 var last_placed: Node2D = null
 
+## Whether the grid is currently visible.
+var grid_enabled: bool = true
+
 ## Currently selected ovals.
 var selected_set: Array[LabelShape] = []
 
@@ -27,6 +30,7 @@ var primary_selection: LabelShape = null
 @onready var select_button: Button = $UI/Toolbar/HBox/SelectButton
 @onready var click_handler: Node = $ClickHandler
 @onready var confirm_dialog: AcceptDialog = $UI/ConfirmDialog
+@onready var grid_background: ColorRect = %GridBackground
 
 
 func _ready() -> void:
@@ -36,6 +40,15 @@ func _ready() -> void:
 	click_handler.connect("empty_canvas_clicked", _on_empty_canvas_clicked)
 	## Start in Select mode by default.
 	activate_select_mode()
+
+	## Connect grid toggle signal.
+	grid_background.connect("grid_toggled", _on_grid_toggled)
+
+	## Load persisted grid state — it loads inside grid_background._ready().
+	grid_enabled = grid_background.get("grid_enabled")
+
+	## Set initial theme (dark) on the grid.
+	grid_background.call("set_theme_dark", true)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -50,6 +63,31 @@ func _unhandled_input(event: InputEvent) -> void:
 			clear_selection()
 			get_viewport().set_input_as_handled()
 			return
+
+	## G key toggles the grid on/off.
+	if event.is_action_pressed(&"grid_toggle"):
+		toggle_grid()
+		get_viewport().set_input_as_handled()
+		return
+
+	if event is InputEventKey:
+		var key_event: InputEventKey = event as InputEventKey
+		if (
+			key_event.keycode == KEY_G
+			and not key_event.ctrl_pressed
+			and not key_event.shift_pressed
+			and not key_event.alt_pressed
+			and key_event.pressed
+			and not key_event.echo
+		):
+			toggle_grid()
+			get_viewport().set_input_as_handled()
+
+
+## Toggles the grid background on/off.
+func _on_grid_toggled(enabled: bool) -> void:
+	grid_enabled = enabled
+	update_info_bar()
 
 
 ## Removes all children from ElementLayer and clears selection.
@@ -225,3 +263,8 @@ func update_info_bar() -> void:
 		info_bar.text = "Click to select an oval"
 	else:
 		info_bar.text = ""
+
+
+## Toggles the grid on/off. Accessible for UI button connections.
+func toggle_grid() -> void:
+	grid_background.set("grid_enabled", not grid_background.get("grid_enabled"))

@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://dg8nopt5kevjk"]
+
+[ext_resource type="Script" uid="uid://wd833fcj7d6s" path="res://scenes/main/grid/grid_background.gd" id="1_vl43t"]
+[ext_resource type="Shader" uid="uid://dgbimbj1blseq" path="res://scenes/main/grid/grid_background.gdshader" id="2_h3qow"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_y6o4m"]
+shader = ExtResource("2_h3qow")
+shader_parameter/grid_spacing = 80.0
+shader_parameter/theme_dark = true
+shader_parameter/camera_position = Vector2(0, 0)
+shader_parameter/camera_zoom = 1.0
+
+[node name="GridBackground" type="ColorRect" unique_id=1680069048]
+material = SubResource("ShaderMaterial_y6o4m")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(1, 0, 0, 1)
+script = ExtResource("1_vl43t")
+grid_spacing = 80.0

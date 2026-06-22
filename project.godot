@@ -61,8 +61,19 @@ gdscript/warnings/confusable_capture_reassignment=2
 
 window/size/viewport_width=1920
 window/size/viewport_height=1080
+window/size/mode=3
 window/stretch/mode="viewport"
 window/stretch/aspect="expand"
+
+[input]
+
+grid_toggle={
+"deadzone": 0.5,
+"events": [{
+"keycode": "G",
+"type": "key"
+}]
+}
 
 [physics]
 
