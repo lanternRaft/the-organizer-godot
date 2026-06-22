@@ -18,6 +18,7 @@ Main (Node) — Main.gd
 │   │       └── OvalButton (Button, toggle)
 │   ├── ZoomControls (Control)        — bottom-right zoom buttons
 │   ├── InfoBar (Label)              — centered bottom hint text
+│   ├── GridToggle (Control)         — top-right ⊞ grid toggle button
 │   ├── HamburgerMenu (Control)      — top-left ☰ button + PopupMenu
 │   ├── ConfirmDialog (AcceptDialog) — Clear Canvas confirmation dialog
 │   └── SelectionMenu (PanelContainer) — contextual menu below single selection
@@ -51,6 +52,7 @@ Main (Node)
 │   ├── LegendPanel (Control)            — bottom-left color legend
 │   ├── ZoomControls (Control)           — bottom-right zoom buttons
 │   ├── InfoBar (Label)                  — centered bottom hint text
+│   ├── GridToggle (Control)             — top-right ⊞ grid toggle button
 │   ├── HamburgerMenu (Control)          — top-left menu button + dropdown
 │   ├── ConfirmDialog (AcceptDialog)     — Clear Canvas confirmation
 │   └── TextEditOverlay (TextEdit)       — inline text editor for labels

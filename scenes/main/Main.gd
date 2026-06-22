@@ -50,6 +50,7 @@ var primary_selection: Node = null
 @onready var _main_camera: Camera2D = %MainCamera
 @onready var _text_overlay: TextEditOverlay = TEXT_OVERLAY_SCENE.instantiate()
 @onready var selection_menu: Node = $UI/SelectionMenu
+@onready var grid_toggle: Control = $UI/GridToggle
 
 
 func _ready() -> void:
@@ -65,6 +66,8 @@ func _ready() -> void:
 
 	## Load persisted grid state — it loads inside grid_background._ready().
 	grid_enabled = grid_background.get("grid_enabled")
+	## Sync the toggle button's visual state.
+	grid_toggle.call("set_grid_visible", grid_enabled)
 
 	## Set initial theme (dark) on the grid.
 	grid_background.call("set_theme_dark", true)
@@ -392,6 +395,7 @@ func update_info_bar() -> void:
 ## Toggles the grid on/off. Accessible for UI button connections.
 func toggle_grid() -> void:
 	grid_background.set("grid_enabled", not grid_background.get("grid_enabled"))
+	grid_toggle.call("set_grid_visible", grid_background.get("grid_enabled"))
 
 
 # ----- Text Editing ----------------------------------------------------------
