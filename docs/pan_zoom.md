@@ -42,9 +42,10 @@ The main viewport's `_input(event)` distinguishes:
 
 | Gesture | Detection | Behaviour |
 |---|---|---|
-| **Mouse wheel** (notch) | `event is InputEventMouseButton` with `button_index == MOUSE_BUTTON_WHEEL_UP`/`DOWN` | Zoom centered on cursor position. Factor = 1.25 or 0.8 |
+| **Mouse wheel zoom** | `event is InputEventMouseButton` with `button_index == MOUSE_BUTTON_WHEEL_UP`/`DOWN` + `Ctrl` / `Cmd` | Zoom centered on cursor position. Factor = 1.25 or 0.8 |
+| **Mouse wheel pan** | `event is InputEventMouseButton` with `button_index == MOUSE_BUTTON_WHEEL_*` | Pan camera by 60px scaled by zoom. (Shift modifies axis) |
 | **Trackpad pinch-to-zoom** | `event is InputEventMagnifyGesture` | Zoom by `event.factor`, centered on gesture focus |
-| **Trackpad two-finger pan** | `event is InputEventPanGesture` | Pan camera by `event.delta * zoom` |
+| **Trackpad two-finger pan** | `event is InputEventPanGesture` | Pan camera by `event.delta * zoom * PAN_SPEED` |
 | **Middle-click drag pan** | `MOUSE_BUTTON_MIDDLE` held + `_input()` mouse motion | Pan camera position |
 
 ## Touch Pinch-to-Zoom
