@@ -13,10 +13,13 @@ Main (Node) — Main.gd
 │   │   └── HBox (HBoxContainer)
 │   │       ├── SelectButton (Button, toggle)
 │   │       └── OvalButton (Button, toggle)
+│   ├── ZoomControls (Control)        — bottom-right zoom buttons
 │   ├── InfoBar (Label)              — centered bottom hint text
 │   ├── HamburgerMenu (Control)      — top-left ☰ button + PopupMenu
 │   └── ConfirmDialog (AcceptDialog) — Clear Canvas confirmation dialog
-└── MainCamera (Camera2D)             — positioned at origin
+├── CameraController (Node)            — camera pan/zoom logic
+│   └── (references MainCamera)
+└── MainCamera (Camera2D)             — positioned at origin, controlled by CameraController
 ```
 
 ## Planned Scene Tree

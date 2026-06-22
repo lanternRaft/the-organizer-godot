@@ -1,24 +1,23 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dob50x3j1nuww"]
 
-[ext_resource type="Script" path="res://scenes/ui/hamburger_menu/hamburger_menu.gd" id="1_vhq2c"]
+[ext_resource type="Script" uid="uid://bw2xfqe5gg8xl" path="res://scenes/ui/hamburger_menu/hamburger_menu.gd" id="1_vhq2c"]
 
-[node name="HamburgerMenu" type="Control"]
-anchors_preset = 12
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
+[node name="HamburgerMenu" type="Control" unique_id=106620619]
+layout_mode = 3
+anchors_preset = 0
 offset_left = 8.0
 offset_top = 8.0
 offset_right = 48.0
 offset_bottom = 48.0
 script = ExtResource("1_vhq2c")
 
-[node name="MenuButton" type="Button" parent="."]
+[node name="MenuButton" type="Button" parent="." unique_id=1134958803]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 text = "☰"
 
-[node name="PopupMenu" type="PopupMenu" parent="."]
+[node name="PopupMenu" type="PopupMenu" parent="." unique_id=97636590]

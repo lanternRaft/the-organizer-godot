@@ -14,6 +14,9 @@ var select_mode_active: bool = false
 ## Reference to the last placed shape (useful for future undo / selection).
 var last_placed: Node2D = null
 
+## Most recent zoom level (cached from camera_controller signal).
+var current_zoom: float = 1.0
+
 ## Whether the grid is currently visible.
 var grid_enabled: bool = true
 
@@ -31,11 +34,12 @@ var primary_selection: LabelShape = null
 @onready var click_handler: Node = $ClickHandler
 @onready var confirm_dialog: AcceptDialog = $UI/ConfirmDialog
 @onready var grid_background: ColorRect = %GridBackground
+@onready var camera_controller: Node = $CameraController
+@onready var zoom_controls: Control = $UI/ZoomControls
+@onready var _viewport: Viewport = get_viewport()
 
 
 func _ready() -> void:
-	## Clip canvas rendering to the viewport bounds.
-	canvas.clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW
 	## Connect ClickHandler's empty-canvas signal for mode-specific actions.
 	click_handler.connect("empty_canvas_clicked", _on_empty_canvas_clicked)
 	## Start in Select mode by default.
@@ -49,6 +53,14 @@ func _ready() -> void:
 
 	## Set initial theme (dark) on the grid.
 	grid_background.call("set_theme_dark", true)
+
+	## Connect zoom controls to camera controller (string-based to bypass type inference).
+	zoom_controls.connect("zoom_in_requested", _on_zoom_in_requested)
+	zoom_controls.connect("zoom_out_requested", _on_zoom_out_requested)
+	zoom_controls.connect("zoom_reset_requested", _on_zoom_reset_requested)
+
+	## Track zoom changes for the info bar.
+	camera_controller.connect("zoom_changed", _on_zoom_changed)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -255,16 +267,48 @@ func clear_selection() -> void:
 
 ## Updates the info bar hint text based on current state.
 func update_info_bar() -> void:
+	var zoom_suffix: String = ""
+	if not is_equal_approx(current_zoom, 1.0):
+		var pct: int = roundi(current_zoom * 100.0)
+		zoom_suffix = "   |   Zoom: %d%%" % pct
+
 	if oval_mode_active:
-		info_bar.text = "Click the canvas to place an oval"
+		info_bar.text = "Click the canvas to place an oval" + zoom_suffix
 	elif select_mode_active and not selected_set.is_empty():
-		info_bar.text = "Drag handles to resize"
+		info_bar.text = "Drag handles to resize" + zoom_suffix
 	elif select_mode_active:
-		info_bar.text = "Click to select an oval"
+		info_bar.text = "Click to select an oval" + zoom_suffix
 	else:
-		info_bar.text = ""
+		info_bar.text = zoom_suffix.trim_prefix("   |   ")
+		if info_bar.text.is_empty():
+			info_bar.text = ""
 
 
 ## Toggles the grid on/off. Accessible for UI button connections.
 func toggle_grid() -> void:
 	grid_background.set("grid_enabled", not grid_background.get("grid_enabled"))
+
+
+# ----- Zoom Controls Relay ---------------------------------------------------
+
+## Relays zoom-in button press to the camera controller.
+func _on_zoom_in_requested() -> void:
+	var vp_center: Vector2 = _viewport.get_visible_rect().size / 2.0
+	camera_controller.call("zoom_by_factor", 1.25, vp_center)
+
+
+## Relays zoom-out button press to the camera controller.
+func _on_zoom_out_requested() -> void:
+	var vp_center: Vector2 = _viewport.get_visible_rect().size / 2.0
+	camera_controller.call("zoom_by_factor", 0.8, vp_center)
+
+
+## Relays zoom-reset button press to the camera controller.
+func _on_zoom_reset_requested() -> void:
+	camera_controller.call("reset_zoom")
+
+
+## Updates the cached zoom level and refreshes the info bar.
+func _on_zoom_changed(level: float) -> void:
+	current_zoom = level
+	update_info_bar()

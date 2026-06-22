@@ -61,16 +61,13 @@ func _update_shader_uniforms() -> void:
 	if not is_instance_valid(cam):
 		return
 
-	# Use the camera's global position — this is the camera's focus point.
-	# For the shader we need the top-left of the viewport in world coords.
-	var viewport_size: Vector2 = get_viewport_rect().size
+	# Use the camera's global position (center of viewport).
+	# The shader formula (UV - 0.5) * viewport_size * zoom + camera_position
+	# expects camera_position as the world position at the screen center.
 	var cam_pos: Vector2 = cam.global_position
 	var zoom: Vector2 = cam.zoom
 
-	# Top-left world position (camera position - half viewport * zoom)
-	var top_left: Vector2 = cam_pos - viewport_size * 0.5 * zoom
-
-	grid_material.set_shader_parameter("camera_position", top_left)
+	grid_material.set_shader_parameter("camera_position", cam_pos)
 	grid_material.set_shader_parameter("camera_zoom", zoom.x)  # uniform zoom
 	grid_material.set_shader_parameter("grid_spacing", grid_spacing)
 

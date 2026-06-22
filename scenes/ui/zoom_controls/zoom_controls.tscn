@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/zoom_controls/zoom_controls.gd" id="1_vqj2s"]
+
+[node name="ZoomControls" type="Control"]
+anchors_preset = 12
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -144.0
+offset_top = -180.0
+offset_right = -12.0
+offset_bottom = -50.0
+grow_horizontal = 0
+grow_vertical = 0
+script = ExtResource("1_vqj2s")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 2
+
+[node name="ZoomIn" type="Button" parent="VBox"]
+layout_mode = 2
+text = "+"
+tooltip_text = "Zoom in (Ctrl+=)"
+
+[node name="ZoomOut" type="Button" parent="VBox"]
+layout_mode = 2
+text = "−"
+tooltip_text = "Zoom out (Ctrl+-)"
+
+[node name="ZoomReset" type="Button" parent="VBox"]
+layout_mode = 2
+text = "⟳"
+tooltip_text = "Reset zoom (Ctrl+0)"
+
+[connection signal="pressed" from="VBox/ZoomIn" to="." method="_on_zoom_in_pressed"]
+[connection signal="pressed" from="VBox/ZoomOut" to="." method="_on_zoom_out_pressed"]
+[connection signal="pressed" from="VBox/ZoomReset" to="." method="_on_zoom_reset_pressed"]

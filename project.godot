@@ -75,6 +75,45 @@ grid_toggle={
 }]
 }
 
+zoom_in={
+"deadzone": 0.5,
+"events": [{
+"type": "key",
+"keycode": "KEY_EQUAL",
+"ctrl": true
+}, {
+"type": "key",
+"keycode": "KEY_KP_ADD",
+"ctrl": true
+}]
+}
+
+zoom_out={
+"deadzone": 0.5,
+"events": [{
+"type": "key",
+"keycode": "KEY_MINUS",
+"ctrl": true
+}, {
+"type": "key",
+"keycode": "KEY_KP_SUBTRACT",
+"ctrl": true
+}]
+}
+
+zoom_reset={
+"deadzone": 0.5,
+"events": [{
+"type": "key",
+"keycode": "KEY_0",
+"ctrl": true
+}, {
+"type": "key",
+"keycode": "KEY_KP_0",
+"ctrl": true
+}]
+}
+
 [physics]
 
 3d/physics_engine="Jolt Physics"

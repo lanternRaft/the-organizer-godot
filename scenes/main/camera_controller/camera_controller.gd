@@ -1,0 +1,141 @@
+## Controls camera pan and zoom via input, gestures, and UI buttons.
+##
+## Manages the MainCamera node, handling scroll-wheel zoom, trackpad
+## pinch/pan, middle-click drag pan, keyboard shortcuts, and programmatic
+## zoom/pan dispatched from the zoom_controls UI buttons.
+extends Node
+
+## Minimum zoom level (10%).
+const MIN_ZOOM: float = 0.1
+## Maximum zoom level (2000%).
+const MAX_ZOOM: float = 20.0
+## Zoom-in factor per step.
+const ZOOM_IN_FACTOR: float = 1.25
+## Zoom-out factor per step.
+const ZOOM_OUT_FACTOR: float = 1.0 / ZOOM_IN_FACTOR  # 0.8
+
+## Trackpad pan speed multiplier — converts gesture delta to world-space pixels.
+const PAN_SPEED: float = 100.0
+
+## Emitted when zoom changes (for InfoBar display).
+signal zoom_changed(level: float)
+
+## Reference to the main camera.
+@onready var camera: Camera2D = %MainCamera
+
+## Current zoom level (1.0 = 100%).
+var zoom_level: float = 1.0:
+	set(value):
+		zoom_level = clampf(value, MIN_ZOOM, MAX_ZOOM)
+		camera.zoom = Vector2(zoom_level, zoom_level)
+		zoom_changed.emit(zoom_level)
+
+## Reference to the viewport, cached for size lookups.
+@onready var _viewport: Viewport = get_viewport()
+
+## Whether a middle-click pan drag is active.
+var _pan_active: bool = false
+## Cached viewport center (screen coordinates), used for keyboard-zoom focus.
+var _viewport_center: Vector2 = Vector2.ZERO
+
+
+func _ready() -> void:
+	_viewport_center = _viewport.get_visible_rect().size / 2.0
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	## -- Middle-click drag pan ------------------------------------------------
+	if event is InputEventMouseButton:
+		var mb: InputEventMouseButton = event as InputEventMouseButton
+		if mb.button_index == MOUSE_BUTTON_MIDDLE:
+			if mb.pressed:
+				_pan_active = true
+				get_viewport().set_input_as_handled()
+				return
+			elif _pan_active:
+				_pan_active = false
+				get_viewport().set_input_as_handled()
+				return
+
+		## -- Scroll-wheel zoom (notch) ---------------------------------------
+		if mb.pressed:
+			if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
+				zoom_by_factor(ZOOM_IN_FACTOR, mb.position)
+				get_viewport().set_input_as_handled()
+				return
+			elif mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+				zoom_by_factor(ZOOM_OUT_FACTOR, mb.position)
+				get_viewport().set_input_as_handled()
+				return
+
+	## -- Middle-click drag: continuous motion --------------------------------
+	if event is InputEventMouseMotion:
+		var mm: InputEventMouseMotion = event as InputEventMouseMotion
+		if _pan_active and mm.button_mask == MOUSE_BUTTON_MASK_MIDDLE:
+			pan_by(-mm.relative * camera.zoom)
+			get_viewport().set_input_as_handled()
+			return
+
+	## -- Trackpad pinch-to-zoom ----------------------------------------------
+	if event is InputEventMagnifyGesture:
+		var mg: InputEventMagnifyGesture = event as InputEventMagnifyGesture
+		zoom_by_factor(mg.factor, mg.position)
+		get_viewport().set_input_as_handled()
+		return
+
+	## -- Trackpad two-finger pan ---------------------------------------------
+	if event is InputEventPanGesture:
+		var pg: InputEventPanGesture = event as InputEventPanGesture
+		pan_by(pg.delta * camera.zoom * PAN_SPEED)
+		get_viewport().set_input_as_handled()
+		return
+
+	## -- Keyboard shortcuts ---------------------------------------------------
+	if event is InputEventKey:
+		var ke: InputEventKey = event as InputEventKey
+		if not ke.pressed or ke.echo:
+			return
+
+		if ke.ctrl_pressed:
+			match ke.keycode:
+				KEY_EQUAL, KEY_KP_ADD, KEY_PLUS:
+					zoom_by_factor(ZOOM_IN_FACTOR, _viewport_center)
+					get_viewport().set_input_as_handled()
+				KEY_MINUS, KEY_KP_SUBTRACT:
+					zoom_by_factor(ZOOM_OUT_FACTOR, _viewport_center)
+					get_viewport().set_input_as_handled()
+				KEY_0, KEY_KP_0:
+					reset_zoom()
+					get_viewport().set_input_as_handled()
+
+
+## Zooms the camera by the given factor, optionally centered on a focus point.
+##
+## @param factor:   The zoom multiplier (e.g., 1.25 to zoom in, 0.8 to zoom out).
+## @param focus_pos: Screen-space position (in pixels) to zoom toward.
+##                   Uses viewport center if omitted (Vector2.INF).
+func zoom_by_factor(factor: float, focus_pos: Vector2 = Vector2.INF) -> void:
+	var old_zoom: float = zoom_level
+	zoom_level *= factor
+
+	# Compute the *actual* factor applied (may differ due to clamping).
+	var applied: float = zoom_level / old_zoom
+	if applied == 1.0:
+		return
+
+	# Adjust camera position to keep focus_pos stationary on screen.
+	if focus_pos != Vector2.INF:
+		var vp_center: Vector2 = _viewport.get_visible_rect().size / 2.0
+		var offset: Vector2 = focus_pos - vp_center
+		camera.position += offset * (1.0 - 1.0 / applied)
+
+
+## Resets zoom to 1.0× and camera position to the world origin.
+func reset_zoom() -> void:
+	zoom_level = 1.0
+	camera.position = Vector2.ZERO
+
+
+## Pans the camera by the given delta vector (in world coordinates).
+func pan_by(delta: Vector2) -> void:
+	camera.position += delta
