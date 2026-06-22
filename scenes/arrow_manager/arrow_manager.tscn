@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b6focqgpm4moj"]
 
-[ext_resource type="Script" uid="uid://3k4pml1r13gq" path="res://scenes/arrow_manager/arrow_manager.gd" id="1_lk4js"]
+[ext_resource type="Script" path="res://scenes/arrow_manager/arrow_manager.gd" id="1_lk4js"]
 
 [node name="ArrowManager" type="Node"]
 script = ExtResource("1_lk4js")

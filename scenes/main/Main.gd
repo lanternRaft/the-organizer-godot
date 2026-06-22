@@ -4,6 +4,10 @@ extends Node
 
 ## Preload LabelShape scene for instantiation.
 const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
+const TEXT_OVERLAY_SCENE: PackedScene = preload("res://scenes/ui/text_edit_overlay/text_edit_overlay.tscn")
+
+## Path where the canvas state is persisted.
+const SAVE_PATH: String = "user://canvas.save"
 
 ## Whether shape-placement mode is currently active.
 var shape_tool_active: bool = false
@@ -43,6 +47,9 @@ var selected_arrow: Node = null
 @onready var zoom_controls: Control = $UI/ZoomControls
 @onready var arrow_manager: Node = $ArrowManager
 @onready var _viewport: Viewport = get_viewport()
+@onready var ui_layer: CanvasLayer = $UI
+@onready var _main_camera: Camera2D = %MainCamera
+@onready var _text_overlay: TextEditOverlay = TEXT_OVERLAY_SCENE.instantiate()
 
 
 func _ready() -> void:
@@ -70,11 +77,24 @@ func _ready() -> void:
 	## Track zoom changes for the info bar.
 	camera_controller.connect("zoom_changed", _on_zoom_changed)
 
+	## --- Text Edit Overlay Setup ---
+	ui_layer.add_child(_text_overlay)
+	_text_overlay.text_committed.connect(_on_text_committed)
+	_text_overlay.text_cancelled.connect(_on_text_cancelled)
+
+	## Load persisted canvas state.
+	load_canvas()
+
 
 func _unhandled_input(event: InputEvent) -> void:
 	## Handle Escape to deactivate Oval mode or clear selection.
 	## Keyboard-only — all pointer input is handled by ClickHandler.
 	if event.is_action_pressed("ui_cancel"):
+		# If text overlay is open, cancel it first.
+		if _text_overlay.get("is_open"):
+			_text_overlay.call("cancel")
+			get_viewport().set_input_as_handled()
+			return
 		if shape_tool_active:
 			deactivate_shape_mode()
 			get_viewport().set_input_as_handled()
@@ -99,13 +119,27 @@ func _unhandled_input(event: InputEvent) -> void:
 		var key_event: InputEventKey = event as InputEventKey
 		if not key_event.pressed or key_event.echo:
 			return
+
 		if key_event.keycode == KEY_DELETE or key_event.keycode == KEY_BACKSPACE:
+			# If editing text, let the overlay handle the key.
+			if _text_overlay.get("is_open"):
+				return
 			if selected_arrow != null:
 				arrow_manager.call("delete_arrow", selected_arrow)
 				selected_arrow = null
 				update_info_bar()
+				save_canvas()
 				get_viewport().set_input_as_handled()
 				return
+
+		# Enter key opens text editor on selected shape.
+		# (must come after the Delete check since both dispatch on the same event type)
+		if not key_event.ctrl_pressed and not key_event.shift_pressed:
+			if key_event.keycode == KEY_ENTER:
+				if select_mode_active and primary_selection != null and not _text_overlay.get("is_open"):
+					open_text_editor(primary_selection)
+					get_viewport().set_input_as_handled()
+					return
 
 		if (
 			key_event.keycode == KEY_G
@@ -127,6 +161,9 @@ func _on_grid_toggled(enabled: bool) -> void:
 
 ## Removes all children from ElementLayer and clears selection.
 func clear_all_elements() -> void:
+	# Close text overlay if open (the shape being edited may be deleted).
+	if _text_overlay.get("is_open"):
+		_text_overlay.call("cancel")
 	arrow_manager.call("delete_all_arrows")
 	for child: Node in element_layer.get_children():
 		if child.is_in_group("arrows"):
@@ -145,6 +182,7 @@ func _on_hamburger_clear_requested() -> void:
 ## Called when the Clear button in the confirmation dialog is pressed.
 func _on_confirm_dialog_confirmed() -> void:
 	clear_all_elements()
+	save_canvas()
 
 
 ## Creates a new shape at the given world position and parents it to ElementLayer.
@@ -159,6 +197,8 @@ func place_shape(world_pos: Vector2) -> void:
 
 	# Connect the click signal for selection.
 	shape.clicked.connect(_on_shape_clicked)
+	# Connect double-click for text editing.
+	shape.double_clicked.connect(_on_shape_double_clicked)
 	# Connect anchor_changed so ArrowManager updates connected arrows.
 	shape.anchor_changed.connect(_on_shape_anchor_changed.bind(shape))
 	# Auto-switch to Select mode and select the new shape.
@@ -166,6 +206,8 @@ func place_shape(world_pos: Vector2) -> void:
 	activate_select_mode()
 	select_shape(shape, false)
 	set_primary_selection(shape)
+	# Save after placement.
+	save_canvas()
 
 
 ## Activates shape-placement mode with the given sub-mode. Deactivates Select mode if active.
@@ -256,6 +298,8 @@ func _on_shape_clicked(_event: InputEvent, shape: LabelShape) -> void:
 			clear_selection()
 			select_shape(shape, false)
 			set_primary_selection(shape)
+
+
 ## Adds the shape to the selection set. If additive is false, clears first.
 func select_shape(shape: LabelShape, additive: bool = false) -> void:
 	if not additive:
@@ -299,11 +343,13 @@ func update_info_bar() -> void:
 		var pct: int = roundi(current_zoom * 100.0)
 		zoom_suffix = "   |   Zoom: %d%%" % pct
 
-	if shape_tool_active:
+	if _text_overlay.get("is_open"):
+		info_bar.text = "Type your text   Enter to confirm   Escape to cancel" + zoom_suffix
+	elif shape_tool_active:
 		var hint: String = "oval" if shape_sub_mode == "oval" else "circle"
 		info_bar.text = "Click the canvas to place a %s" % hint + zoom_suffix
 	elif select_mode_active and not selected_set.is_empty():
-		info_bar.text = "Drag handles to resize" + zoom_suffix
+		info_bar.text = "Enter to edit text   Drag handles to resize" + zoom_suffix
 	elif select_mode_active:
 		info_bar.text = "Click to select an oval" + zoom_suffix
 	else:
@@ -315,6 +361,126 @@ func update_info_bar() -> void:
 ## Toggles the grid on/off. Accessible for UI button connections.
 func toggle_grid() -> void:
 	grid_background.set("grid_enabled", not grid_background.get("grid_enabled"))
+
+
+# ----- Text Editing ----------------------------------------------------------
+
+## Opens the text edit overlay centered over the given shape.
+func open_text_editor(shape: LabelShape) -> void:
+	# Guard: shape must still be in the tree.
+	if not is_instance_valid(shape) or not shape.is_inside_tree():
+		return
+
+	var shape_center: Vector2 = shape.global_position
+	var screen_pos: Vector2 = (_main_camera as Camera2D).get_canvas_transform() * shape_center
+
+	# Calculate overlay size to match shape visual bounds × zoom, with a minimum.
+	var overlay_width: float = max(160.0, shape.rx * 2.0 * current_zoom)
+	var overlay_height: float = max(80.0, shape.ry * 2.0 * current_zoom)
+
+	var screen_rect: Rect2 = Rect2(
+		screen_pos - Vector2(overlay_width / 2.0, overlay_height / 2.0),
+		Vector2(overlay_width, overlay_height)
+	)
+
+	_text_overlay.call("open", shape, screen_rect)
+	update_info_bar()
+
+
+## Called when a shape is double-clicked. Opens the text editor.
+func _on_shape_double_clicked(shape: Node) -> void:
+	if not select_mode_active:
+		return
+	var label_shape: LabelShape = shape as LabelShape
+	if label_shape == null:
+		return
+	open_text_editor(label_shape)
+
+
+## Called when text is committed in the overlay. Triggers persistence save.
+func _on_text_committed(shape: Node, text: String) -> void:
+	if is_instance_valid(shape):
+		var label_shape: LabelShape = shape as LabelShape
+		if label_shape != null:
+			label_shape.text_content = text
+	save_canvas()
+	update_info_bar()
+
+
+## Called when text editing is cancelled. No changes are saved.
+func _on_text_cancelled(_shape: Node) -> void:
+	update_info_bar()
+
+
+# ----- Persistence -----------------------------------------------------------
+
+## Serialises all canvas elements into a Dictionary for save.
+func serialize_canvas() -> Dictionary:
+	var elements: Array[Dictionary] = []
+	for child: Node in element_layer.get_children():
+		if child is LabelShape:
+			var shape: LabelShape = child as LabelShape
+			var pos: Vector2 = shape.position
+			var color: Color = shape.fill_color
+			elements.append({
+				"type": "LabelShape",
+				"position_x": pos.x,
+				"position_y": pos.y,
+				"rx": shape.rx,
+				"ry": shape.ry,
+				"fill_r": color.r,
+				"fill_g": color.g,
+				"fill_b": color.b,
+				"fill_a": color.a,
+				"text": shape.text_content,
+				"shape_mode": shape.shape_mode,
+			})
+	return {"elements": elements}
+
+
+## Saves the current canvas state to disk.
+func save_canvas() -> void:
+	var file: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if file == null:
+		push_error("Failed to open save file for writing: ", SAVE_PATH)
+		return
+	file.store_var(serialize_canvas())
+
+
+## Loads the canvas state from disk (called during _ready).
+func load_canvas() -> void:
+	if not FileAccess.file_exists(SAVE_PATH):
+		return
+	var file: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if file == null:
+		push_error("Failed to open save file for reading: ", SAVE_PATH)
+		return
+	var data: Dictionary = file.get_var()
+	for element_data: Variant in data.get("elements", []):
+		if typeof(element_data) == TYPE_DICTIONARY:
+			var elem: Dictionary = element_data
+			if elem.get("type") == "LabelShape":
+				_load_label_shape(elem)
+
+
+## Instantiates a LabelShape from serialised data and adds it to the canvas.
+func _load_label_shape(data: Dictionary) -> void:
+	var shape: LabelShape = LABEL_SHAPE_SCENE.instantiate()
+	@warning_ignore("unsafe_cast")
+	shape.position = Vector2(data.get("position_x", 0.0) as float, data.get("position_y", 0.0) as float)
+	@warning_ignore("unsafe_cast")
+	shape.rx = data.get("rx", 80.0) as float
+	@warning_ignore("unsafe_cast")
+	shape.ry = data.get("ry", 50.0) as float
+	@warning_ignore("unsafe_cast")
+	shape.fill_color = Color(data.get("fill_r", 0.231) as float, data.get("fill_g", 0.51) as float, data.get("fill_b", 0.965) as float, data.get("fill_a", 1.0) as float)
+	shape.shape_mode = str(data.get("shape_mode", "oval"))
+	shape.text_content = str(data.get("text", ""))
+
+	element_layer.add_child(shape)
+	shape.clicked.connect(_on_shape_clicked)
+	shape.double_clicked.connect(_on_shape_double_clicked)
+	shape.anchor_changed.connect(_on_shape_anchor_changed.bind(shape))
 
 
 # ----- Zoom Controls Relay ---------------------------------------------------

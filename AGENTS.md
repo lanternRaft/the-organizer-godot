@@ -37,6 +37,7 @@ Any implementation change that:
 - Use signals for decoupling over direct node references.
 - Default to @export for anything likely to be tweaked during playtesting.
 - File names us lowercase with underscores. Example: `label_shape.gd`
+- Use tabs for indentation
 
 ## File Organization
 - One class per file, filename matches class/script name.

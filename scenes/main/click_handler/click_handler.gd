@@ -12,6 +12,9 @@ extends Node
 ## Minimum pointer-move distance (in pixels) before a drag actually begins.
 const DRAG_THRESHOLD: float = 5.0
 
+## Maximum time (in milliseconds) between two clicks on the same element to register a double-click.
+const DOUBLE_CLICK_TIME_MS: int = 400
+
 ## Emitted when a pointer-down lands on empty canvas area (no clickable element found).
 signal empty_canvas_clicked(world_pos: Vector2)
 
@@ -35,6 +38,12 @@ var _drag_threshold_met: bool = false
 
 ## The last pointer-down position, used for threshold checks.
 var _pointer_down_pos: Vector2 = Vector2.ZERO
+
+## The last element clicked (used for double-click detection).
+var _last_clicked_element: Node = null
+
+## Timestamp of the last click (in milliseconds), used for double-click detection.
+var _last_click_time: int = 0
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -102,6 +111,20 @@ func _handle_pointer_down(event: InputEventMouseButton) -> void:
 	}
 
 	if hit_element != null:
+		# 1. Double-click detection — same element within 400ms.
+		var now: int = Time.get_ticks_msec()
+		var is_double_click: bool = (
+			hit_element == _last_clicked_element
+			and now - _last_click_time < DOUBLE_CLICK_TIME_MS
+		)
+		_last_clicked_element = hit_element
+		_last_click_time = now
+
+		if is_double_click and hit_element.has_method("handle_double_click"):
+			hit_element.call("handle_double_click", pointer_event)
+			get_viewport().set_input_as_handled()
+			return
+
 		# 1. Click phase — always runs.
 		var click_consumed: bool = false
 		if hit_element.has_method("handle_click"):
