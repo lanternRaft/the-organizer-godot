@@ -494,15 +494,12 @@ func _create_arrow(start_shape: Node, start_label: String, end_shape: Node, end_
 
 	_arrows.append(arrow)
 
-	# Connect signal for selection.
-	arrow.call("connect", "selected", _on_arrow_selected)
-
-
-func _on_arrow_selected(arrow: Variant) -> void:
-	var main: Node = get_parent()
-	if not main.has_method("_on_arrow_selected"):
-		return
-	main.call("_on_arrow_selected", arrow)
+	# Connect signal for multi-drag coordination so Main can move all selected
+	# elements when this arrow is dragged.
+	if arrow.has_signal(&"multi_drag_moved"):
+		var main: Node = get_parent()
+		if main.has_method(&"_on_multi_drag_moved"):
+			arrow.connect("multi_drag_moved", Callable(main, "_on_multi_drag_moved").bind(arrow))
 
 
 func _on_element_layer_click(mouse_pos: Vector2) -> bool:

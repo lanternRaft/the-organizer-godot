@@ -7,3 +7,8 @@ In-memory clipboard stores serialized copies of selected elements:
 - **Arrows**: `{ type, points: PackedVector2Array, color }`
 
 Pasted elements are offset by +20px from original and become selected.
+
+## Related Keyboard Shortcuts
+
+- **Ctrl+A / Cmd+A**: Selects all elements on the canvas (LabelShapes + Arrows). See [Selection System](selection.md).
+- **Delete / Backspace**: Deletes all elements in the current selection set, including connected arrows. See [Selection System](selection.md).

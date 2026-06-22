@@ -13,6 +13,8 @@
   - In Circle mode, handles constrain to equal `rx`/`ry` (distance from center)
   - In Oval mode, handles allow independent `rx`/`ry`
 - **Drag to move**: Smooth free movement while dragging; snaps to 20px increments on release
+  - When multiple elements are selected, dragging one LabelShape moves all selected LabelShapes by the same delta via `multi_drag_moved` signal broadcast to Main
+  - Other selected LabelShapes also snap to 20px grid on drag-end via `multi_drag_ended` signal
 - **Placement**: Initial placement via click (no snap)
 - **Stroke**: Darkened version of fill color (40% darker) at `width=2`; on selection, lightened version (40% lighter) at `width=3`
 - **Text**:
@@ -68,6 +70,10 @@ Both modes share the same click/drag/select/color/delete behavior.
 ## Arrows
 
 `Arrow` scene (Node2D with Line2D children):
+
+- **Two Line2D children**: `vis_line` (visible stroke) and `hit_line` (wider invisible stroke for easier clicking, `width=14`)
+- **Multi-drag support**: Arrow implements `handle_drag_begin/move/end` for cases where it's selected in a multi-set without connected endpoint shapes in the set. Its `multi_drag_moved` signal integrates with Main's multi-drag coordination.
+- **Visual priority**: When selected, `is_primary` controls whether it gets solid (`Color(0.6, 0.8, 1.0)`) or semi-transparent (`Color(0.6, 0.8, 1.0, 0.7)`) highlight.
 
 - **Two Line2D children**: `vis_line` (visible stroke) and `hit_line` (wider invisible stroke for easier clicking, `width=14`)
 - **Waypoint-based data model**: `points` is a `PackedVector2Array` (minimum 2 points)

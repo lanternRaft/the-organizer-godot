@@ -27,14 +27,13 @@ var current_zoom: float = 1.0
 ## Whether the grid is currently visible.
 var grid_enabled: bool = true
 
-## Currently selected ovals.
-var selected_set: Array[LabelShape] = []
+## Current multi-selection set. Contains LabelShape and/or Arrow nodes.
+## Replaces the old split state (selected_set + selected_arrow).
+var selected_set: Array[Node] = []
 
-## Last-clicked (primary) selection.
-var primary_selection: LabelShape = null
-
-## Currently selected arrow node (if any).
-var selected_arrow: Node = null
+## Last-clicked (primary) selection. Determines which element gets the stronger highlight.
+## Set to the most recently clicked element.
+var primary_selection: Node = null
 
 @onready var element_layer: Node2D = %ElementLayer
 @onready var info_bar: Label = %InfoBar
@@ -105,10 +104,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			deactivate_shape_mode()
 			get_viewport().set_input_as_handled()
 			return
-		if selected_arrow != null:
-			_deselect_arrow()
-			get_viewport().set_input_as_handled()
-			return
 		if select_mode_active and not selected_set.is_empty():
 			clear_selection()
 			get_viewport().set_input_as_handled()
@@ -130,28 +125,26 @@ func _unhandled_input(event: InputEvent) -> void:
 			# If editing text, let the overlay handle the key.
 			if _text_overlay.get("is_open"):
 				return
-			if selected_arrow != null:
-				var to_delete: Node = selected_arrow
-				selected_arrow = null
-				arrow_manager.call("delete_arrow", to_delete)
-				_update_selection_menu()
-				update_info_bar()
-				save_canvas()
-				get_viewport().set_input_as_handled()
-				return
-			if primary_selection != null:
-				_delete_shape(primary_selection)
+			if not selected_set.is_empty():
+				_delete_selected_elements()
 				get_viewport().set_input_as_handled()
 				return
 
+		# Ctrl+A or Cmd+A — Select all elements on canvas.
+		if (key_event.ctrl_pressed or key_event.meta_pressed) and key_event.keycode == KEY_A:
+			_select_all_elements()
+			get_viewport().set_input_as_handled()
+			return
+
 		# Enter key opens text editor on selected shape.
 		# (must come after the Delete check since both dispatch on the same event type)
-		if not key_event.ctrl_pressed and not key_event.shift_pressed:
+		if not key_event.ctrl_pressed and not key_event.shift_pressed and not key_event.meta_pressed:
 			if key_event.keycode == KEY_ENTER:
 				if select_mode_active and primary_selection != null and not _text_overlay.get("is_open"):
-					open_text_editor(primary_selection)
-					get_viewport().set_input_as_handled()
-					return
+					if primary_selection is LabelShape:
+						open_text_editor(primary_selection as LabelShape)
+						get_viewport().set_input_as_handled()
+						return
 
 		if (
 			key_event.keycode == KEY_G
@@ -182,7 +175,6 @@ func clear_all_elements() -> void:
 			continue  # Already removed above.
 		child.queue_free()
 	clear_selection()
-	selected_arrow = null
 	update_info_bar()
 
 
@@ -213,10 +205,12 @@ func place_shape(world_pos: Vector2) -> void:
 	shape.double_clicked.connect(_on_shape_double_clicked)
 	# Connect anchor_changed so ArrowManager updates connected arrows.
 	shape.anchor_changed.connect(_on_shape_anchor_changed.bind(shape))
+	shape.multi_drag_moved.connect(_on_multi_drag_moved.bind(shape))
+	shape.multi_drag_ended.connect(_on_multi_drag_ended.bind(shape))
 	# Auto-switch to Select mode and select the new shape.
 	deactivate_shape_mode()
 	activate_select_mode()
-	select_shape(shape, false)
+	select_element(shape, false)
 	set_primary_selection(shape)
 	# Save after placement.
 	save_canvas()
@@ -285,67 +279,85 @@ func _on_empty_canvas_clicked(world_pos: Vector2) -> void:
 
 ## Handles a click on a shape. Connected to LabelShape.clicked signal.
 ## Shift-click toggles additive; single click re-selects.
-func _on_shape_clicked(_event: InputEvent, shape: LabelShape) -> void:
+func _on_shape_clicked(_event: InputEvent, shape: Node) -> void:
 	if not select_mode_active:
-		# In Oval mode, ignore clicks on existing shapes.
+		return
+	_handle_element_clicked(shape)
+
+
+## Unified click handler for both shapes and arrows.
+## Shift-click toggles additive; no-Shift clears and selects just this element.
+func _handle_element_clicked(element: Node) -> void:
+	if not select_mode_active:
 		return
 
-	# Shift-click logic.
 	var shift: bool = Input.is_key_pressed(KEY_SHIFT)
 
 	if shift:
-		if shape in selected_set:
-			_deselect_shape(shape)
+		if element in selected_set:
+			_deselect_element(element)
 		else:
-			select_shape(shape, true)
-			set_primary_selection(shape)
+			select_element(element, true)
+			set_primary_selection(element)
 	else:
-		if shape in selected_set:
-			# Already selected — make it primary (deselect others, keeps this)
-			clear_selection()
-			select_shape(shape, false)
-			set_primary_selection(shape)
-		else:
-			# New selection
-			clear_selection()
-			select_shape(shape, false)
-			set_primary_selection(shape)
+		# No-Shift: clear multi-set and select just this element.
+		clear_selection()
+		select_element(element, false)
+		set_primary_selection(element)
 
 
-## Adds the shape to the selection set. If additive is false, clears first.
-func select_shape(shape: LabelShape, additive: bool = false) -> void:
+## Adds the element (LabelShape or Arrow) to the selection set.
+## If additive is false, clears first.
+func select_element(element: Node, additive: bool = false) -> void:
 	if not additive:
 		clear_selection()
-	if not shape in selected_set:
-		selected_set.append(shape)
-	shape.set_selected(true)
+	if not element in selected_set:
+		selected_set.append(element)
+	# Duck-type: both LabelShape and Arrow have set_selected / is_selected.
+	if element.has_method(&"set_selected"):
+		element.call("set_selected", true)
+	_refresh_primary_visuals()
 	_update_selection_menu()
 	update_info_bar()
 
 
-## Removes the shape from the selection set.
-func _deselect_shape(shape: LabelShape) -> void:
-	shape.set_selected(false)
-	selected_set.erase(shape)
-	if primary_selection == shape:
+## Removes the element from the selection set.
+func _deselect_element(element: Node) -> void:
+	if element.has_method(&"set_selected"):
+		element.call("set_selected", false)
+	selected_set.erase(element)
+	if primary_selection == element:
 		if selected_set.is_empty():
 			primary_selection = null
 		else:
 			primary_selection = selected_set[-1]
+	_refresh_primary_visuals()
 	_update_selection_menu()
 	update_info_bar()
 
 
-## Sets the primary (last-clicked) selection.
-func set_primary_selection(shape: LabelShape) -> void:
-	primary_selection = shape
+## Sets the primary (last-clicked) selection and refreshes visual priority indicators.
+func set_primary_selection(element: Node) -> void:
+	primary_selection = element
+	_refresh_primary_visuals()
 	_update_selection_menu()
+
+
+## Refreshes is_primary on every element in selected_set so the primary element
+## gets stronger highlight and secondary elements get dimmer highlight.
+func _refresh_primary_visuals() -> void:
+	for elem: Node in selected_set:
+		if elem.has_method(&"set"):
+			elem.set("is_primary", elem == primary_selection)
 
 
 ## Clears all selection.
 func clear_selection() -> void:
-	for shape: LabelShape in selected_set:
-		shape.set_selected(false)
+	for elem: Node in selected_set:
+		if not is_instance_valid(elem):
+			continue
+		if elem.has_method(&"set_selected"):
+			elem.call("set_selected", false)
 	selected_set.clear()
 	primary_selection = null
 	selection_menu.call("dismiss")
@@ -365,7 +377,10 @@ func update_info_bar() -> void:
 		var hint: String = "oval" if shape_sub_mode == "oval" else "circle"
 		info_bar.text = "Click the canvas to place a %s" % hint + zoom_suffix
 	elif select_mode_active and not selected_set.is_empty():
-		info_bar.text = "Enter to edit text   Drag handles to resize" + zoom_suffix
+		if selected_set.size() > 1:
+			info_bar.text = "Drag to move %d selected elements" % selected_set.size() + zoom_suffix
+		else:
+			info_bar.text = "Enter to edit text   Drag handles to resize" + zoom_suffix
 	elif select_mode_active:
 		info_bar.text = "Click to select an oval" + zoom_suffix
 	else:
@@ -500,6 +515,53 @@ func _load_label_shape(data: Dictionary) -> void:
 	shape.clicked.connect(_on_shape_clicked)
 	shape.double_clicked.connect(_on_shape_double_clicked)
 	shape.anchor_changed.connect(_on_shape_anchor_changed.bind(shape))
+	shape.multi_drag_moved.connect(_on_multi_drag_moved.bind(shape))
+	shape.multi_drag_ended.connect(_on_multi_drag_ended.bind(shape))
+
+
+# ----- Multi-Drag Coordination ------------------------------------------------
+
+## Called when a selected element moves during a drag. Broadcasts the same delta
+## to every other element in selected_set so they all move in sync.
+## The emitter element already handled its own movement — this only moves siblings.
+func _on_multi_drag_moved(delta: Vector2, emitter: Node) -> void:
+	if selected_set.size() <= 1:
+		return
+	for elem: Node in selected_set:
+		if elem == emitter:
+			continue
+		if elem is LabelShape:
+			var shape: LabelShape = elem as LabelShape
+			shape.position += delta
+			shape.anchor_changed.emit()
+		elif elem.is_in_group("arrows"):
+			var arrow_node: Node = elem
+			if arrow_node is Node2D:
+				(arrow_node as Node2D).position += delta
+
+
+## Called when a body-drag ends on a LabelShape. Snaps all other selected
+## LabelShapes to the 20px grid so they stay aligned with the dragged shape.
+func _on_multi_drag_ended(_emitter: Node) -> void:
+	if selected_set.size() <= 1:
+		return
+	for elem: Node in selected_set:
+		if elem is LabelShape:
+			var shape: LabelShape = elem as LabelShape
+			shape.position = shape.position.snapped(Vector2(20.0, 20.0))
+			shape.anchor_changed.emit()
+
+
+## Selects all LabelShapes and Arrows currently on the canvas.
+func _select_all_elements() -> void:
+	if not select_mode_active:
+		return
+	clear_selection()
+	for child: Node in element_layer.get_children():
+		if child is LabelShape or child.is_in_group("arrows"):
+			select_element(child, true)
+	if not selected_set.is_empty():
+		set_primary_selection(selected_set[-1])
 
 
 # ----- Zoom Controls Relay ---------------------------------------------------
@@ -531,6 +593,7 @@ func _on_zoom_changed(level: float) -> void:
 
 ## Called by ClickHandler as a secondary path when no Area2D shape was hit.
 ## Checks whether the click is on an arrow path. Returns true if consumed.
+## Uses unified selection logic (Shift+click additive, no-Shift replace).
 func _on_arrow_clicked_at(world_pos: Vector2) -> bool:
 	if not select_mode_active:
 		return false
@@ -538,7 +601,10 @@ func _on_arrow_clicked_at(world_pos: Vector2) -> bool:
 		return false
 	var arrow: Variant = arrow_manager.call("get_arrow_near", world_pos)
 	if arrow != null:
-		_select_arrow(arrow)
+		@warning_ignore("unsafe_cast")
+		var arrow_node: Node = arrow as Node
+		if arrow_node != null:
+			_handle_element_clicked(arrow_node)
 		return true
 	return false
 
@@ -567,35 +633,10 @@ func _on_shape_anchor_changed(shape: LabelShape) -> void:
 	arrow_manager.call("update_arrows_for_shape", shape)
 
 
-## Selects an arrow, deselecting any shapes.
-func _select_arrow(arrow: Variant) -> void:
-	if not select_mode_active:
-		return
-	clear_selection()
-	@warning_ignore("unsafe_cast")
-	var arrow_n: Node = arrow as Node
-	if arrow_n == null:
-		return
-	if selected_arrow != null:
-		selected_arrow.set("is_selected", false)
-	selected_arrow = arrow_n
-	arrow_n.set("is_selected", true)
-	_update_selection_menu()
-	update_info_bar()
-
-
-## Deselects the current arrow.
-func _deselect_arrow() -> void:
-	if selected_arrow != null:
-		selected_arrow.set("is_selected", false)
-		selected_arrow = null
-	_update_selection_menu()
-	update_info_bar()
-
-
-# ----- Selection Menu ----------------------------------------------------------
+# ----- Selection Menu & Deletion ---------------------------------------------
 
 ## Shows/hides the selection menu based on current selection state.
+## Menu is hidden entirely when more than one element is selected.
 func _update_selection_menu() -> void:
 	if not select_mode_active:
 		selection_menu.call("dismiss")
@@ -605,26 +646,36 @@ func _update_selection_menu() -> void:
 		return
 	if selected_set.size() == 1 and primary_selection != null:
 		selection_menu.call("show_for_element", primary_selection)
-	elif selected_arrow != null:
-		selection_menu.call("show_for_element", selected_arrow)
 	else:
 		selection_menu.call("dismiss")
 
 
 ## Deletes the currently selected element via the menu's Delete button.
 func _on_menu_delete_requested() -> void:
-	if selected_arrow != null:
-		var to_delete: Node = selected_arrow
-		selected_arrow = null
-		arrow_manager.call("delete_arrow", to_delete)
-		_update_selection_menu()
-		update_info_bar()
-		save_canvas()
-	elif primary_selection != null and selected_set.size() == 1:
-		_delete_shape(primary_selection)
+	if not selected_set.is_empty():
+		_delete_selected_elements()
 
 
-## Removes a LabelShape and any connected arrows from the canvas.
+## Deletes all elements currently in the selection set.
+## Iterates a duplicate so modifying the original doesn't cause issues.
+func _delete_selected_elements() -> void:
+	var to_delete: Array[Node] = selected_set.duplicate()
+	for element: Node in to_delete:
+		if not is_instance_valid(element):
+			selected_set.erase(element)
+			continue
+		if element is LabelShape:
+			_delete_shape(element as LabelShape)
+		elif element.is_in_group("arrows"):
+			selected_set.erase(element)
+			if primary_selection == element:
+				primary_selection = null
+			arrow_manager.call("delete_arrow", element)
+	clear_selection()
+	save_canvas()
+
+
+## Removes a LabelShape and any connected arrows from the canvas and selection.
 func _delete_shape(shape: LabelShape) -> void:
 	if not is_instance_valid(shape):
 		return
@@ -635,13 +686,13 @@ func _delete_shape(shape: LabelShape) -> void:
 	shape.queue_free()
 	_update_selection_menu()
 	update_info_bar()
-	save_canvas()
 
 
 ## Applies the selected color from the palette to the currently selected element.
 func _on_menu_color_selected(color: Color) -> void:
-	if primary_selection != null and selected_set.size() == 1:
-		primary_selection.fill_color = color
+	if primary_selection != null and selected_set.size() == 1 and primary_selection is LabelShape:
+		var shape: LabelShape = primary_selection as LabelShape
+		shape.fill_color = color
 		save_canvas()
 
 

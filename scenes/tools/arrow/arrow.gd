@@ -7,6 +7,11 @@ extends Node2D
 
 signal selected(arrow: Arrow)
 
+## Emitted during a multi-drag to broadcast the movement delta to Main
+## so it can shift all other selected elements by the same amount.
+## delta: raw movement offset in world-space pixels.
+signal multi_drag_moved(delta: Vector2)
+
 ## Anchor reference data: shape paths are used instead of direct refs so that
 ## shape deletion doesn't leave dangling pointers.
 var start_shape_path: NodePath
@@ -19,7 +24,28 @@ var is_selected: bool = false:
 		is_selected = value
 		queue_redraw()
 		if vis_line != null:
-			vis_line.default_color = Color(1, 1, 1) if not value else Color(0.6, 0.8, 1.0)
+			if value:
+				vis_line.default_color = Color(0.6, 0.8, 1.0) if is_primary else Color(0.6, 0.8, 1.0, 0.7)
+			else:
+				vis_line.default_color = Color(1, 1, 1)
+
+## Whether this arrow is the primary (last-clicked) selection.
+## When true, uses stronger highlight. Otherwise uses dimmer highlight.
+var is_primary: bool = false:
+	set(value):
+		is_primary = value
+		queue_redraw()
+		if vis_line != null:
+			if is_selected:
+				vis_line.default_color = Color(0.6, 0.8, 1.0) if value else Color(0.6, 0.8, 1.0, 0.7)
+			else:
+				vis_line.default_color = Color(1, 1, 1)
+
+## Last-clicked world position for drag delta calculation.
+var _drag_start_world: Vector2 = Vector2.ZERO
+
+## Arrow position when the drag started.
+var _drag_start_position: Vector2 = Vector2.ZERO
 
 const ARROWHEAD_SIZE: float = 10.0
 const ARROWHEAD_HALF_ANGLE: float = 0.4  # half-angle in radians (~23 degrees)
@@ -65,7 +91,6 @@ func _draw() -> void:
 	var base_right: Vector2 = tip - dir * half_size + perp * half_width
 
 	var arrowhead_color: Color = vis_line.default_color
-	# Use draw_colored_polygon since Godot 4 has no draw_triangle.
 	draw_colored_polygon(PackedVector2Array([tip, base_left, base_right]), arrowhead_color)
 
 
@@ -136,6 +161,39 @@ static func rebuild_arrows_for_shape(shape: Node, all_arrows: Array) -> void:
 
 
 # ----- private helpers -------------------------------------------------------
+
+## Unified setter called by Main during selection state changes.
+## Matches the LabelShape API so both types can be treated uniformly.
+func set_selected(value: bool) -> void:
+	self.is_selected = value
+
+
+## Called by ClickHandler to determine if a drag should begin on this element.
+## Returns true if the arrow is selected (allows multi-drag from any selected element).
+func handle_drag_begin(event: Dictionary) -> bool:
+	if not is_selected:
+		return false
+	_drag_start_world = event.get("world_pos", Vector2.ZERO)
+	_drag_start_position = position
+	return true
+
+
+## Called by ClickHandler on each mouse move while drag is active.
+## Moves the arrow by the world-space delta, then broadcasts delta to Main
+## so other selected elements also move.
+func handle_drag_move(event: Dictionary) -> void:
+	var world_pos: Vector2 = event.get("world_pos", Vector2.ZERO)
+	var delta: Vector2 = world_pos - _drag_start_world
+	position = _drag_start_position + delta
+	queue_redraw()
+	multi_drag_moved.emit(delta)
+
+
+## Called by ClickHandler on pointer up to end the drag.
+## Snaps position to 20px grid.
+func handle_drag_end(_event: Dictionary) -> void:
+	position = position.snapped(Vector2(20.0, 20.0))
+
 
 ## Static utility: returns the edge position (on the ellipse boundary) for an anchor label.
 static func get_anchor_edge_position_static(shape: Node, label: String) -> Vector2:

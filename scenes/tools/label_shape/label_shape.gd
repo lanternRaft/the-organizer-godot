@@ -16,6 +16,15 @@ signal double_clicked(shape: Node)
 ## ArrowManager uses this to update connected arrows.
 signal anchor_changed()
 
+## Emitted during a multi-drag to broadcast the per-frame incremental delta
+## to Main so it can shift all other selected elements by the same amount.
+## delta: per-frame movement increment in world-space pixels.
+signal multi_drag_moved(delta: Vector2)
+
+## Emitted when a body-drag ends, allowing Main to snap all selected shapes.
+## Only emitted when _drag_mode was "body" (not handle resize).
+signal multi_drag_ended()
+
 ## Shape sub-mode: "oval" or "circle". When set to "circle", rx and ry are
 ## constrained to equal dimensions. Mode conversion snaps dimensions:
 ## oval → circle uses max(rx, ry); circle → oval keeps rx and resets ry=50.
@@ -73,6 +82,11 @@ signal anchor_changed()
 ## Whether this shape is currently selected. Controls stroke style and handle visibility.
 var is_selected: bool = false
 
+## Whether this shape is the primary (last-clicked) selection.
+## When true, uses stronger highlight (lightened 0.4, width 3.0).
+## When false, uses dimmer highlight (lightened 0.25, width 2.5).
+var is_primary: bool = false
+
 ## Current drag mode: "handle", "body", or "" if idle.
 var _drag_mode: String = ""
 
@@ -84,6 +98,10 @@ var _drag_start_world: Vector2 = Vector2.ZERO
 
 ## Shape position when the current body-drag started.
 var _drag_start_position: Vector2 = Vector2.ZERO
+
+## Cumulative delta from the previous frame, used to compute incremental delta
+## for multi-drag broadcasting. Reset on each drag begin.
+var _last_delta: Vector2 = Vector2.ZERO
 
 @onready var _collision_shape: CollisionShape2D = $Area2D/CollisionShape2D
 @onready var _handle_tl: ColorRect = $HandleTL
@@ -110,8 +128,12 @@ func _draw() -> void:
 	var stroke_width: float
 
 	if is_selected:
-		stroke_color = fill_color.lightened(0.4)
-		stroke_width = 3.0
+		if is_primary:
+			stroke_color = fill_color.lightened(0.4)
+			stroke_width = 3.0
+		else:
+			stroke_color = fill_color.lightened(0.25)
+			stroke_width = 2.5
 	else:
 		stroke_color = fill_color.darkened(0.4)
 		stroke_width = 2.0
@@ -123,6 +145,8 @@ func _draw() -> void:
 ## Updates selection state, visuals, and handle visibility.
 func set_selected(value: bool) -> void:
 	is_selected = value
+	if not value:
+		is_primary = false
 	queue_redraw()
 	_set_handles_visible(value)
 
@@ -265,14 +289,25 @@ func handle_click(event: Dictionary) -> bool:
 
 ## Called by ClickHandler after handle_click, same pointer-down cycle.
 ## Returns true only if the shape is selected and a drag mode is set.
+## When called without a preceding handle_click (multi-drag on an already-selected
+## element), detects the drag mode (handle vs body) from the event's local_pos.
 func handle_drag_begin(event: Dictionary) -> bool:
 	if not is_selected:
 		return false
 	if _drag_mode == "":
-		return false
+		# handle_click was skipped — detect drag mode from the event.
+		var local_pos: Vector2 = event.get("local_pos", Vector2.ZERO)
+		var handle: String = handle_at_pos(local_pos)
+		if handle != "":
+			_dragging_handle = handle
+			_drag_mode = "handle"
+		else:
+			_dragging_handle = ""
+			_drag_mode = "body"
 
 	_drag_start_world = event.get("world_pos", Vector2.ZERO)
 	_drag_start_position = position
+	_last_delta = Vector2.ZERO
 	return true
 
 
@@ -312,8 +347,13 @@ func handle_drag_move(event: Dictionary) -> void:
 
 	elif _drag_mode == "body":
 		var delta: Vector2 = world_pos - _drag_start_world
+		var incremental: Vector2 = delta - _last_delta
+		_last_delta = delta
 		position = _drag_start_position + delta
 		did_change = true
+		# Broadcast incremental delta so Main can apply it additively
+		# without accumulating cumulative offsets on siblings.
+		multi_drag_moved.emit(incremental)
 
 	if did_change:
 		anchor_changed.emit()
@@ -323,6 +363,10 @@ func handle_drag_move(event: Dictionary) -> void:
 func handle_drag_end(_event: Dictionary) -> void:
 	if _drag_mode == "body":
 		position = position.snapped(Vector2(20.0, 20.0))
+		# Re-notify anchor_changed after snap so arrows match the snapped position.
+		anchor_changed.emit()
+		# Notify Main to snap other selected shapes too.
+		multi_drag_ended.emit()
 	_drag_mode = ""
 	_dragging_handle = ""
 	queue_redraw()

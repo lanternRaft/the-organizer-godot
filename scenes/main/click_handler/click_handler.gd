@@ -125,13 +125,27 @@ func _handle_pointer_down(event: InputEventMouseButton) -> void:
 			get_viewport().set_input_as_handled()
 			return
 
-		# 1. Click phase — always runs.
+		# 1. Check if element is already selected — if so, skip click processing
+		#    to preserve multi-selection and go straight to drag setup.
+		var drag_started: bool = false
+		if hit_element.has_method("handle_drag_begin"):
+			drag_started = hit_element.call("handle_drag_begin", pointer_event)
+
+		if drag_started and hit_element is Node2D:
+			# Element was already selected — preserve multi-selection, start drag.
+			_drag_target = hit_element as Node2D
+			_drag_origin = world_pos
+			_drag_active = true
+			_drag_threshold_met = false
+			get_viewport().set_input_as_handled()
+			return
+
+		# 2. Element was not already selected — process click normally.
 		var click_consumed: bool = false
 		if hit_element.has_method("handle_click"):
 			click_consumed = hit_element.call("handle_click", pointer_event)
 
-		# 2. Drag-begin phase — runs independently of click_consumed.
-		var drag_started: bool = false
+		# 3. After click, try to start a drag (element may now be selected).
 		if hit_element.has_method("handle_drag_begin"):
 			drag_started = hit_element.call("handle_drag_begin", pointer_event)
 

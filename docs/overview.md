@@ -12,6 +12,10 @@ The following are the features currently built vs. those documented in the desig
 | Toolbar with Shape dropdown | ✅ Built | Bottom-center MenuButton with PopupMenu for Oval/Circle toggle. |
 | Circle shape + resize constraint | ✅ Built | shape_mode property on LabelShape; circle resize constrains ry=rx. |
 | Select tool + click-to-select | ✅ Built | Select button, click shape to select, Shift+click additive, Escape deselects. |
+| Multi-select + Multi-drag | ✅ Built | Shift+click selects/deselects multiple shapes and arrows. Drag moves all selected. Primary vs secondary visual highlighting. |
+| Ctrl+A (Select All) | ✅ Built | Selects all LabelShapes and Arrows on the canvas. |
+| Multi-delete (Delete/Backspace) | ✅ Built | Deletes all elements currently in the selection set. |
+| Selection menu hides for multi-select | ✅ Built | Menu only shows for single-element selection. |
 | Resize handles on selection | ✅ Built | 4 corner ColorRect handles; drag to resize with 10px snap, [20, 500] clamp. |
 | Auto-switch to Select after placement | ✅ Built | Placing a shape switches to Select mode and selects the new shape. |
 | InfoBar hints | ✅ Built | Contextual: shape mode (oval/circle), select mode, selection active, zoom. |
