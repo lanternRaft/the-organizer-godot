@@ -16,20 +16,19 @@ uniform float camera_zoom = 1.0;
 void fragment() {
 	// Compute world-space position for this fragment.
 	vec2 viewport_size = 1.0 / SCREEN_PIXEL_SIZE;
-	vec2 world_pos = (UV - 0.5) * viewport_size * camera_zoom + camera_position;
+	vec2 world_pos = (UV - 0.5) * viewport_size / camera_zoom + camera_position;
 
 	// Distance to nearest grid line in world-space.
 	vec2 grid_pos = world_pos / grid_spacing;
 	vec2 frac_part = fract(grid_pos);
 	vec2 dist_to_line = min(frac_part, 1.0 - frac_part) * grid_spacing;
 
-	// Anti-aliased 1 px screen-space line using fwidth.
-	// fwidth(world_pos) tells us how many world-units one screen pixel spans.
-	vec2 fw = fwidth(world_pos);
+	// Analytical screen pixel size in world units.
+	vec2 pixel_size = vec2(1.0 / camera_zoom);
 
-	// Smooth-step from 0 to line_alpha across approximately 1 screen pixel.
-	float line_x = 1.0 - smoothstep(0.0, fw.x, dist_to_line.x);
-	float line_y = 1.0 - smoothstep(0.0, fw.y, dist_to_line.y);
+	// Smooth-step across 1.5 screen pixels for stable anti-aliasing when panning.
+	float line_x = 1.0 - smoothstep(0.0, pixel_size.x * 1.5, dist_to_line.x);
+	float line_y = 1.0 - smoothstep(0.0, pixel_size.y * 1.5, dist_to_line.y);
 
 	float grid_alpha = max(line_x, line_y);
 

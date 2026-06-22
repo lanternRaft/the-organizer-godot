@@ -74,43 +74,40 @@ grid_toggle={
 "type": "key"
 }]
 }
-
 zoom_in={
 "deadzone": 0.5,
 "events": [{
-"type": "key",
+"ctrl": true,
 "keycode": "KEY_EQUAL",
-"ctrl": true
+"type": "key"
 }, {
-"type": "key",
+"ctrl": true,
 "keycode": "KEY_KP_ADD",
-"ctrl": true
+"type": "key"
 }]
 }
-
 zoom_out={
 "deadzone": 0.5,
 "events": [{
-"type": "key",
+"ctrl": true,
 "keycode": "KEY_MINUS",
-"ctrl": true
+"type": "key"
 }, {
-"type": "key",
+"ctrl": true,
 "keycode": "KEY_KP_SUBTRACT",
-"ctrl": true
+"type": "key"
 }]
 }
-
 zoom_reset={
 "deadzone": 0.5,
 "events": [{
-"type": "key",
+"ctrl": true,
 "keycode": "KEY_0",
-"ctrl": true
+"type": "key"
 }, {
-"type": "key",
+"ctrl": true,
 "keycode": "KEY_KP_0",
-"ctrl": true
+"type": "key"
 }]
 }
 

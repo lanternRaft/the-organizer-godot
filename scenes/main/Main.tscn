@@ -15,15 +15,16 @@ script = ExtResource("1_iuonh")
 [node name="Canvas" type="Node2D" parent="." unique_id=811039160]
 unique_name_in_owner = true
 
-[node name="GridBackground" parent="Canvas" unique_id=1234567890 instance=ExtResource("6_qdpx4")]
+[node name="GridLayer" type="CanvasLayer" parent="Canvas" unique_id=987654321]
+layer = -1
+
+[node name="GridBackground" parent="Canvas/GridLayer" unique_id=1234567890 instance=ExtResource("6_qdpx4")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(1920, 1080)
-offset_right = 1920.0
-offset_bottom = 1080.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
 
 [node name="ElementLayer" type="Node2D" parent="Canvas" unique_id=233815462]
 unique_name_in_owner = true
