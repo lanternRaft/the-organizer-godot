@@ -12,8 +12,8 @@
 - **Resize**: 4 corner handles (ColorRect children) appear on selection; drag to resize (snaps to 10px increments)
   - In Circle mode, handles constrain to equal `rx`/`ry` (distance from center)
   - In Oval mode, handles allow independent `rx`/`ry`
-- **Drag to move**: Snaps to 10px increments
-- **Placement**: Initial placement via click snaps to 10px increments
+- **Drag to move**: Smooth free movement while dragging; snaps to 20px increments on release
+- **Placement**: Initial placement via click (no snap)
 - **Stroke**: Darkened version of fill color (40% darker) at `width=2`; on selection, lightened version (40% lighter) at `width=3`
 - **Text**:
   - Press **Enter** on a selected shape to open a `TextEdit` overlay centered over the shape

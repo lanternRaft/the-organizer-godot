@@ -8,6 +8,20 @@ extends Node2D
 ## Emitted from handle_click before drag-begin is evaluated.
 signal clicked(input_event: InputEvent, shape: Node)
 
+## Shape sub-mode: "oval" or "circle". When set to "circle", rx and ry are
+## constrained to equal dimensions. Mode conversion snaps dimensions:
+## oval → circle uses max(rx, ry); circle → oval keeps rx and resets ry=50.
+@export var shape_mode: String = "oval":
+	set(value):
+		shape_mode = value
+		if value == "circle":
+			var new_r: float = max(rx, ry)
+			rx = new_r
+			ry = new_r
+		elif value == "oval":
+			ry = 50.0
+
+
 @export var rx: float = 80.0:
 	set(value):
 		rx = value
@@ -166,16 +180,24 @@ func handle_drag_move(event: Dictionary) -> void:
 				new_rx = snapped(-local_pos.x, 10.0)
 				new_ry = snapped(-local_pos.y, 10.0)
 
+		# In circle mode, constrain both dimensions to the dominant axis.
+		if shape_mode == "circle":
+			var dominant: float = max(new_rx, new_ry)
+			new_rx = dominant
+			new_ry = dominant
+
 		rx = clamp(new_rx, 20.0, 500.0)
 		ry = clamp(new_ry, 20.0, 500.0)
 
 	elif _drag_mode == "body":
 		var delta: Vector2 = world_pos - _drag_start_world
-		position = (_drag_start_position + delta).snapped(Vector2(10.0, 10.0))
+		position = _drag_start_position + delta
 
 
 ## Called by ClickHandler on pointer up while drag is active.
 func handle_drag_end(_event: Dictionary) -> void:
+	if _drag_mode == "body":
+		position = position.snapped(Vector2(20.0, 20.0))
 	_drag_mode = ""
 	_dragging_handle = ""
 	queue_redraw()
