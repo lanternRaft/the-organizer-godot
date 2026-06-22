@@ -50,6 +50,10 @@ offset_bottom = 0.0
 [node name="ZoomControls" parent="UI" unique_id=469378522 instance=ExtResource("8_i6qj")]
 layout_mode = 3
 anchors_preset = 3
+offset_left = -132.0
+offset_top = -130.0
+offset_right = 0.0
+offset_bottom = 0.0
 
 [node name="InfoBar" type="Label" parent="UI" unique_id=342268283]
 unique_name_in_owner = true
