@@ -65,6 +65,14 @@ TextEditOverlay (Control) — TextEditOverlay.gd
 
 `Main._unhandled_input` checks `_text_overlay.is_open` before handling Escape for tool deactivation or selection clear. If the overlay is open, it calls `_text_overlay.cancel()` instead.
 
+### Click-away commit (focus loss)
+
+When the TextEdit loses focus — either via a canvas click (ClickHandler releases focus) or by clicking another UI Control — `focus_exited` fires and calls `commit()`. This saves the current text (even empty) and closes the overlay.
+
+Edge cases:
+- **Escape still cancels:** The `_input` handler fires before `focus_exited`. Escape calls `cancel()`, which sets `is_open = false`. When `focus_exited` fires next, the handler checks `is_open` and becomes a no-op.
+- **Enter + focus_exited:** Enter triggers both `text_submitted` (which calls `commit()`) and `focus_exited` (which also calls `commit()`). The second call is a no-op because `_close()` already cleared state and `editing_shape` is null.
+
 ### Shift+Enter (newline)
 
 Shift+Enter inserts a newline in the TextEdit. Only bare Enter (no Shift) commits. This is handled in `TextEditOverlay._input()` by checking `ke.shift_pressed`.

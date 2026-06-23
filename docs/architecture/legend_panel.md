@@ -48,7 +48,7 @@ var _group_counter: int = 0
 
 | Signal | Arguments | When |
 |---|---|---|
-| `name_changed` | `color: Color, new_name: String` | User finishes editing a LineEdit (on focus loss or Enter key) |
+| `name_changed` | `color: Color, new_name: String` | User finishes editing a LineEdit (on focus loss or Enter key). Focus loss is triggered by ClickHandler releasing focus on canvas clicks, or naturally when another Control receives focus. |
 
 ## Color Tracking Flow
 
@@ -110,3 +110,4 @@ The `PanelContainer` is hidden when no colors are in use (`set_colors_in_use([])
 - **Palette colors only:** The legend supports exactly the 8 palette colors. Colors outside the palette (set programmatically) are technically supported but won't normally occur since the palette is the only color input.
 - **Empty canvas:** Legend panel is hidden, `_color_names` is cleared.
 - **LineEdit appearance:** The LineEdit has a flat (no border) style in disabled state, and gains a subtle border on focus for editing. This keeps the legend looking clean when not being edited.
+- **Clicking away from a LineEdit:** Canvas clicks release focus via ClickHandler, triggering `focus_exited`. If the LineEdit text is empty, it reverts to the cached name from `_color_names`. If non-empty, the change is applied and persisted. Both `_on_name_focus_exited` and `_on_name_submitted` share a helper that handles the revert-on-empty logic.

@@ -65,7 +65,17 @@ func _unhandled_input(event: InputEvent) -> void:
 # ----- private helpers -------------------------------------------------------
 
 ## Responds to a left-button press: runs physics query, dispatches click + drag-begin.
+## Also releases GUI focus so that legend labels and text overlays exit edit mode
+## when the user clicks on the canvas (Node2D/Area2D nodes don't trigger focus loss naturally).
 func _handle_pointer_down(event: InputEventMouseButton) -> void:
+	## Release GUI focus from any currently focused Control before canvas processing.
+	## This triggers focus_exited on legend LineEdits and the TextEdit overlay,
+	## which commit/revert their edits. GUI-captured Control clicks never reach
+	## _unhandled_input, so clicking a legend label itself doesn't release focus here.
+	var focused_input: Control = 	get_viewport().gui_get_focus_owner()
+	if focused_input != null:
+		focused_input.release_focus()
+
 	var world_pos: Vector2 = element_layer.get_global_mouse_position()
 	_pointer_down_pos = world_pos
 

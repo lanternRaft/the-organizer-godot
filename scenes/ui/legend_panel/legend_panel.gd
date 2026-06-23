@@ -177,17 +177,26 @@ func _remove_entry(color: Color) -> void:
 
 
 ## Called when the user presses Enter in a LineEdit.
-func _on_name_submitted(new_name: String, color: Color, _field: LineEdit) -> void:
-	_apply_name_change(color, new_name)
+func _on_name_submitted(new_name: String, color: Color, name_field: LineEdit) -> void:
+	_try_apply_name_change(color, new_name, name_field)
 
 
 ## Called when the LineEdit loses focus.
-func _on_name_focus_exited(color: Color, _field: LineEdit) -> void:
-	var row: Control = _entry_rows.get(color, null)
-	if row != null:
-		var name_field: LineEdit = row.get_child(1) as LineEdit
-		if name_field != null:
-			_apply_name_change(color, name_field.text)
+func _on_name_focus_exited(color: Color, name_field: LineEdit) -> void:
+	_try_apply_name_change(color, name_field.text, name_field)
+
+
+## Applies a name change or reverts to cached name if text is empty.
+## Called from both text_submitted and focus_exited paths.
+## Reverts the LineEdit display to the cached name when the user clears the text,
+## since a blank group name is meaningless in a legend.
+func _try_apply_name_change(color: Color, new_text: String, name_field: LineEdit) -> void:
+	if new_text.is_empty():
+		var cached_name: String = _color_names.get(color, "")
+		if not cached_name.is_empty() and name_field.text != cached_name:
+			name_field.text = cached_name
+		return
+	_apply_name_change(color, new_text)
 
 
 ## Applies a name change: updates cache, emits signal for Main to save.

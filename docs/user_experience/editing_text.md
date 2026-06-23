@@ -69,7 +69,7 @@ Enter feels like sealing a decision — the text is locked in, the overlay close
 ### Edge cases
 
 - **Shift+Enter:** Does not commit. Shift+Enter inserts a newline instead. Only a bare Enter (no Shift) commits. This matches standard text editor behavior across most applications.
-- **Clicking outside the overlay:** Currently, the overlay only responds to keyboard commands. Clicking outside doesn't close it. The user must press Enter or Escape.
+- **Clicking outside the overlay:** Clicking anywhere outside the overlay commits the current text, even if blank. This is different from pressing Escape (which cancels entirely) — it's equivalent to pressing Enter. A blank shape with no text is a valid visual state.
 - **Very long text:** The text scales down to 8px minimum. If the text is still too long at 8px (very rare for most world-building notes), it's simply clipped or runs past the shape edge. The shape doesn't resize to accommodate text — the text fits the shape, not the other way around.
 - **Zoom-induced overlay sizing:** The overlay scales with the camera zoom so it always covers the shape correctly on screen. At high zoom, the overlay is large; at low zoom, it shrinks proportionally.
 - **Opening text editor on an already-selected shape:** If the shape is already selected and the user presses Enter again, the editor opens again with the existing text pre-populated. This is how the user edits existing text.

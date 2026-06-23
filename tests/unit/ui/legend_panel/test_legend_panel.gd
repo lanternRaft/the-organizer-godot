@@ -245,3 +245,117 @@ func test_clear_all_resets_everything() -> void:
 	assert_str(first_field.text).is_equal("Group 1")
 
 	panel.free()
+
+
+## Test 11: focus_exited on a non-empty LineEdit commits the name.
+func test_focus_exited_commits_non_empty_name() -> void:
+	var panel: PanelContainer = await _create_panel()
+	_set_colors(panel, [BLUE])
+
+	# Watch for the signal using a dictionary so lambda mutation works.
+	var signal_result: Dictionary = {
+		"fired": false,
+		"name": ""
+	}
+	panel.connect("name_changed", func(_color: Color, new_name: String) -> void:
+		signal_result["fired"] = true
+		signal_result["name"] = new_name
+	)
+
+	# Get the LineEdit, change the text, then trigger focus release.
+	var entry_list: VBoxContainer = panel.get_node("MarginContainer/EntryList")
+	var name_field: LineEdit = (entry_list.get_child(0) as HBoxContainer).get_child(1) as LineEdit
+	name_field.text = "Oceans"
+	name_field.grab_focus()
+	await get_tree().process_frame
+	name_field.release_focus()
+	await get_tree().process_frame
+
+	assert_bool(signal_result["fired"]).is_true()
+	assert_str(signal_result["name"]).is_equal("Oceans")
+
+	panel.free()
+
+
+## Test 12: focus_exited on an empty LineEdit reverts to the cached name.
+func test_focus_exited_reverts_empty_name() -> void:
+	var panel: PanelContainer = await _create_panel()
+	_set_color_name(panel, BLUE, "My Faction")
+	_set_colors(panel, [BLUE])
+
+	# Track signal using a dictionary — should NOT fire for revert.
+	var signal_result: Dictionary = {
+		"fired": false
+	}
+	panel.connect("name_changed", func(_color: Color, _new_name: String) -> void:
+		signal_result["fired"] = true
+	)
+
+	# Clear the LineEdit text directly, then trigger focus_exited.
+	var entry_list: VBoxContainer = panel.get_node("MarginContainer/EntryList")
+	var name_field: LineEdit = (entry_list.get_child(0) as HBoxContainer).get_child(1) as LineEdit
+	name_field.text = ""
+
+	# Call the handler directly with known args.
+	panel.call("_on_name_focus_exited", BLUE, name_field)
+
+	# LineEdit should have reverted to cached name.
+	assert_str(name_field.text).is_equal("My Faction")
+	assert_bool(signal_result["fired"]).is_false()
+
+	panel.free()
+
+
+## Test 13: text_submitted on an empty LineEdit reverts to the cached name.
+func test_text_submitted_reverts_empty_name() -> void:
+	var panel: PanelContainer = await _create_panel()
+	_set_color_name(panel, BLUE, "My Faction")
+	_set_colors(panel, [BLUE])
+
+	# Track signal using a dictionary — should NOT fire for revert.
+	var signal_result: Dictionary = {
+		"fired": false
+	}
+	panel.connect("name_changed", func(_color: Color, _new_name: String) -> void:
+		signal_result["fired"] = true
+	)
+
+	# Call the handler directly with empty text.
+	var entry_list: VBoxContainer = panel.get_node("MarginContainer/EntryList")
+	var name_field: LineEdit = (entry_list.get_child(0) as HBoxContainer).get_child(1) as LineEdit
+	panel.call("_on_name_submitted", "", BLUE, name_field)
+
+	# LineEdit should have reverted to cached name.
+	assert_str(name_field.text).is_equal("My Faction")
+	assert_bool(signal_result["fired"]).is_false()
+
+	panel.free()
+
+
+## Test 14: focus_exited on unchanged name does nothing (no signal, no revert).
+func test_focus_exited_noop_on_unchanged_name() -> void:
+	var panel: PanelContainer = await _create_panel()
+	_set_color_name(panel, BLUE, "My Faction")
+	_set_colors(panel, [BLUE])
+
+	# Track signal using a dictionary — should NOT fire for unchanged name.
+	var signal_result: Dictionary = {
+		"fired": false
+	}
+	panel.connect("name_changed", func(_color: Color, _new_name: String) -> void:
+		signal_result["fired"] = true
+	)
+
+	# Get the LineEdit, the text is already "My Faction" — unchanged.
+	var entry_list: VBoxContainer = panel.get_node("MarginContainer/EntryList")
+	var name_field: LineEdit = (entry_list.get_child(0) as HBoxContainer).get_child(1) as LineEdit
+	name_field.grab_focus()
+	await get_tree().process_frame
+	name_field.release_focus()
+	await get_tree().process_frame
+
+	# No signal fired because the name didn't change.
+	assert_bool(signal_result["fired"]).is_false()
+	assert_str(name_field.text).is_equal("My Faction")
+
+	panel.free()

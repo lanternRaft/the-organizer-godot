@@ -78,6 +78,10 @@ In a complex world-building diagram with a dozen colored factions, the user need
 - **Editing a name:** Click any label to edit it inline. The change is saved as part of the canvas state.
 - **Name survival:** If the user renames "Red" to "Danger" and later deletes all red shapes, the name "Danger" is still stored. If they add a new red shape next session, the legend shows "Danger" again — it only resets if the color is genuinely unused and they clear the canvas.
 
+### Clicking away from an edit
+
+When the user clicks a legend label to edit it and then clicks anywhere outside the legend panel — on the canvas, a shape, the toolbar, or any other UI element — the label exits editing mode immediately. If the text is non-empty, it saves automatically. If the text is empty, it reverts to the previous name. This feels natural and quick — like renaming a file in a folder — no extra Enter press needed.
+
 ### Edge cases
 
 - **No colors in use:** The legend panel hides entirely. An empty legend is just dead space.

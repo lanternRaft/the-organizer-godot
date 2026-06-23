@@ -24,6 +24,7 @@ var is_open: bool = false
 func _ready() -> void:
 	visible = false
 	text_edit.text_changed.connect(_on_text_changed)
+	text_edit.focus_exited.connect(_on_text_edit_focus_exited)
 
 
 ## Opens the overlay positioned over the given shape.
@@ -61,8 +62,8 @@ func commit() -> void:
 
 
 func _close() -> void:
-	visible = false
 	is_open = false
+	visible = false
 	editing_shape = null
 	text_edit.text = ""
 
@@ -84,6 +85,16 @@ func _input(event: InputEvent) -> void:
 				KEY_ESCAPE:
 					cancel()
 					get_viewport().set_input_as_handled()
+
+
+## Called when the TextEdit loses focus (canvas click, toolbar click, etc.).
+## Commits the current text (even empty) and closes the overlay.
+## Edge cases:
+## - Escape fires before focus_exited; cancel() sets is_open=false, making this a no-op.
+## - Enter fires commit() before focus_exited; _close() clears editing_shape, making commit() a no-op.
+func _on_text_edit_focus_exited() -> void:
+	if is_open:
+		commit()
 
 
 ## Tracks text changes to update the shape's display in real-time.
