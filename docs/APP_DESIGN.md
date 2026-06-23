@@ -21,6 +21,19 @@ The canonical design document for The Organizer whiteboarding tool. Each subject
 | Hamburger menu | [docs/hamburger_menu.md](docs/hamburger_menu.md) |
 | Confirmation dialog | [docs/confirm_dialog.md](docs/confirm_dialog.md) |
 
+## User Experience Documentation
+
+Player-facing interaction descriptions in qualitative, human-readable terms:
+
+| Subject | File |
+|---|---|
+| Canvas navigation (pan, zoom, grid) | [docs/user_experience/navigating_the_canvas.md](docs/user_experience/navigating_the_canvas.md) |
+| Creating elements (shapes, nodes, arrows) | [docs/user_experience/creating_elements.md](docs/user_experience/creating_elements.md) |
+| Selecting and manipulating (selection, drag, resize, bump, delete) | [docs/user_experience/selecting_and_manipulating.md](docs/user_experience/selecting_and_manipulating.md) |
+| Text editing on shapes | [docs/user_experience/editing_text.md](docs/user_experience/editing_text.md) |
+| Colors and legend | [docs/user_experience/colors_and_legend.md](docs/user_experience/colors_and_legend.md) |
+| Managing your work (copy/paste, auto-save, clear, export) | [docs/user_experience/managing_your_work.md](docs/user_experience/managing_your_work.md) |
+
 ## Syncing
 
 This is the canonical contract between design and implementation. Any implementation change that modifies a documented behavior, adds/removes a feature, or alters the user interface **must also update** the relevant file under `docs/` (or `APP_DESIGN.md` if the subject spans multiple docs).
