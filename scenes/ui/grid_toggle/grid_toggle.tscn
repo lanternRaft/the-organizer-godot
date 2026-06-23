@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://b64yqge5mdqf7"]
+
+[ext_resource type="Script" path="res://scenes/ui/grid_toggle/grid_toggle.gd" id="1_eacqy"]
+
+[node name="GridToggle" type="Control"]
+anchors_preset = 10
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -48.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 48.0
+script = ExtResource("1_eacqy")
+
+[node name="Button" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "⊞"
+tooltip_text = "Toggle grid (G)"
