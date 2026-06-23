@@ -16,6 +16,16 @@
   - When multiple elements are selected, dragging one LabelShape moves all selected LabelShapes by the same delta via `multi_drag_moved` signal broadcast to Main
   - Other selected LabelShapes also snap to 20px grid on drag-end via `multi_drag_ended` signal
 - **Placement**: Initial placement via click (no snap)
+- **Bumping (overlap push)**: Dragging or placing a LabelShape pushes overlapping shapes out of the way
+  - Collision shape is a `CircleShape2D` with radius `max(rx, ry)` centered on the shape
+  - After a body-drag move, the dragged shape checks for overlapping `Area2D` children owned by other LabelShapes
+  - Overlapping shapes are pushed outward along the line between centers so the distance equals the sum of both radii
+  - Pushed shapes then check their own overlaps, creating a chain reaction (up to 5 iterations deep)
+  - Multiple pushes on the same shape are accumulated and applied together
+  - **Arrows are unaffected**: they have no `Area2D` and are filtered out by the bump code
+  - **Resize handles do not trigger bumping**: only body drags and placement trigger overlap resolution
+  - Connected arrows update automatically via `anchor_changed` emission on pushed shapes
+- **Multi-drag bumping**: When multiple shapes are selected and one is dragged, bump resolution runs on all moved shapes (dragged + other selected) after positions are applied. Selected shapes bump into each other too.
 - **Stroke**: Darkened version of fill color (40% darker) at `width=2`; on selection, lightened version (40% lighter) at `width=3`
 - **Text**:
   - Press **Enter** on a selected shape to open a `TextEdit` overlay centered over the shape
