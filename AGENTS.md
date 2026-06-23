@@ -4,7 +4,7 @@ Expert Godot 4 developer. Write clean, strongly typed GDScript following officia
 
 ## Keep design docs in sync
 
-Design documentation lives in `docs/APP_DESIGN.md` (index) and `docs/*.md` (per-subject files).
+Design documentation lives in `docs/APP_DESIGN.md` (index), `docs/*.md` (per-subject files), and `docs/user_experience/*.md` (user experience docs).
 
 Any implementation change that:
 - modifies a documented behavior
@@ -13,6 +13,22 @@ Any implementation change that:
 - alters the user interface or interaction model
 
 **must also update** the relevant design doc(s) to match the new reality. These files are the canonical contract between design and implementation.
+
+### User experience docs level of detail
+
+`docs/user_experience/*.md` describes the feel and behavior of interactions from the player's perspective — not how they're implemented in Godot. Use qualitative, human-readable descriptions rather than precise numeric values.
+- ✅ "A small buffer between the two elements"
+- ✅ "The block settles with a satisfying thud"
+- ❌ "3px spacing between elements"
+- ❌ "0.2s fade-in animation"
+
+Save exact numbers, thresholds, and implementation-specific values for inline comments or the implementation-focused design docs under `docs/*.md`.
+
+**Scope rules for `docs/user_experience/*.md`:**
+- **Audience:** Written for both designers and developers.
+- **Boundary:** Player-facing interactions only. How it's built in Godot belongs in `docs/*.md`.
+- **Edge cases & errors:** Include in the same doc (or a companion file under `docs/user_experience/`), not a separate directory.
+- **Rationale:** Include full rationale for why an interaction works a certain way. This helps designers evaluate trade-offs and developers make consistent decisions.
 
 ## Code Standards
 
