@@ -150,6 +150,47 @@ An `AcceptDialog` with:
 - Cancel button (added via `add_cancel_button("Cancel")`)
 - Clear/Confirm button (default AcceptDialog behavior) → emits `confirmed` → `Main._on_confirm_dialog_confirmed()` → `clear_all_elements()` + `save_canvas()`
 
+## Legend Panel
+
+**File**: `res://scenes/ui/legend_panel/legend_panel.gd`
+
+A compact panel anchored to the bottom-left corner of the screen listing every color currently in use on the canvas, each with an editable label.
+
+### Scene Structure
+
+```
+LegendPanel (PanelContainer)
+└── EntryList (VBoxContainer)
+    ├── LegendEntry (HBoxContainer)     — one per color in use
+    │   ├── Swatch (ColorRect)          — 16×16 colored square
+    │   └── NameField (LineEdit)        — editable label, flat style
+    └── ...
+```
+
+### Position
+
+Anchored to bottom-left corner of the viewport, with small padding from edges. Sized snugly to content — grows vertically as entries are added.
+
+### Visibility Rules
+
+- Shown when at least one color is in use on the canvas
+- Hidden when no colors are in use
+
+### Data Ownership
+
+LegendPanel owns its state internally (color-to-name mapping) and exposes a simple API:
+
+| Method | Purpose |
+|---|---|
+| `set_colors_in_use(colors)` | Sync entries with the given set of unique colors |
+| `get_legend_data()` | Returns Dictionary for serialization |
+| `load_legend_data(data)` | Restores custom names from saved data |
+| `clear_all()` | Clears all entries and resets group counter |
+
+Emits `name_changed(color, new_name)` when the user edits a label.
+
+See [legend_panel.md](legend_panel.md) for full architecture details.
+
 ## UI Component Status Summary
 
 | Component | File | Status |
@@ -163,6 +204,6 @@ An `AcceptDialog` with:
 | HamburgerMenu | `scenes/ui/hamburger_menu/` | ✅ Built (Clear only) |
 | ConfirmDialog | `scenes/ui/confirm_dialog/` | ✅ Built |
 | TextEditOverlay | `scenes/ui/text_edit_overlay/` | ✅ Built |
+| LegendPanel | `scenes/ui/legend_panel/` | ✅ Built |
 | Export PNG | — | 🚧 Planned |
-| LegendPanel | — | 🚧 Planned |
 | ThemeToggle | — | 🚧 Planned |

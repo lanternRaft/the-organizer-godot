@@ -5,6 +5,7 @@ extends Node
 ## Preload LabelShape scene for instantiation.
 const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
 const TEXT_OVERLAY_SCENE: PackedScene = preload("res://scenes/ui/text_edit_overlay/text_edit_overlay.tscn")
+const LEGEND_PANEL_SCENE: PackedScene = preload("res://scenes/ui/legend_panel/legend_panel.tscn")
 
 ## Path where the canvas state is persisted.
 const SAVE_PATH: String = "user://canvas.save"
@@ -51,6 +52,7 @@ var primary_selection: Node = null
 @onready var _text_overlay: TextEditOverlay = TEXT_OVERLAY_SCENE.instantiate()
 @onready var selection_menu: Node = $UI/SelectionMenu
 @onready var grid_toggle: Control = $UI/GridToggle
+@onready var legend_panel: Control = LEGEND_PANEL_SCENE.instantiate()
 
 
 func _ready() -> void:
@@ -90,8 +92,13 @@ func _ready() -> void:
 	_text_overlay.text_committed.connect(_on_text_committed)
 	_text_overlay.text_cancelled.connect(_on_text_cancelled)
 
+	## --- Legend Panel Setup ---
+	ui_layer.add_child(legend_panel)
+	legend_panel.connect("name_changed", _on_legend_name_changed)
+
 	## Load persisted canvas state.
 	load_canvas()
+	_refresh_legend()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -178,6 +185,7 @@ func clear_all_elements() -> void:
 			continue  # Already removed above.
 		child.queue_free()
 	clear_selection()
+	legend_panel.call("clear_all")
 	update_info_bar()
 
 
@@ -219,6 +227,7 @@ func place_shape(world_pos: Vector2) -> void:
 	shape.resolve_overlaps()
 	# Save after placement.
 	save_canvas()
+	_refresh_legend()
 
 
 ## Activates shape-placement mode with the given sub-mode. Deactivates Select mode if active.
@@ -475,7 +484,9 @@ func serialize_canvas() -> Dictionary:
 				"text": shape.text_content,
 				"shape_mode": shape.shape_mode,
 			})
-	return {"elements": elements}
+	var result: Dictionary = {"elements": elements}
+	result["legend"] = legend_panel.call("get_legend_data")
+	return result
 
 
 ## Saves the current canvas state to disk.
@@ -496,6 +507,13 @@ func load_canvas() -> void:
 		push_error("Failed to open save file for reading: ", SAVE_PATH)
 		return
 	var data: Dictionary = file.get_var()
+
+	# Restore legend data first (before loading elements).
+	if data.has("legend"):
+		var legend_data: Variant = data["legend"]
+		if typeof(legend_data) == TYPE_ARRAY:
+			legend_panel.call("load_legend_data", legend_data)
+
 	for element_data: Variant in data.get("elements", []):
 		if typeof(element_data) == TYPE_DICTIONARY:
 			var elem: Dictionary = element_data
@@ -685,6 +703,7 @@ func _delete_selected_elements() -> void:
 			arrow_manager.call("delete_arrow", element)
 	clear_selection()
 	save_canvas()
+	_refresh_legend()
 
 
 ## Removes a LabelShape and any connected arrows from the canvas and selection.
@@ -706,6 +725,25 @@ func _on_menu_color_selected(color: Color) -> void:
 		var shape: LabelShape = primary_selection as LabelShape
 		shape.fill_color = color
 		save_canvas()
+		_refresh_legend()
+
+
+## Legend Panel ---------------------------------------------------------------
+
+## Scans the canvas for unique fill colors and updates the legend panel.
+## Called after any color-affecting mutation (placement, recolor, deletion, clear).
+func _refresh_legend() -> void:
+	var colors: Array[Color] = []
+	for child: Node in element_layer.get_children():
+		if child is LabelShape:
+			var shape: LabelShape = child as LabelShape
+			colors.append(shape.fill_color)
+	legend_panel.call("set_colors_in_use", colors)
+
+
+## Called when the user edits a legend label. Saves the canvas to persist the name.
+func _on_legend_name_changed(_color: Color, _new_name: String) -> void:
+	save_canvas()
 
 
 ## Repositions the selection menu when the camera zooms.

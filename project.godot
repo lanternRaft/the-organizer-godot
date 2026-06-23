@@ -62,7 +62,6 @@ gdscript/warnings/confusable_capture_reassignment=2
 window/size/viewport_width=1728
 window/size/viewport_height=1117
 window/size/mode=3
-window/dpi/allow_hidpi=true
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 

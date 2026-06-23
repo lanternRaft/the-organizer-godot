@@ -76,6 +76,20 @@ The project's documentation follows a layered structure, each with a distinct pu
 - One class per file, filename matches class/script name.
 - Group related scripts in logical directories (e.g., `blocks/`, `ui/`, `physics/`).
 
+## Testing
+
+Run all tests:
+```bash
+bash addons/gdUnit4/runtest.sh
+```
+
+Run a specific test file:
+```bash
+bash addons/gdUnit4/runtest.sh -a res://tests/unit/ui/legend_panel/test_legend_panel.gd
+```
+
+The `-a` flag accepts a path to a test suite file or directory. Tests are located under `tests/`.
+
 ## Communication Style
 - No conversational filler or praise
 - Provide information without editorializing
