@@ -20,6 +20,10 @@ const PAN_SPEED: float = 100.0
 ## Emitted when zoom changes (for InfoBar display).
 signal zoom_changed(level: float)
 
+## Emitted when the camera position changes (pan, cursor-centered zoom, or reset).
+## UI elements that track world positions in screen-space (selection menu, text overlay) connect to this.
+signal camera_moved()
+
 ## Reference to the main camera.
 @onready var camera: Camera2D = %MainCamera
 
@@ -169,13 +173,17 @@ func zoom_by_factor(factor: float, focus_pos: Vector2 = Vector2.INF) -> void:
 		var offset: Vector2 = focus_pos - vp_center
 		camera.position += offset * (1.0 - 1.0 / applied)
 
+	camera_moved.emit()
+
 
 ## Resets zoom to 1.0× and camera position to the world origin.
 func reset_zoom() -> void:
 	zoom_level = 1.0
 	camera.position = Vector2.ZERO
+	camera_moved.emit()
 
 
 ## Pans the camera by the given delta vector (in world coordinates).
 func pan_by(delta: Vector2) -> void:
 	camera.position += delta
+	camera_moved.emit()

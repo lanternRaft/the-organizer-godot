@@ -81,6 +81,7 @@ func _ready() -> void:
 
 	## Track zoom changes for the info bar.
 	camera_controller.connect("zoom_changed", _on_zoom_changed)
+	camera_controller.connect("camera_moved", _on_camera_moved)
 
 	## --- Selection Menu Setup ---
 	selection_menu.connect("delete_requested", _on_menu_delete_requested)
@@ -749,3 +750,11 @@ func _on_legend_name_changed(_color: Color, _new_name: String) -> void:
 ## Repositions the selection menu when the camera zooms.
 func _on_menu_zoom_changed(_level: float) -> void:
 	selection_menu.call("refresh_position")
+
+
+## Called when the camera moves (pan, cursor-centered zoom, or reset).
+## Refreshes the selection menu and text overlay so they follow the element on screen.
+func _on_camera_moved() -> void:
+	selection_menu.call("refresh_position")
+	if _text_overlay.get("is_open"):
+		_text_overlay.call("reposition", _main_camera, current_zoom)

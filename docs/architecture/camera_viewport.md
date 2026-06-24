@@ -20,7 +20,7 @@ Main
 
 - **Input handling**: All pan/zoom input is handled in `CameraController._unhandled_input()`. This includes scroll-wheel, trackpad gestures, middle-click drag, and keyboard shortcuts.
 - **Programmatic control**: Exposes `zoom_by_factor()`, `reset_zoom()`, and `pan_by()` methods called by ZoomControls and Main.
-- **Signal emission**: Emits `zoom_changed(level)` to update InfoBar and SelectionMenu.
+- **Signal emission**: Emits `zoom_changed(level)` to update InfoBar and SelectionMenu, and `camera_moved()` for UI elements that track world positions in screen-space (selection menu, text overlay).
 
 ## Zoom Configuration
 

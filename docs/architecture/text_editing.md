@@ -31,6 +31,18 @@ TextEditOverlay (Control) — TextEditOverlay.gd
 5. Compute screen Rect2 centered on the shape's screen position
 6. Call `_text_overlay.call("open", shape, screen_rect)`
 
+### `TextEditOverlay.reposition(camera, zoom)`:
+
+Recalculates the overlay's position and size when the camera moves (pan or zoom) while the overlay is open. Called from `Main._on_camera_moved()`.
+
+1. Guard: exit early if `is_open == false` or `editing_shape == null`
+2. Compute shape center in world space: `editing_shape.global_position`
+3. Convert to screen space: `camera.get_canvas_transform() * shape_center`
+4. Calculate size from shape bounds × current zoom (same formula as `open()`)
+5. Update `position` and `size` of the overlay Control
+
+This duplicates the positioning math from `Main.open_text_editor()` intentionally — the overlay owns its positioning state and can recalculate independently.
+
 ### `TextEditOverlay.open(shape, screen_rect)`:
 
 1. Store reference to `editing_shape`
@@ -89,5 +101,5 @@ Shift+Enter inserts a newline in the TextEdit. Only bare Enter (no Shift) commit
 - **Delete key while editing**: The TextEdit handles Delete internally. `Main._unhandled_input` checks `_text_overlay.is_open` and skips Delete-key element removal.
 - **Escape during text editing**: Cancels the overlay first, then stops propagation. The Escape key does not also clear selection or deactivate the tool.
 - **Selection menu hidden**: The selection menu is dismissed while text editing is active. It would overlap with the overlay.
-- **Zoom while editing**: CameraController's zoom controls remain active. The overlay scales with zoom (its position/size is computed from shape bounds × zoom on open, but does not update on zoom changes — the overlay stays at the size it was opened at).
+- **Camera movement while editing**: The overlay follows the shape during camera pan and zoom via `TextEditOverlay.reposition()`. Connected through `CameraController.camera_moved` signal → `Main._on_camera_moved()` → `_text_overlay.reposition(camera, zoom)`.
 - **Cancel reverts text?**: Currently, cancel does NOT revert text because `_on_text_changed()` modifies `shape.text_content` in real time. This is a bug — a snapshot of the original text should be saved on open and restored on cancel.

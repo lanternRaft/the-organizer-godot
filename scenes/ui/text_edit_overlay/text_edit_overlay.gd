@@ -47,6 +47,21 @@ func open(shape: LabelShape, screen_rect: Rect2) -> void:
 	text_edit.grab_focus.call_deferred()
 
 
+## Recalculates position and size based on current camera state.
+## Called when the camera pans/zooms while the overlay is open.
+## @param camera: The main Camera2D for coordinate conversion.
+## @param zoom:   Current zoom level (for scaling the overlay to shape bounds).
+func reposition(camera: Camera2D, zoom: float) -> void:
+	if not is_open or editing_shape == null:
+		return
+	var shape_center: Vector2 = editing_shape.global_position
+	var screen_pos: Vector2 = camera.get_canvas_transform() * shape_center
+	var overlay_width: float = max(160.0, editing_shape.rx * 2.0 * zoom)
+	var overlay_height: float = max(80.0, editing_shape.ry * 2.0 * zoom)
+	position = screen_pos - Vector2(overlay_width / 2.0, overlay_height / 2.0)
+	size = Vector2(overlay_width, overlay_height)
+
+
 ## Closes the overlay without committing changes.
 func cancel() -> void:
 	if editing_shape != null:

@@ -31,6 +31,7 @@ SelectionMenu (PanelContainer)
 Menu repositions on:
 - Element move/resize (connected via `anchor_changed` signal)
 - Camera zoom changes (via `zoom_changed` signal)
+- Camera pan (via `camera_moved` signal)
 - Manual `refresh_position()` call
 
 ### Visibility Rules
