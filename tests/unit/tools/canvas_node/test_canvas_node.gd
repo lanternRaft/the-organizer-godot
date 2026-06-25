@@ -260,14 +260,17 @@ func test_drag_end_snaps_to_grid() -> void:
 	# Move to non-snapped position.
 	node.call("handle_drag_move", _make_pointer_event(Vector2(137, 152)))
 
-	var multi_drag_ended_fired: bool = false
+	var context: Dictionary[String, bool] = {
+		"multi_drag_ended_fired": false,
+		"anchor_changed_fired": false
+	}
+
 	node.connect("multi_drag_ended", func() -> void:
-		multi_drag_ended_fired = true
+		context.multi_drag_ended_fired = true
 	)
 
-	var anchor_changed_fired: bool = false
 	node.connect("anchor_changed", func() -> void:
-		anchor_changed_fired = true
+		context.anchor_changed_fired = true
 	)
 
 	# End drag — should snap to grid.
@@ -275,9 +278,9 @@ func test_drag_end_snaps_to_grid() -> void:
 
 	# Position snapped to 20px grid (140, 160).
 	assert_vector(node.position).is_equal(Vector2(140, 160))
-	assert_bool(multi_drag_ended_fired).is_true()
+	assert_bool(context.multi_drag_ended_fired).is_true()
 	# anchor_changed fires after snap inside handle_drag_end.
-	assert_bool(anchor_changed_fired).is_true()
+	assert_bool(context.anchor_changed_fired).is_true()
 
 	node.free()
 
@@ -387,20 +390,20 @@ func test_node_bumps_another_node() -> void:
 
 ## A17: CanvasNode has no text methods.
 func test_node_has_no_text_methods() -> void:
-	var node: Node2D = await _create_node("circle_node")
+	var node: CanvasNode = await _create_node("circle_node")
 
 	assert_bool(node.has_method("open_text_editor")).is_false()
-	assert_bool(node.has_property("text_content")).is_false()
+	assert_bool("text_content" in node).is_false()
 
 	node.free()
 
 
 ## A18: CanvasNode has no resize methods.
 func test_node_has_no_resize_methods() -> void:
-	var node: Node2D = await _create_node("circle_node")
+	var node: CanvasNode = await _create_node("circle_node")
 
 	assert_bool(node.has_method("handle_at_pos")).is_false()
-	assert_bool(node.has_property("rx")).is_false()
-	assert_bool(node.has_property("ry")).is_false()
+	assert_bool("rx" in node).is_false()
+	assert_bool("ry" in node).is_false()
 
 	node.free()
