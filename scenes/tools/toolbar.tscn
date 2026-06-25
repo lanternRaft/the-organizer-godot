@@ -35,4 +35,9 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Oval ▾"
 
+[node name="NodeMenuButton" type="MenuButton" parent="HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Circle Node ▾"
+
 [connection signal="toggled" from="HBox/SelectButton" to="." method="_on_select_button_toggled"]

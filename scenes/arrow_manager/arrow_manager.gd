@@ -26,6 +26,9 @@ const DOT_COLOR_FILL: Color = Color(1, 1, 1)
 const DOT_COLOR_STROKE: Color = Color(0.23, 0.51, 0.965)  # #3b82f6
 const DOT_COLOR_HOVER_FILL: Color = Color(0.23, 0.51, 0.965)  # #3b82f6
 
+## Default anchor labels for LabelShape.
+const SHAPE_ANCHOR_LABELS: Array[String] = ["top", "bottom", "left", "right"]
+
 ## ----- State ---------------------------------------------------------------
 
 ## List of all LabelShape instances currently in ElementLayer.
@@ -212,7 +215,15 @@ func update_arrows_for_shape(shape: Node) -> void:
 # ----- Static utility methods ------------------------------------------------
 
 ## Returns the edge position (on the ellipse boundary) for an anchor label.
+## Uses duck-typing: if the element has get_anchor_position(label), uses that.
+## Falls back to ellipse-based calculation for LabelShape.
 static func get_anchor_edge_position(shape: Node, label: String) -> Vector2:
+	# CanvasNode and similar elements provide their own anchor positions.
+	if shape.has_method(&"get_anchor_position"):
+		@warning_ignore("unsafe_cast")
+		var pos: Vector2 = shape.call(&"get_anchor_position", label)
+		return pos
+	# Default LabelShape ellipse-based calculation.
 	var rx: float = shape.get("rx")
 	var ry: float = shape.get("ry")
 	var local_pos: Vector2
@@ -226,6 +237,42 @@ static func get_anchor_edge_position(shape: Node, label: String) -> Vector2:
 	var shape_2d: Node2D = shape as Node2D
 	if shape_2d != null:
 		return shape_2d.to_global(local_pos)
+	return local_pos
+
+
+## Returns the list of anchor labels for a given element, using duck-typing.
+## If the element has get_anchor_points(), calls it.
+## Falls back to SHAPE_ANCHOR_LABELS for LabelShape compatibility.
+static func _get_element_anchor_labels(element: Node) -> Array[String]:
+	if element.has_method(&"get_anchor_points"):
+		var result: Variant = element.call(&"get_anchor_points")
+		if result is Array:
+			@warning_ignore("unsafe_cast")
+			return result as Array[String]
+	return SHAPE_ANCHOR_LABELS
+
+
+## Returns the global anchor dot position for a given element and label.
+## Uses duck-typing: if the element has get_anchor_position(label), uses that.
+## Falls back to ellipse-based calculation for LabelShape.
+static func _get_element_anchor_position(element: Node, label: String) -> Vector2:
+	if element.has_method(&"get_anchor_position"):
+		@warning_ignore("unsafe_cast")
+		var pos: Vector2 = element.call(&"get_anchor_position", label)
+		return pos
+	# Default LabelShape ellipse-based calculation.
+	var rx: float = element.get("rx")
+	var ry: float = element.get("ry")
+	var local_pos: Vector2
+	match label:
+		"top": local_pos = Vector2(0, -ry - ANCHOR_OFFSET)
+		"bottom": local_pos = Vector2(0, ry + ANCHOR_OFFSET)
+		"left": local_pos = Vector2(-rx - ANCHOR_OFFSET, 0)
+		"right": local_pos = Vector2(rx + ANCHOR_OFFSET, 0)
+		_: local_pos = Vector2.ZERO
+	var element_2d: Node2D = element as Node2D
+	if element_2d != null:
+		return element_2d.to_global(local_pos)
 	return local_pos
 
 
@@ -278,7 +325,7 @@ func _update_anchor_dots(mouse_pos: Vector2) -> void:
 		if not is_instance_valid(shape):
 			continue
 
-		var labels: Array[String] = ["top", "bottom", "left", "right"]
+		var labels: Array[String] = _get_element_anchor_labels(shape)
 		var shape_shown: bool = false
 
 		for label: String in labels:
@@ -307,7 +354,7 @@ func _show_dots_for_shape(shape: Node) -> void:
 	if not _dot_nodes.has(sid):
 		_dot_nodes[sid] = {}
 
-	var labels: Array[String] = ["top", "bottom", "left", "right"]
+	var labels: Array[String] = _get_element_anchor_labels(shape)
 	for label: String in labels:
 		if not label in _dot_nodes[sid]:
 			var dot: Node2D = _create_dot(shape, label)
@@ -414,19 +461,7 @@ func _highlight_dot(shape: Node, label: String, dist: float) -> void:
 
 
 func _get_dot_position(shape: Node, label: String) -> Vector2:
-	var rx: float = shape.get("rx")
-	var ry: float = shape.get("ry")
-	var local_pos: Vector2
-	match label:
-		"top": local_pos = Vector2(0, -ry - ANCHOR_OFFSET)
-		"bottom": local_pos = Vector2(0, ry + ANCHOR_OFFSET)
-		"left": local_pos = Vector2(-rx - ANCHOR_OFFSET, 0)
-		"right": local_pos = Vector2(rx + ANCHOR_OFFSET, 0)
-		_: local_pos = Vector2.ZERO
-	var shape_2d: Node2D = shape as Node2D
-	if shape_2d != null:
-		return shape_2d.to_global(local_pos)
-	return local_pos
+	return _get_element_anchor_position(shape, label)
 
 
 # ----- Private helpers: drag preview -----------------------------------------
@@ -543,7 +578,7 @@ func handle_dot_mousedown(mouse_pos: Vector2) -> bool:
 	for shape: Node in _shapes:
 		if not is_instance_valid(shape):
 			continue
-		var labels: Array[String] = ["top", "bottom", "left", "right"]
+		var labels: Array[String] = _get_element_anchor_labels(shape)
 		for label: String in labels:
 			var dot_pos: Vector2 = _get_dot_position(shape, label)
 			if mouse_pos.distance_to(dot_pos) <= DOT_RADIUS_HOVER:

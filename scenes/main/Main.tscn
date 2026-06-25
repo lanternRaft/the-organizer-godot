@@ -96,4 +96,5 @@ unique_name_in_owner = true
 [connection signal="confirmed" from="UI/ConfirmDialog" to="." method="_on_confirm_dialog_confirmed"]
 [connection signal="select_mode_toggled" from="UI/Toolbar" to="." method="_on_select_mode_toggled"]
 [connection signal="shape_sub_mode_changed" from="UI/Toolbar" to="." method="_on_shape_sub_mode_changed"]
+[connection signal="node_sub_mode_changed" from="UI/Toolbar" to="." method="_on_node_sub_mode_changed"]
 [connection signal="grid_toggle_requested" from="UI/GridToggle" to="." method="toggle_grid"]

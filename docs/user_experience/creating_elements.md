@@ -4,7 +4,7 @@
 
 ## Overview
 
-The user populates the canvas with two kinds of things: **shapes** (ovals and circles that hold text) and **arrows** (curved connectors between shapes). Also planned but not yet implemented: **nodes** (small fixed-size circle and triangle markers). Each element is placed using a distinct interaction.
+The user populates the canvas with three kinds of things: **shapes** (ovals and circles that hold text), **arrows** (curved connectors between shapes), and **nodes** (small fixed-size circle and triangle markers). Each element is placed using a distinct interaction.
 
 ---
 
@@ -12,18 +12,19 @@ The user populates the canvas with two kinds of things: **shapes** (ovals and ci
 
 A toolbar sits at the bottom center of the screen. It's always visible and shows which tool is active. The active tool changes what happens when the user clicks or drags on the canvas.
 
-There are two tool categories:
+There are three tool categories:
 
 - **Select tool** — the default. Click to pick things up, drag to move them. This is the mode users come back to between every other action.
 - **Shape tool** — click the canvas to drop a new shape. A dropdown on this button lets the user choose between Oval and Circle before placing.
+- **Node tool** — click the canvas to drop a small fixed-size marker. A dropdown on this button lets the user choose between Circle Node and Triangle Node before placing.
 
 The user is never stuck in a tool they don't want. Every shape placement automatically returns them to Select mode. If they accidentally enter a tool, Escape gets them out.
 
 ### How tool switching feels
 
-Buttons in the toolbar are toggle-style — when Select is active, the Select button looks pressed in. Switching to a shape tool pops the Select button back up. There's a quiet, mechanical finality to it: tools snap into place.
+Buttons in the toolbar are toggle-style — when Select is active, the Select button looks pressed in. Switching to a shape tool or node tool pops the Select button back up. There's a quiet, mechanical finality to it: tools snap into place.
 
-The info bar at the bottom of the screen shows a brief hint for the current tool, so the user always knows what will happen if they click.
+The info bar at the bottom of the screen shows a brief hint for the current tool, so the user always knows what will happen if they click. In Select mode it says "Click to select an oval"; in Shape mode it says "Click the canvas to place a (oval/circle)"; in Node mode it says "Click the canvas to place a (circle/triangle) node".
 
 ---
 
@@ -115,17 +116,54 @@ Four cardinal points (top, bottom, left, right) cover the most common connection
 
 ---
 
-## Placing Nodes (Planned)
+## Placing Nodes
 
-Circle and Triangle nodes are small fixed-size markers — useful for labeling connection points, representing entities in a network, or highlighting specific locations without the visual weight of a full shape.
+Nodes are small fixed-size markers — useful for labeling connection points, representing entities in a network, or highlighting specific locations without the visual weight of a full shape.
 
-Interaction would follow the same pattern as shapes:
-1. User selects the Node tool and chooses Circle or Triangle from its dropdown
-2. Cursor becomes a crosshair
-3. Click on the canvas to drop the node
-4. Auto-return to Select mode
+### How it works
 
-Nodes are smaller than shapes (8px radius) and don't have resize handles. They support color changes and arrow connections via their own anchor points: four cardinal points for circle nodes, three vertex points for triangle nodes.
+1. The user clicks the **Node** button in the toolbar
+2. A dropdown reveals two options: **Circle Node** and **Triangle Node**
+3. The user selects one — the toolbar button text updates to show the current sub-mode
+4. The cursor changes to a crosshair — the canvas is waiting
+5. The info bar reads "Click the canvas to place a (circle/triangle) node"
+6. The user clicks anywhere on the canvas
+7. A node appears at that exact spot, already selected
+8. The tool automatically switches back to Select mode
+
+### Node sizes and appearance
+
+- **Circle Node:** 16px diameter (8px radius). Drawn as a filled circle.
+- **Triangle Node:** Pointing upward, ~16px inscribed in a bounding circle. Drawn as a filled equilateral triangle.
+
+Both default to the same friendly blue fill color as shapes, configurable via the selection menu color palette.
+
+### What nodes support
+
+- **Color changes** — same palette and flow as shapes (via selection menu)
+- **Arrow connections** — each node has its own set of anchor points for creating arrows
+  - **Circle Node anchors:** 4 cardinal points (top, bottom, left, right) — identical to shapes
+  - **Triangle Node anchors:** 3 vertex points (top, bottom-left, bottom-right)
+- **Selection and dragging** — nodes can be clicked, shift+clicked, and dragged like shapes (20px snap)
+
+### What nodes don't support
+
+- **Resize handles** — nodes are fixed-size; no resize interaction appears on selection
+- **Text editing** — nodes have no text overlay; they're purely visual markers
+- **Appearing in the legend** — nodes are not included in the legend panel (they are decoration, not categories)
+
+### How it feels
+
+Placing a node should feel even lighter than placing a shape — a quick tap to leave a small visual marker. Where a shape says "this is a labeled thing," a node says "this spot matters." The small size makes them suitable for dense, detailed diagrams where full shapes would be too heavy.
+
+### Edge cases
+
+- **Placing on top of existing elements:** Nodes bump overlapping shapes and other nodes out of the way, consistent with the existing bumping behavior.
+- **Rapid placement:** Each placement returns to Select mode (same trade-off as shapes). The user can click, return to Node mode, click again — no mass-placement risk.
+- **Tool deactivation:** Escape exits Node mode without placing, returning to Select.
+- **Arrow connections from/to nodes:** Arrows can originate from a node's anchor and land on a shape's anchor (or vice versa). Nodes can connect to other nodes. The same anchor-based drag interaction applies.
+- **Deleting a node with connected arrows:** Arrows attached to the node are destroyed when the node is removed (consistent with shape deletion).
+- **Copy/paste:** Nodes can be copied and pasted following the same rules as shapes (paste offset, same-layer placement).
 
 ---
 
@@ -136,5 +174,6 @@ The flow between creation and manipulation should feel seamless:
 1. User places a shape → auto-selects it → is ready to move/resize/color/text
 2. User creates an arrow → stays in Select mode → arrow is now part of the diagram
 3. User finishes editing a shape's text → Enter commits → back to Select mode with the shape still selected
+4. User places a node → auto-selects it → is ready to move/color/connect
 
 The auto-return to Select is a deliberate choice: creation is a single action, but manipulation (moving, resizing, connecting) is where the user spends most of their time. Defaulting to Select mode means they never have to switch tools just to pick up what they just put down.
