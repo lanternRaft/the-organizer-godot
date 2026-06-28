@@ -53,26 +53,12 @@ LabelShape supports two drag modes, detected in `handle_click()`:
 - **10px snap**: Resize increments snap to 10px.
 - **Clamp**: `[20.0, 500.0]` bounds on both axes.
 - **Circle mode**: Both dimensions locked together. `dominant = max(new_rx, new_ry)`, then both set to dominant.
-- **No collision while resizing**: Resize does not trigger overlap bumping.
 
 ### Move (Body Drag) Behavior
 
 - **Free movement**: Drag follows cursor with no snap during movement.
 - **20px snap on release**: `position = position.snapped(Vector2(20.0, 20.0))`
 - **Multi-drag broadcast**: During body drag, emits `multi_drag_moved(incremental_delta)` each frame so Main can shift sibling elements.
-- **Overlap bumping**: Each frame during drag, calls `resolve_overlaps()` to push overlapping shapes away.
-
-### Overlap Bumping (`resolve_overlaps()`)
-
-Chain-reaction overlap resolution:
-
-1. Check static frame tracking: `_bump_frame` and `_bump_processed` prevent double-processing in one frame
-2. Iterate up to 5 rounds: for each mover, query `Area2D.get_overlapping_areas()`
-3. Compute push vector via `_compute_push_vector()`: direction from mover center to other center, distance = `(radius_a + radius_b) - distance`
-4. Accumulate pushes per shape (multiple pushes from different directions in one round)
-5. Apply accumulated pushes, emit `anchor_changed` on each pushed shape
-6. Pushed shapes become the next round's movers
-7. Arrows are not affected (they have no Area2D)
 
 ### Text Display
 

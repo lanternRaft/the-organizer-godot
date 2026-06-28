@@ -103,11 +103,6 @@ var _drag_start_position: Vector2 = Vector2.ZERO
 ## for multi-drag broadcasting. Reset on each drag begin.
 var _last_delta: Vector2 = Vector2.ZERO
 
-## Static tracking for bump resolution — prevents double-processing shapes within one frame.
-static var _bump_frame: int = -1
-static var _bump_processed: Array = []
-
-@onready var _area: Area2D = $Area2D
 @onready var _collision_shape: CollisionShape2D = $Area2D/CollisionShape2D
 @onready var _handle_tl: ColorRect = $HandleTL
 @onready var _handle_tr: ColorRect = $HandleTR
@@ -280,80 +275,6 @@ func _update_handle_positions() -> void:
 	_handle_br.color = handle_color
 
 
-# ----- Bump Resolution (Overlap Push) --------------------------------------
-
-## Resolves overlaps between this shape and others, with chain-reaction pushes
-## up to 5 iterations deep. Uses static frame tracking to avoid double-processing
-## the same shape within one frame (e.g., when both handle_drag_move and
-## _on_multi_drag_moved trigger resolution on overlapping shape sets).
-func resolve_overlaps() -> void:
-	var current_frame: int = Engine.get_process_frames()
-	if current_frame != _bump_frame:
-		_bump_frame = current_frame
-		_bump_processed.clear()
-
-	if self in _bump_processed:
-		return
-	_bump_processed.append(self)
-
-	var current_round: Array[LabelShape] = [self]
-	var iteration: int = 0
-	while iteration < 5 and not current_round.is_empty():
-		iteration += 1
-
-		var push_map: Dictionary = {}  # LabelShape -> Vector2 (accumulated push)
-		var next_round: Array[LabelShape] = []
-
-		for mover: LabelShape in current_round:
-			if not is_instance_valid(mover):
-				continue
-			var overlapping_areas: Array[Area2D] = mover._area.get_overlapping_areas()
-			for area: Area2D in overlapping_areas:
-				var parent: Node = area.get_parent()
-				if not parent is LabelShape:
-					continue
-				var other: LabelShape = parent as LabelShape
-				if other == mover or other in _bump_processed:
-					continue
-
-				var push_vec: Vector2 = _compute_push_vector(mover, other)
-				if push_vec == Vector2.ZERO:
-					continue
-
-				if push_map.has(other):
-					push_map[other] += push_vec
-				else:
-					push_map[other] = push_vec
-					next_round.append(other)
-
-		# Apply accumulated pushes and emit anchor_changed for each pushed shape.
-		for other: LabelShape in next_round:
-			other.position += push_map[other]
-			other.anchor_changed.emit()
-			_bump_processed.append(other)
-
-		current_round = next_round
-
-
-## Computes the push vector to move `other` away from `mover` so they no longer
-## overlap. Returns Vector2.ZERO when the shapes do not overlap (distance >=
-## sum of radii) or when centers are coincident (handling the edge case).
-static func _compute_push_vector(mover: LabelShape, other: LabelShape) -> Vector2:
-	var radius_a: float = mover.overlap_radius()
-	var radius_b: float = other.overlap_radius()
-	var center_a: Vector2 = mover.global_position
-	var center_b: Vector2 = other.global_position
-	var distance: float = center_a.distance_to(center_b)
-	var min_dist: float = radius_a + radius_b
-
-	if distance >= min_dist or distance < 0.001:
-		return Vector2.ZERO
-
-	var direction: Vector2 = (center_b - center_a) / distance
-	var overlap: float = min_dist - distance
-	return direction * overlap
-
-
 # ClickHandler interface methods
 ## Called by ClickHandler when a pointer-down hits this shape's Area2D.
 ## Detects handle vs. body hit, emits clicked signal, and returns true.
@@ -439,11 +360,6 @@ func handle_drag_move(event: Dictionary) -> void:
 		# Broadcast incremental delta so Main can apply it additively
 		# without accumulating cumulative offsets on siblings.
 		multi_drag_moved.emit(incremental)
-		# After moving self and broadcasting (which moves other selected shapes
-		# via Main), resolve overlaps to push other shapes out of the way.
-		# Chain reactions propagate through pushed shapes recursively.
-		resolve_overlaps()
-
 	if did_change:
 		anchor_changed.emit()
 

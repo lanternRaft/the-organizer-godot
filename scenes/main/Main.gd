@@ -235,8 +235,6 @@ func place_shape(world_pos: Vector2) -> void:
 	activate_select_mode()
 	select_element(shape, false)
 	set_primary_selection(shape)
-	# Resolve overlaps with existing shapes (placement bumping).
-	shape.resolve_overlaps()
 	# Save after placement.
 	save_canvas()
 	_refresh_legend()
@@ -303,9 +301,6 @@ func place_node(world_pos: Vector2) -> void:
 	activate_select_mode()
 	select_element(node, false)
 	set_primary_selection(node)
-	# Resolve overlaps with existing elements (placement bumping).
-	if node.has_method("resolve_overlaps"):
-		node.call("resolve_overlaps")
 	# Save after placement.
 	save_canvas()
 
@@ -666,8 +661,6 @@ func _load_canvas_node(data: Dictionary) -> void:
 ## Called when a selected element moves during a drag. Broadcasts the same delta
 ## to every other element in selected_set so they all move in sync.
 ## The emitter element already handled its own movement — this only moves siblings.
-## After moving, triggers bump resolution on all moved elements so they push
-## other elements (and each other) out of the way.
 func _on_multi_drag_moved(delta: Vector2, emitter: Node) -> void:
 	if selected_set.size() <= 1:
 		return
@@ -678,16 +671,10 @@ func _on_multi_drag_moved(delta: Vector2, emitter: Node) -> void:
 			var shape: LabelShape = elem as LabelShape
 			shape.position += delta
 			shape.anchor_changed.emit()
-			# Resolve overlaps for this moved shape (chain reactions propagate).
-			# The emitter (dragged shape) already resolves in handle_drag_move,
-			# but this catches overlaps between non-dragged selected shapes.
-			shape.resolve_overlaps()
 		elif elem is Node2D and elem.has_method("get_anchor_points"):
 			var node: Node2D = elem as Node2D
 			node.position += delta
 			node.emit_signal("anchor_changed")
-			if node.has_method("resolve_overlaps"):
-				node.call("resolve_overlaps")
 		elif elem.is_in_group("arrows"):
 			var arrow_node: Node = elem
 			if arrow_node is Node2D:

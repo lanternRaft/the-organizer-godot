@@ -817,6 +817,85 @@ func test_on_node_clicked_routes_correctly() -> void:
 	env["main"].free()
 
 
+# ===== C25-C27: No Bumping Behavior =========================================
+
+## C25: Place node does not bump existing shapes.
+func test_place_node_does_not_bump_shape() -> void:
+	var env: Dictionary = await _create_main_env()
+	var main: Node = env["main"]
+	var el: Node2D = env["element_layer"]
+
+	# Place a shape at (0, 0).
+	var shape: Node2D = _create_label_shape(el, Vector2(0, 0))
+	# Connect signal so place_node works cleanly alongside existing elements.
+	shape.connect("clicked", Callable(main, "_on_shape_clicked"))
+
+	# Place a node at (5, 5) — overlapping.
+	main.call("activate_node_mode", "circle_node")
+	main.call("place_node", Vector2(5, 5))
+
+	# Node is at (5, 5).
+	var node: Node2D = el.get_children()[-1] as Node2D
+	assert_vector(node.position).is_equal(Vector2(5, 5))
+	# Shape remains at (0, 0) — not pushed.
+	assert_vector(shape.position).is_equal(Vector2(0, 0))
+
+	env["main"].free()
+
+
+## C26: Multi-drag into existing shape does not push.
+func test_multi_drag_does_not_push() -> void:
+	var env: Dictionary = await _create_main_env()
+	var main: Node = env["main"]
+	var el: Node2D = env["element_layer"]
+
+	# Create a shape at (0, 0).
+	var shape: Node2D = _create_label_shape(el, Vector2(0, 0))
+	shape.connect("clicked", Callable(main, "_on_shape_clicked"))
+
+	# Create a circle node at (10, 0).
+	var node: Node2D = _create_circle_node(el, Vector2(10, 0))
+	node.connect("clicked", Callable(main, "_on_node_clicked"))
+	node.connect("anchor_changed", Callable(main, "_on_node_anchor_changed").bind(node))
+	node.connect("multi_drag_moved", Callable(main, "_on_multi_drag_moved").bind(node))
+	node.connect("multi_drag_ended", Callable(main, "_on_multi_drag_ended").bind(node))
+
+	# Select both.
+	main.call("activate_select_mode")
+	main.call("select_element", shape, false)
+	main.call("select_element", node, true)
+
+	# Simulate multi-drag with delta (50, 0) from shape.
+	main.call("_on_multi_drag_moved", Vector2(50, 0), shape)
+
+	# Node moved to (60, 0) — just delta applied, no push.
+	assert_vector(node.position).is_equal_approx(Vector2(60, 0), Vector2(0.1, 0.1))
+
+	env["main"].free()
+
+
+## C27: Place shape does not bump existing nodes.
+func test_place_shape_does_not_bump_node() -> void:
+	var env: Dictionary = await _create_main_env()
+	var main: Node = env["main"]
+	var el: Node2D = env["element_layer"]
+
+	# Create a circle node at (0, 0).
+	var node: Node2D = _create_circle_node(el, Vector2(0, 0))
+	# Main.place_shape calls shape.connect for signals — node just needs to exist.
+
+	# Place a shape at (5, 5) — overlapping.
+	main.call("activate_shape_mode", "oval")
+	main.call("place_shape", Vector2(5, 5))
+
+	# Shape is at (5, 5).
+	var shape: Node2D = el.get_children()[-1] as Node2D
+	assert_vector(shape.position).is_equal(Vector2(5, 5))
+	# Node remains at (0, 0) — not pushed.
+	assert_vector(node.position).is_equal(Vector2(0, 0))
+
+	env["main"].free()
+
 # ===== C24: Activate Node Tool Deactivates Shape Tool =======================
 
 ## C24: Place node while shape tool active auto-switches.

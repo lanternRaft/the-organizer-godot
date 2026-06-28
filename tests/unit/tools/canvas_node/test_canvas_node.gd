@@ -339,51 +339,61 @@ func test_deselected_no_handles() -> void:
 	node.free()
 
 
-# ===== A15-A16: Overlap Bump ================================================
+# ===== A17-A19: Drag & Overlap Compatibility ================================
 
-## A15: Node bumps LabelShape out of overlap range.
-func test_node_bumps_shape() -> void:
-	var node: Node2D = await _create_node("circle_node")
-	node.position = Vector2(5, 5)
+## A17: Drag move does not resolve overlaps on CanvasNode.
+func test_drag_move_no_resolve_overlaps() -> void:
+	var node_a: Node2D = await _create_node("circle_node")
+	node_a.position = Vector2(0, 0)
+	node_a.set("is_selected", true)
 
-	# Create a LabelShape at (0, 0) with rx=80, ry=50.
-	var label_shape_scene: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
-	var shape: Node2D = label_shape_scene.instantiate()
-	shape.set("rx", 80.0)
-	shape.set("ry", 50.0)
-	shape.position = Vector2(0, 0)
-	get_tree().root.add_child(shape)
-	await get_tree().process_frame
+	var node_b: Node2D = await _create_node("circle_node")
+	node_b.position = Vector2(3, 3)
 
-	# Resolve overlaps on the node.
-	node.call("resolve_overlaps")
+	# Begin drag on node_a at (0, 0).
+	node_a.call("handle_drag_begin", {"world_pos": Vector2(0, 0)})
 
-	# The shape should be pushed away so distance >= overlap_radius + CIRCLE_RADIUS.
-	var min_dist: float = shape.call("overlap_radius") + node.call("overlap_radius")
-	var dist: float = shape.global_position.distance_to(node.global_position)
-	assert_bool(dist >= min_dist - 0.1).is_true()
+	# Drag to (50, 50).
+	node_a.call("handle_drag_move", {"world_pos": Vector2(50, 50)})
 
-	shape.free()
-	node.free()
+	# node_a position is exactly (50, 50), no overlap resolution.
+	assert_vector(node_a.position).is_equal_approx(Vector2(50, 50), Vector2(0.1, 0.1))
+	# node_b should remain at (3, 3) — not pushed.
+	assert_vector(node_b.position).is_equal_approx(Vector2(3, 3), Vector2(0.1, 0.1))
+
+	node_a.free()
+	node_b.free()
 
 
-## A16: Node bumps another node out of overlap range.
-func test_node_bumps_another_node() -> void:
+## A18: resolve_overlaps method exists as no-op on CanvasNode.
+func test_resolve_overlaps_noop() -> void:
 	var node_a: Node2D = await _create_node("circle_node")
 	node_a.position = Vector2(0, 0)
 
 	var node_b: Node2D = await _create_node("circle_node")
 	node_b.position = Vector2(3, 3)
 
-	# Resolve overlaps on the first node.
+	# Call resolve_overlaps — should not error or change positions.
 	node_a.call("resolve_overlaps")
 
-	# Distance should be >= 16px (8+8).
-	var dist: float = node_a.global_position.distance_to(node_b.global_position)
-	assert_bool(dist >= 15.9).is_true()
+	# Positions unchanged.
+	assert_vector(node_a.position).is_equal_approx(Vector2(0, 0), Vector2(0.1, 0.1))
+	assert_vector(node_b.position).is_equal_approx(Vector2(3, 3), Vector2(0.1, 0.1))
 
 	node_a.free()
 	node_b.free()
+
+
+## A19: overlap_radius method retained (compatibility).
+func test_overlap_radius_retained() -> void:
+	var circle: Node2D = await _create_node("circle_node")
+	var triangle: Node2D = await _create_node("triangle_node")
+
+	assert_float(circle.call("overlap_radius")).is_equal(8.0)
+	assert_float(triangle.call("overlap_radius")).is_equal(8.0)
+
+	circle.free()
+	triangle.free()
 
 
 # ===== A17-A18: No Text/Resize Methods ======================================

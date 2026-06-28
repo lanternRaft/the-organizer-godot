@@ -73,7 +73,7 @@ When multiple elements are selected, dragging any one moves all of them by the s
 1. Dragged element (LabelShape or Arrow) computes incremental delta in `handle_drag_move()`
 2. Emits `multi_drag_moved(incremental_delta)`
 3. `Main._on_multi_drag_moved(delta, emitter)` applies the delta to every other element in `selected_set`:
-   - **LabelShape siblings**: `shape.position += delta`, emits `anchor_changed()`, calls `resolve_overlaps()`
+   - **LabelShape siblings**: `shape.position += delta`, emits `anchor_changed()`
    - **Arrow siblings**: `arrow.position += delta`
 4. On drag end, dragged element emits `multi_drag_ended()`
 5. `Main._on_multi_drag_ended(emitter)` snaps all LabelShape siblings to 20px grid and emits `anchor_changed()` on each
@@ -84,10 +84,6 @@ When multiple elements are selected, dragging any one moves all of them by the s
 - Arrows connected to moving shapes update automatically via `anchor_changed` signal → `ArrowManager.update_arrows_for_shape()`
 - Free-floating arrows in the set also move by the same delta (sibling dispatch)
 - Handle resizing is per-element only — only the primary shape can be resized
-
-### Multi-Drag Bumping
-
-During multi-drag, bump resolution runs on all moved shapes. The dragged shape calls `resolve_overlaps()` after moving. Sibling shapes (moved by Main) also call `resolve_overlaps()`. Static frame tracking (`_bump_frame`, `_bump_processed`) prevents double-processing shapes in the same frame.
 
 ## Select All (Ctrl+A / Cmd+A)
 

@@ -56,7 +56,7 @@ When the user switches from Oval to Circle, any shape they place from that point
 
 ### Edge cases
 
-- **Placing on top of existing shapes:** When a new shape appears, it pushes any overlapping shapes out of the way (see Selecting and Manipulating for the bumping behavior).
+- **Placing on top of existing shapes:** New shapes can overlap existing shapes if placed on top of them. The user can freely position shapes anywhere on the canvas, including on top of other elements.
 - **Rapid placement:** The user can click multiple times quickly to drop several shapes in sequence — but only if they re-enter Shape mode each time. Each placement returns to Select mode, which is a deliberate trade-off: it prevents accidental mass placement while letting the user build up a canvas quickly through repetition.
 - **Tool deactivation:** Pressing Escape while in shape mode deactivates the tool without placing anything. The user returns to Select mode with a clean slate.
 
@@ -158,7 +158,7 @@ Placing a node should feel even lighter than placing a shape — a quick tap to 
 
 ### Edge cases
 
-- **Placing on top of existing elements:** Nodes bump overlapping shapes and other nodes out of the way, consistent with the existing bumping behavior.
+- **Placing on top of existing elements:** Nodes can overlap shapes and other nodes if placed on top of them.
 - **Rapid placement:** Each placement returns to Select mode (same trade-off as shapes). The user can click, return to Node mode, click again — no mass-placement risk.
 - **Tool deactivation:** Escape exits Node mode without placing, returning to Select.
 - **Arrow connections from/to nodes:** Arrows can originate from a node's anchor and land on a shape's anchor (or vice versa). Nodes can connect to other nodes. The same anchor-based drag interaction applies.

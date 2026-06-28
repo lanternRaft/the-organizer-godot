@@ -67,11 +67,6 @@ const ANCHOR_POSITIONS: Dictionary = {
 	"bottom_right": Vector2(7.0, 4.0),
 }
 
-## Static tracking for bump resolution — prevents double-processing within one frame.
-static var _bump_frame: int = -1
-static var _bump_processed: Array = []
-
-@onready var _area: Area2D = $Area2D
 @onready var _collision_shape: CollisionShape2D = $Area2D/CollisionShape2D
 
 
@@ -163,7 +158,6 @@ func handle_drag_move(event: Dictionary) -> void:
 	position = _drag_start_position + delta
 	multi_drag_moved.emit(incremental)
 	anchor_changed.emit()
-	resolve_overlaps()
 
 
 ## Called by ClickHandler on pointer up while drag is active.
@@ -210,7 +204,7 @@ func _update_collision_shape() -> void:
 			_collision_shape.shape = poly_shape
 
 
-## Returns the overlap radius used for bump resolution.
+## Returns the overlap radius used for collision detection.
 func overlap_radius() -> float:
 	match sub_mode:
 		"circle_node":
@@ -218,90 +212,3 @@ func overlap_radius() -> float:
 		"triangle_node":
 			return 8.0  # Inscribed circle radius approximates the triangle's bounding radius.
 	return 8.0
-
-
-# ----- Bump resolution -------------------------------------------------------
-
-## Resolves overlaps between this node and other elements (LabelShape and CanvasNode).
-## Uses the same pattern as LabelShape.resolve_overlaps().
-func resolve_overlaps() -> void:
-	var current_frame: int = Engine.get_process_frames()
-	if current_frame != _bump_frame:
-		_bump_frame = current_frame
-		_bump_processed.clear()
-
-	if self in _bump_processed:
-		return
-	_bump_processed.append(self)
-
-	var current_round: Array[Node2D] = [self]
-	var iteration: int = 0
-	while iteration < 5 and not current_round.is_empty():
-		iteration += 1
-
-		var push_map: Dictionary = {}  # Node2D -> Vector2
-		var next_round: Array[Node2D] = []
-
-		for mover: Node2D in current_round:
-			if not is_instance_valid(mover):
-				continue
-			# Use direct Area2D reference from the mover's scene structure.
-			var mover_area: Area2D = null
-			if mover is CanvasNode:
-				mover_area = (mover as CanvasNode)._area
-			elif mover is LabelShape:
-				mover_area = (mover as LabelShape).get_node("Area2D") as Area2D
-
-			if mover_area == null:
-				continue
-
-			var overlapping_areas: Array[Area2D] = mover_area.get_overlapping_areas()
-			for area: Area2D in overlapping_areas:
-				var parent: Node2D = area.get_parent() as Node2D
-				if not (parent is LabelShape or parent is CanvasNode):
-					continue
-				if parent == mover or parent in _bump_processed:
-					continue
-
-				var push_vec: Vector2 = _compute_push_vector(mover, parent)
-				if push_vec == Vector2.ZERO:
-					continue
-
-				if push_map.has(parent):
-					push_map[parent] += push_vec
-				else:
-					push_map[parent] = push_vec
-					next_round.append(parent)
-
-		for other: Node2D in next_round:
-			other.position += push_map[other]
-			if other.has_signal("anchor_changed"):
-				if other is LabelShape:
-					(other as LabelShape).emit_signal("anchor_changed")
-				elif other is CanvasNode:
-					(other as CanvasNode).emit_signal("anchor_changed")
-			_bump_processed.append(other)
-
-		current_round = next_round
-
-
-## Computes the push vector to move `other` away from `mover`.
-## Works with LabelShape and CanvasNode.
-static func _compute_push_vector(mover: Node2D, other: Node2D) -> Vector2:
-	var radius_a: float = 8.0
-	var radius_b: float = 8.0
-	if mover.has_method("overlap_radius"):
-		radius_a = mover.call("overlap_radius")
-	if other.has_method("overlap_radius"):
-		radius_b = other.call("overlap_radius")
-	var center_a: Vector2 = mover.global_position
-	var center_b: Vector2 = other.global_position
-	var distance: float = center_a.distance_to(center_b)
-	var min_dist: float = radius_a + radius_b
-
-	if distance >= min_dist or distance < 0.001:
-		return Vector2.ZERO
-
-	var direction: Vector2 = (center_b - center_a) / distance
-	var overlap: float = min_dist - distance
-	return direction * overlap

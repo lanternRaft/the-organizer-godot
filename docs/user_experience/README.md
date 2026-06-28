@@ -9,7 +9,7 @@ Quick-reference index for agents to find the UX doc they need. Each file covers 
 | [`editing_text.md`](editing_text.md) | Opening the text overlay (Enter or double-click), typing/editing with live preview, auto-scaling font size, commit vs cancel behavior |
 | [`managing_your_work.md`](managing_your_work.md) | Copy/paste mechanics (what transfers, paste offset, arrow reconnection), auto-save triggers and persistence, clearing the canvas with confirmation, PNG export, hamburger menu |
 | [`navigating_the_canvas.md`](navigating_the_canvas.md) | Panning (scroll, shift+scroll, middle-click drag, trackpad), zooming (cursor-centered via scroll, button stack, keyboard shortcuts, pinch), grid toggle and state persistence |
-| [`selecting_and_manipulating.md`](selecting_and_manipulating.md) | Single-click, shift+click additive, Ctrl+A select-all, primary vs secondary selection, single/multi drag with 20px snap, four-handle resize with 10px snap, circle-mode constraint, bumping chain reactions, deletion |
+| [`selecting_and_manipulating.md`](selecting_and_manipulating.md) | Single-click, shift+click additive, Ctrl+A select-all, primary vs secondary selection, single/multi drag with 20px snap, four-handle resize with 10px snap, circle-mode constraint, deletion |
 
 ## Quick topic lookup
 
@@ -17,7 +17,6 @@ Quick-reference index for agents to find the UX doc they need. Each file covers 
 |---|---|
 | Anchor dots, arrow creation | `creating_elements.md` |
 | Auto-save | `managing_your_work.md` |
-| Bumping (overlap push) | `selecting_and_manipulating.md` |
 | Canvas clearing | `managing_your_work.md` |
 | Color palette, legend | `colors_and_legend.md` |
 | Copy / paste | `managing_your_work.md` |
