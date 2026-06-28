@@ -127,16 +127,16 @@ func test_circle_node_anchors() -> void:
 
 	# Each anchor at the expected global position.
 	var top_pos: Vector2 = node.call("get_anchor_position", "top")
-	assert_vector(top_pos).is_equal_approx(Vector2(100, 192), 0.5)
+	assert_vector(top_pos).is_equal_approx(Vector2(100, 192), Vector2(0.5, 0.5))
 
 	var bottom_pos: Vector2 = node.call("get_anchor_position", "bottom")
-	assert_vector(bottom_pos).is_equal_approx(Vector2(100, 208), 0.5)
+	assert_vector(bottom_pos).is_equal_approx(Vector2(100, 208), Vector2(0.5, 0.5))
 
 	var left_pos: Vector2 = node.call("get_anchor_position", "left")
-	assert_vector(left_pos).is_equal_approx(Vector2(92, 200), 0.5)
+	assert_vector(left_pos).is_equal_approx(Vector2(92, 200), Vector2(0.5, 0.5))
 
 	var right_pos: Vector2 = node.call("get_anchor_position", "right")
-	assert_vector(right_pos).is_equal_approx(Vector2(108, 200), 0.5)
+	assert_vector(right_pos).is_equal_approx(Vector2(108, 200), Vector2(0.5, 0.5))
 
 	node.free()
 
@@ -154,13 +154,13 @@ func test_triangle_node_anchors() -> void:
 	assert_str(anchors[2]).is_equal("bottom_right")
 
 	var top_pos: Vector2 = node.call("get_anchor_position", "top")
-	assert_vector(top_pos).is_equal_approx(Vector2(100, 192), 0.5)
+	assert_vector(top_pos).is_equal_approx(Vector2(100, 192), Vector2(0.5, 0.5))
 
 	var bl_pos: Vector2 = node.call("get_anchor_position", "bottom_left")
-	assert_vector(bl_pos).is_equal_approx(Vector2(93, 204), 1.0)
+	assert_vector(bl_pos).is_equal_approx(Vector2(93, 204), Vector2(1.0, 1.0))
 
 	var br_pos: Vector2 = node.call("get_anchor_position", "bottom_right")
-	assert_vector(br_pos).is_equal_approx(Vector2(107, 204), 1.0)
+	assert_vector(br_pos).is_equal_approx(Vector2(107, 204), Vector2(1.0, 1.0))
 
 	node.free()
 
@@ -241,9 +241,9 @@ func test_drag_move_emits_multi_drag_moved() -> void:
 	node.call("handle_drag_move", _make_pointer_event(Vector2(130, 140)))
 
 	assert_bool(signal_fired["fired"]).is_true()
-	assert_vector(signal_fired["delta"]).is_equal_approx(Vector2(30, 40), 0.1)
+	assert_vector(signal_fired["delta"]).is_equal_approx(Vector2(30, 40), Vector2(0.1, 0.1))
 	# Position should be approx (130, 140) but may be modified by overlap resolution.
-	assert_vector(node.position).is_equal_approx(Vector2(130, 140), 1.0)
+	assert_vector(node.position).is_equal_approx(Vector2(130, 140), Vector2(1.0, 1.0))
 
 	node.free()
 

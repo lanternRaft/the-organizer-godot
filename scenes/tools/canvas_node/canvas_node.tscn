@@ -7,6 +7,6 @@ script = ExtResource("1_gig7e")
 
 [node name="Area2D" type="Area2D" parent="."]
 collision_layer = 1
-collision_mask = 0
+collision_mask = 1
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
