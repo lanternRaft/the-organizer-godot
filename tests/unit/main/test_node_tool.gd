@@ -282,7 +282,8 @@ func test_node_color_change() -> void:
 
 	var node: Node2D = _el().get_child(0)
 	assert_bool(node.get("fill_color")).is_equal(Color.RED)
-	assert_bool(FileAccess.file_exists(_main.get("SAVE_PATH"))).is_true()
+	var save_path_c11: String = _main.get("SAVE_PATH")
+	assert_bool(FileAccess.file_exists(save_path_c11)).is_true()
 
 
 # ===== C12-C13: Delete Node =================================================
@@ -298,9 +299,11 @@ func test_delete_node() -> void:
 	_main.call("_unhandled_input", delete_event)
 
 	assert_int(_el().get_child_count()).is_equal(0)
-	assert_int((_main.get("selected_set") as Array).size()).is_equal(0)
+	var selected_set: Array = _main.get("selected_set")
+	assert_int(selected_set.size()).is_equal(0)
 	assert_object(_main.get("primary_selection")).is_null()
-	assert_bool(FileAccess.file_exists(_main.get("SAVE_PATH"))).is_true()
+	var save_path: String = _main.get("SAVE_PATH")
+	assert_bool(FileAccess.file_exists(save_path)).is_true()
 
 
 ## C13: Delete node with connected arrows.
@@ -317,7 +320,8 @@ func test_delete_node_with_arrows() -> void:
 
 	mgr.call("_refresh_shape_list")
 	mgr.call("_create_arrow", shape, "right", node, "left")
-	assert_int((mgr.get("_arrows") as Array).size()).is_equal(1)
+	var arrows: Array = mgr.get("_arrows")
+	assert_int(arrows.size()).is_equal(1)
 
 	_main.call("clear_selection")
 	_main.call("activate_select_mode")
@@ -329,7 +333,8 @@ func test_delete_node_with_arrows() -> void:
 	_main.call("_unhandled_input", delete_event)
 
 	assert_int(_el().get_child_count()).is_equal(1)
-	assert_int((mgr.get("_arrows") as Array).size()).is_equal(0)
+	arrows = mgr.get("_arrows")
+	assert_int(arrows.size()).is_equal(0)
 
 
 # ===== C14: Select All Includes Nodes =======================================
@@ -395,7 +400,11 @@ func test_canvas_node_deserialization() -> void:
 	var node: Node2D = _el().get_child(0) as Node2D
 	assert_vector(node.position).is_equal_approx(Vector2(300.0, 400.0), 0.1)
 	assert_str(node.get("sub_mode")).is_equal("triangle_node")
-	assert_color(node.get("fill_color")).is_equal_approx(Color(0.5, 0.8, 0.2), 0.01)
+	var _fill: Color = node.get("fill_color")
+	assert_float(_fill.r).is_equal_approx(0.5, 0.01)
+	assert_float(_fill.g).is_equal_approx(0.8, 0.01)
+	assert_float(_fill.b).is_equal_approx(0.2, 0.01)
+	assert_float(_fill.a).is_equal_approx(1.0, 0.01)
 
 	assert_bool(node.is_connected("clicked", Callable(_main, "_on_node_clicked"))).is_true()
 	assert_bool(node.is_connected("anchor_changed", Callable(_main, "_on_node_anchor_changed").bind(node))).is_true()
@@ -439,7 +448,10 @@ func test_legend_excludes_node_colors() -> void:
 	var entry_rows: Dictionary = _legend_panel().get("_entry_rows")
 	assert_int(entry_rows.size()).is_equal(1)
 	for color: Color in entry_rows.keys():
-		assert_color(color).is_equal_approx(Color(0.231, 0.51, 0.965), 0.01)
+		assert_float(color.r).is_equal_approx(0.231, 0.01)
+		assert_float(color.g).is_equal_approx(0.51, 0.01)
+		assert_float(color.b).is_equal_approx(0.965, 0.01)
+		assert_float(color.a).is_equal_approx(1.0, 0.01)
 
 
 # ===== C21: Node Copy/Paste =================================================
