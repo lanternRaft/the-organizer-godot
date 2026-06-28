@@ -16,14 +16,14 @@ var _main: Node
 
 # ----- Lifecycle -------------------------------------------------------------
 
-func before_each() -> void:
+func before_test() -> void:
 	_main = __scene.instantiate()
 	get_tree().root.add_child(_main)
 	await get_tree().process_frame
 	_reset_state()
 
 
-func after_each() -> void:
+func after_test() -> void:
 	_main.free()
 	_main = null
 
@@ -373,12 +373,12 @@ func test_canvas_node_serialization() -> void:
 
 	var entry: Dictionary = elements[0]
 	assert_str(entry.get("type")).is_equal("CanvasNode")
-	assert_float(entry.get("position_x") as float).is_equal_approx(100.0, 0.1)
-	assert_float(entry.get("position_y") as float).is_equal_approx(200.0, 0.1)
-	assert_float(entry.get("fill_r") as float).is_equal_approx(1.0, 0.01)
-	assert_float(entry.get("fill_g") as float).is_equal_approx(0.0, 0.01)
-	assert_float(entry.get("fill_b") as float).is_equal_approx(0.0, 0.01)
-	assert_float(entry.get("fill_a") as float).is_equal_approx(1.0, 0.01)
+	assert_float(entry.get("position_x")).is_equal_approx(100.0, 0.1)
+	assert_float(entry.get("position_y")).is_equal_approx(200.0, 0.1)
+	assert_float(entry.get("fill_r")).is_equal_approx(1.0, 0.01)
+	assert_float(entry.get("fill_g")).is_equal_approx(0.0, 0.01)
+	assert_float(entry.get("fill_b")).is_equal_approx(0.0, 0.01)
+	assert_float(entry.get("fill_a")).is_equal_approx(1.0, 0.01)
 	assert_str(entry.get("sub_mode")).is_equal("circle_node")
 
 
