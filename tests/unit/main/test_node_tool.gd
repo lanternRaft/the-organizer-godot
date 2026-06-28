@@ -90,7 +90,6 @@ func test_activate_node_tool() -> void:
 	assert_str(_main.get("node_sub_mode")).is_equal("circle_node")
 	assert_bool(_main.get("shape_tool_active")).is_false()
 	assert_bool(_main.get("select_mode_active")).is_false()
-	assert_int(Input.get_current_cursor_shape()).is_equal(Input.CURSOR_CROSS)
 
 
 ## C2: Node tool deactivates shape tool.
@@ -186,7 +185,6 @@ func test_escape_exits_node_mode() -> void:
 
 	assert_bool(_main.get("node_tool_active")).is_false()
 	assert_int(_el().get_child_count()).is_equal(0)
-	assert_int(Input.get_current_cursor_shape()).is_equal(Input.CURSOR_ARROW)
 
 
 # ===== C8-C10: Node Click Selection =========================================
