@@ -118,7 +118,8 @@ func test_arrow_shape_to_circle_node() -> void:
 
 	shape.free()
 	node.free()
-	scene["main"].free()
+	var main: Node = scene["main"]
+	main.free()
 
 
 ## B2: Arrow from CircleNode to TriangleNode.
@@ -146,7 +147,8 @@ func test_arrow_circle_to_triangle() -> void:
 
 	circle.free()
 	triangle.free()
-	scene["main"].free()
+	var main: Node = scene["main"]
+	main.free()
 
 
 ## B3: Arrow from TriangleNode to LabelShape.
@@ -174,7 +176,8 @@ func test_arrow_node_to_shape() -> void:
 
 	triangle.free()
 	shape.free()
-	scene["main"].free()
+	var main: Node = scene["main"]
+	main.free()
 
 
 # ===== B4: Self-Connection Prevention =======================================
@@ -183,12 +186,12 @@ func test_arrow_node_to_shape() -> void:
 func test_arrow_self_connection_node() -> void:
 	var scene: Dictionary = await _create_test_scene()
 	var el: Node2D = scene["element_layer"]
-	var mgr: Node = scene["arrow_manager"]
+	var mgr: ArrowManager = scene["arrow_manager"]
 
 	var node: Node2D = _create_circle_node(el, Vector2(100, 100))
 	await get_tree().process_frame
 
-	var initial_count: int = (mgr.get("_arrows") as Array).size()
+	var initial_count: int = mgr._arrows.size()
 
 	# Simulate arrow drag from node's "top" released on same node's "bottom".
 	# ArrowManager's end_arrow_drag checks _drag_snapped_shape != _drag_start_shape,
@@ -203,7 +206,8 @@ func test_arrow_self_connection_node() -> void:
 	assert_int(arrows.size()).is_equal(initial_count)
 
 	node.free()
-	scene["main"].free()
+	var main: Node = scene["main"]
+	main.free()
 
 
 # ===== B5: Deleting Node Removes Connected Arrows ===========================
@@ -212,23 +216,24 @@ func test_arrow_self_connection_node() -> void:
 func test_delete_node_removes_arrows() -> void:
 	var scene: Dictionary = await _create_test_scene()
 	var el: Node2D = scene["element_layer"]
-	var mgr: Node = scene["arrow_manager"]
+	var mgr: ArrowManager = scene["arrow_manager"]
 
 	var shape: Node2D = _create_label_shape(el, Vector2(0, 0))
 	var node: Node2D = _create_circle_node(el, Vector2(200, 0))
 	await get_tree().process_frame
 
 	_create_arrow(mgr, shape, "right", node, "left")
-	assert_int((mgr.get("_arrows") as Array).size()).is_equal(1)
+	assert_int(mgr._arrows.size()).is_equal(1)
 
 	# Delete arrows for the node.
 	mgr.call("delete_arrows_for_shape", node)
 
-	assert_int((mgr.get("_arrows") as Array).size()).is_equal(0)
+	assert_int(mgr._arrows.size()).is_equal(0)
 
 	shape.free()
 	node.free()
-	scene["main"].free()
+	var main: Node = scene["main"]
+	main.free()
 
 
 # ===== B6-B7: Anchor Dots ===================================================
@@ -269,7 +274,8 @@ func test_circle_node_anchor_dots() -> void:
 	assert_bool(dots.has("right")).is_true()
 
 	node.free()
-	scene["main"].free()
+	var main: Node = scene["main"]
+	main.free()
 
 
 ## B7: Triangle node shows 3 anchor dots.
@@ -298,7 +304,8 @@ func test_triangle_node_anchor_dots() -> void:
 	assert_bool(dots.has("bottom_right")).is_true()
 
 	node.free()
-	scene["main"].free()
+	var main: Node = scene["main"]
+	main.free()
 
 
 # ===== B8-B9: Arrow Drag from Node Anchor ===================================
@@ -327,14 +334,15 @@ func test_arrow_drag_from_node() -> void:
 	assert_bool(mgr.get("_preview_line") != null).is_true()
 
 	node.free()
-	scene["main"].free()
+	var main: Node = scene["main"]
+	main.free()
 
 
 ## B9: Arrow drag ending without snap discards the arrow.
 func test_arrow_drag_no_snap_discards() -> void:
 	var scene: Dictionary = await _create_test_scene()
 	var el: Node2D = scene["element_layer"]
-	var mgr: Node = scene["arrow_manager"]
+	var mgr: ArrowManager = scene["arrow_manager"]
 
 	var node: Node2D = _create_circle_node(el, Vector2(100, 100))
 	await get_tree().process_frame
@@ -350,11 +358,12 @@ func test_arrow_drag_no_snap_discards() -> void:
 	mgr.call("end_arrow_drag")
 
 	assert_bool(mgr.get("_arrow_drag_active")).is_false()
-	assert_int((mgr.get("_arrows") as Array).size()).is_equal(0)
+	assert_int(mgr._arrows).is_equal(0)
 	assert_bool(mgr.get("_preview_line") == null or not is_instance_valid(mgr.get("_preview_line"))).is_true()
 
 	node.free()
-	scene["main"].free()
+	var main: Node = scene["main"]
+	main.free()
 
 
 # ===== B10: Arrow Updates on Node Move ======================================
@@ -363,14 +372,14 @@ func test_arrow_drag_no_snap_discards() -> void:
 func test_arrow_updates_on_node_move() -> void:
 	var scene: Dictionary = await _create_test_scene()
 	var el: Node2D = scene["element_layer"]
-	var mgr: Node = scene["arrow_manager"]
+	var mgr: ArrowManager = scene["arrow_manager"]
 
 	var shape: Node2D = _create_label_shape(el, Vector2(0, 0))
 	var node: Node2D = _create_circle_node(el, Vector2(200, 0))
 	await get_tree().process_frame
 
 	_create_arrow(mgr, shape, "right", node, "left")
-	var arrow: Node = (mgr.get("_arrows") as Array)[0]
+	var arrow: Node = mgr._arrows[0]
 	arrow.call("rebuild_path")
 
 	# Cache original bezier points.
@@ -389,4 +398,5 @@ func test_arrow_updates_on_node_move() -> void:
 
 	shape.free()
 	node.free()
-	scene["main"].free()
+	var main: Node = scene["main"]
+	main.free()
