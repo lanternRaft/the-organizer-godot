@@ -17,6 +17,10 @@ var _main: Node
 # ----- Lifecycle -------------------------------------------------------------
 
 func before_test() -> void:
+	# Delete the persisted save file first so _ready() → load_canvas() loads nothing.
+	# This keeps each test isolated from prior test-run artifacts.
+	if FileAccess.file_exists("user://canvas.save"):
+		DirAccess.remove_absolute("user://canvas.save")
 	_main = __scene.instantiate()
 	get_tree().root.add_child(_main)
 	await get_tree().process_frame
@@ -52,7 +56,7 @@ func _arrow_manager() -> Node:
 
 
 func _legend_panel() -> Control:
-	return _main.get_node("%LegendPanel")
+	return _main.get("legend_panel")
 
 
 func _create_circle_node(pos: Vector2) -> Node2D:
@@ -226,8 +230,11 @@ func test_node_shift_click_multiselect() -> void:
 
 	var shift_press: InputEventKey = InputEventKey.new()
 	shift_press.keycode = KEY_SHIFT
+	shift_press.physical_keycode = KEY_SHIFT
 	shift_press.pressed = true
+	shift_press.echo = false
 	Input.parse_input_event(shift_press)
+	await get_tree().process_frame
 
 	_main.call("_on_node_clicked", dummy_event, node2)
 
@@ -239,8 +246,11 @@ func test_node_shift_click_multiselect() -> void:
 
 	var shift_release: InputEventKey = InputEventKey.new()
 	shift_release.keycode = KEY_SHIFT
+	shift_release.physical_keycode = KEY_SHIFT
 	shift_release.pressed = false
+	shift_release.echo = false
 	Input.parse_input_event(shift_release)
+	await get_tree().process_frame
 
 
 ## C10: Node click clears shape selection.
@@ -279,7 +289,11 @@ func test_node_color_change() -> void:
 	_main.call("_on_menu_color_selected", Color.RED)
 
 	var node: Node2D = _el().get_child(0)
-	assert_bool(node.get("fill_color")).is_equal(Color.RED)
+	var _fill: Color = node.get("fill_color")
+	assert_float(_fill.r).is_equal_approx(Color.RED.r, 0.01)
+	assert_float(_fill.g).is_equal_approx(Color.RED.g, 0.01)
+	assert_float(_fill.b).is_equal_approx(Color.RED.b, 0.01)
+	assert_float(_fill.a).is_equal_approx(Color.RED.a, 0.01)
 	var save_path_c11: String = _main.get("SAVE_PATH")
 	assert_bool(FileAccess.file_exists(save_path_c11)).is_true()
 
@@ -295,6 +309,7 @@ func test_delete_node() -> void:
 	delete_event.keycode = KEY_DELETE
 	delete_event.pressed = true
 	_main.call("_unhandled_input", delete_event)
+	await get_tree().process_frame
 
 	assert_int(_el().get_child_count()).is_equal(0)
 	var selected_set: Array = _main.get("selected_set")
@@ -329,6 +344,7 @@ func test_delete_node_with_arrows() -> void:
 	delete_event.keycode = KEY_DELETE
 	delete_event.pressed = true
 	_main.call("_unhandled_input", delete_event)
+	await get_tree().process_frame
 
 	assert_int(_el().get_child_count()).is_equal(1)
 	arrows = mgr.get("_arrows")
@@ -396,7 +412,7 @@ func test_canvas_node_deserialization() -> void:
 
 	assert_int(_el().get_child_count()).is_equal(1)
 	var node: Node2D = _el().get_child(0) as Node2D
-	assert_vector(node.position).is_equal_approx(Vector2(300.0, 400.0), 0.1)
+	assert_vector(node.position).is_equal(Vector2(300.0, 400.0))
 	assert_str(node.get("sub_mode")).is_equal("triangle_node")
 	var _fill: Color = node.get("fill_color")
 	assert_float(_fill.r).is_equal_approx(0.5, 0.01)

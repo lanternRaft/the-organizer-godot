@@ -426,6 +426,7 @@ func set_primary_selection(element: Node) -> void:
 	primary_selection = element
 	_refresh_primary_visuals()
 	_update_selection_menu()
+	update_info_bar()
 
 
 ## Refreshes is_primary on every element in selected_set so the primary element
