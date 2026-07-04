@@ -1,7 +1,5 @@
 # Managing Your Work
 
-**Audience:** Designers + developers | **Scope:** Player-facing interactions for copy/paste, persistence, clear, export, and the hamburger menu
-
 ## Overview
 
 The user works on their canvas over multiple sessions. They copy elements they like, paste them elsewhere, save automatically, clear the board to start fresh, and export finished diagrams as images. These operations form the lifecycle of working with a canvas — from a blank slate to a shareable artifact.

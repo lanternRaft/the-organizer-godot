@@ -72,7 +72,6 @@ func load_legend_data(data: Array) -> void:
 	for entry: Variant in data:
 		if typeof(entry) != TYPE_ARRAY:
 			continue
-		@warning_ignore("unsafe_cast")
 		var entry_arr: Array = entry
 		if entry_arr.size() < 2:
 			continue

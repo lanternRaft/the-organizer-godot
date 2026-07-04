@@ -1,7 +1,5 @@
 # Navigating the Canvas
 
-**Audience:** Designers + developers | **Scope:** Player-facing canvas navigation interactions only
-
 ## Overview
 
 The canvas is an infinite whiteboard. The user moves around it the same way they'd move around a physical desk covered in papers — they scoot their chair left or right, lean in to see details, lean back to see the big picture. The navigation system should feel transparent, never demanding attention or getting in the way.

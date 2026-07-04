@@ -201,7 +201,6 @@ func handle_drag_end(_event: Dictionary) -> void:
 static func get_anchor_edge_position_static(shape: Node, label: String) -> Vector2:
 	# CanvasNode and similar elements provide their own anchor positions.
 	if shape.has_method(&"get_anchor_position"):
-		@warning_ignore("unsafe_cast")
 		var pos: Vector2 = shape.call(&"get_anchor_position", label)
 		return pos
 	# Default LabelShape ellipse-based calculation.

@@ -204,6 +204,11 @@ func _update_collision_shape() -> void:
 			_collision_shape.shape = poly_shape
 
 
+## No-op for overlap resolution (CanvasNode does not support overlap pushing).
+func resolve_overlaps() -> void:
+	pass
+
+
 ## Returns the overlap radius used for collision detection.
 func overlap_radius() -> float:
 	match sub_mode:

@@ -5,7 +5,7 @@ extends GdUnitTestSuite
 @warning_ignore('return_value_discarded')
 
 # TestSuite generated from
-const __source: String = 'res://scenes/main/main.gd'
+const __source: String = 'res://scenes/main/Main.gd'
 const __scene: PackedScene = preload("res://scenes/main/main.tscn")
 
 const CANVAS_NODE_SCENE: PackedScene = preload("res://scenes/tools/canvas_node/canvas_node.tscn")

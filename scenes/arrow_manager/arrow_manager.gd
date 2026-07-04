@@ -220,7 +220,6 @@ func update_arrows_for_shape(shape: Node) -> void:
 static func get_anchor_edge_position(shape: Node, label: String) -> Vector2:
 	# CanvasNode and similar elements provide their own anchor positions.
 	if shape.has_method(&"get_anchor_position"):
-		@warning_ignore("unsafe_cast")
 		var pos: Vector2 = shape.call(&"get_anchor_position", label)
 		return pos
 	# Default LabelShape ellipse-based calculation.

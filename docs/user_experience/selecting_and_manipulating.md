@@ -1,7 +1,5 @@
 # Selecting and Manipulating
 
-**Audience:** Designers + developers | **Scope:** Player-facing interactions for selection, drag, resize, bumping, and deletion
-
 ## Overview
 
 World building on the canvas is an iterative process. The user moves things around, changes their size, repositions clusters, and removes things that don't fit. This document describes how the user grabs, adjusts, and cleans up their elements.

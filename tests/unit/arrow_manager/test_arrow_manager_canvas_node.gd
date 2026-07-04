@@ -21,7 +21,7 @@ const CIRCLE_RADIUS: float = 8.0
 ## Returns { "main": Node, "element_layer": Node2D, "anchor_layer": Node2D, "arrow_manager": Node }
 func _create_test_scene() -> Dictionary:
 	var main: Node = Node.new()
-	main.set_script(load("res://scenes/main/main.gd"))
+	main.set_script(load("res://scenes/main/Main.gd"))
 	get_tree().root.add_child(main)
 
 	# Create layers that Main expects.

@@ -1,7 +1,5 @@
 # Creating Elements
 
-**Audience:** Designers + developers | **Scope:** Player-facing interactions for placing shapes, nodes, and arrows
-
 ## Overview
 
 The user populates the canvas with three kinds of things: **shapes** (ovals and circles that hold text), **arrows** (curved connectors between shapes), and **nodes** (small fixed-size circle and triangle markers). Each element is placed using a distinct interaction.

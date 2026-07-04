@@ -1,7 +1,5 @@
 # Editing Text
 
-**Audience:** Designers + developers | **Scope:** Player-facing text editing interactions on shapes
-
 ## Overview
 
 Shapes hold labels. A shape without text is just a colored blob — adding text gives it meaning: a character's name, a location, a system, a note. Text is the core of what makes the canvas a world-building tool rather than just a drawing board.
