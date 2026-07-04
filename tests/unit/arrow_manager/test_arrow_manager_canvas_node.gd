@@ -16,39 +16,56 @@ const CIRCLE_RADIUS: float = 8.0
 
 # ----- Helpers ---------------------------------------------------------------
 
+## Minimal script for the test's main node — provides only the properties
+## that ArrowManager and the test assertions rely on, without pulling in
+## Main.gd's complex scene structure requirements.
+const _MAIN_STUB_SCRIPT: GDScript = preload("res://tests/unit/arrow_manager/main_stub.gd")
+
 ## Creates a minimal test scene with ElementLayer and AnchorLayer under a dummy Main node.
 ## ArrowManager is added as a child of Main.
 ## Returns { "main": Node, "element_layer": Node2D, "anchor_layer": Node2D, "arrow_manager": Node }
 func _create_test_scene() -> Dictionary:
 	var main: Node = Node.new()
-	main.set_script(load("res://scenes/main/Main.gd"))
-	get_tree().root.add_child(main)
+	main.set_script(_MAIN_STUB_SCRIPT)
 
-	# Create layers that Main expects.
+	# Build the tree structure expected by ArrowManager and ClickHandler @onready vars.
+	# The @onready var element_layer := %ElementLayer uses get_node("%ElementLayer") which
+	# searches up the owner chain.  We must set owner explicitly so % can find the nodes.
+	var canvas: Node2D = Node2D.new()
+	canvas.name = "Canvas"
+	main.add_child(canvas)
+	canvas.owner = main
+
 	var element_layer: Node2D = Node2D.new()
 	element_layer.name = "ElementLayer"
 	element_layer.unique_name_in_owner = true
-	main.add_child(element_layer)
+	canvas.add_child(element_layer)
+	element_layer.owner = main
 
 	var anchor_layer: Node2D = Node2D.new()
 	anchor_layer.name = "AnchorLayer"
 	anchor_layer.unique_name_in_owner = true
-	main.add_child(anchor_layer)
+	canvas.add_child(anchor_layer)
+	anchor_layer.owner = main
 
 	# Create a ClickHandler stub so ArrowManager doesn't error on get_parent().get_node("ClickHandler").
 	var click_handler: Node = Node.new()
 	click_handler.name = "ClickHandler"
 	click_handler.set_script(load("res://scenes/main/click_handler/click_handler.gd"))
 	main.add_child(click_handler)
+	click_handler.owner = main
 
 	# Create ArrowManager as child of Main.
 	var arrow_mgr: Node = Node.new()
 	arrow_mgr.set_script(load("res://scenes/arrow_manager/arrow_manager.gd"))
 	arrow_mgr.name = "ArrowManager"
 	main.add_child(arrow_mgr)
-	arrow_mgr.set("element_layer", element_layer)
-	arrow_mgr.set("anchor_layer", anchor_layer)
-	# Re-initialize _dot_nodes and _shapes.
+	arrow_mgr.owner = main
+
+	# Add the full tree to the scene (triggers @onready and _ready on all children).
+	get_tree().root.add_child(main)
+
+	# Re-initialize _dot_nodes and _shapes (clears any state set during _ready).
 	arrow_mgr.set("_dot_nodes", {})
 	arrow_mgr.set("_shapes", [])
 
@@ -116,10 +133,12 @@ func test_arrow_shape_to_circle_node() -> void:
 	assert_str(arrow.get("start_anchor_label")).is_equal("right")
 	assert_str(arrow.get("end_anchor_label")).is_equal("left")
 
-	shape.free()
-	node.free()
+	shape.queue_free()
+	node.queue_free()
+	await get_tree().process_frame
 	var main: Node = scene["main"]
-	main.free()
+	main.queue_free()
+	await get_tree().process_frame
 
 
 ## B2: Arrow from CircleNode to TriangleNode.
@@ -145,10 +164,12 @@ func test_arrow_circle_to_triangle() -> void:
 	assert_str(arrow.get("start_anchor_label")).is_equal("right")
 	assert_str(arrow.get("end_anchor_label")).is_equal("bottom_left")
 
-	circle.free()
-	triangle.free()
+	circle.queue_free()
+	triangle.queue_free()
+	await get_tree().process_frame
 	var main: Node = scene["main"]
-	main.free()
+	main.queue_free()
+	await get_tree().process_frame
 
 
 ## B3: Arrow from TriangleNode to LabelShape.
@@ -174,10 +195,12 @@ func test_arrow_node_to_shape() -> void:
 	assert_str(arrow.get("start_anchor_label")).is_equal("top")
 	assert_str(arrow.get("end_anchor_label")).is_equal("bottom")
 
-	triangle.free()
-	shape.free()
+	triangle.queue_free()
+	shape.queue_free()
+	await get_tree().process_frame
 	var main: Node = scene["main"]
-	main.free()
+	main.queue_free()
+	await get_tree().process_frame
 
 
 # ===== B4: Self-Connection Prevention =======================================
@@ -230,10 +253,12 @@ func test_delete_node_removes_arrows() -> void:
 
 	assert_int(mgr._arrows.size()).is_equal(0)
 
-	shape.free()
-	node.free()
+	shape.queue_free()
+	node.queue_free()
+	await get_tree().process_frame
 	var main: Node = scene["main"]
-	main.free()
+	main.queue_free()
+	await get_tree().process_frame
 
 
 # ===== B6-B7: Anchor Dots ===================================================
@@ -273,9 +298,10 @@ func test_circle_node_anchor_dots() -> void:
 	assert_bool(dots.has("left")).is_true()
 	assert_bool(dots.has("right")).is_true()
 
-	node.free()
+	node.queue_free()
 	var main: Node = scene["main"]
-	main.free()
+	main.queue_free()
+	await get_tree().process_frame
 
 
 ## B7: Triangle node shows 3 anchor dots.
@@ -303,9 +329,10 @@ func test_triangle_node_anchor_dots() -> void:
 	assert_bool(dots.has("bottom_left")).is_true()
 	assert_bool(dots.has("bottom_right")).is_true()
 
-	node.free()
+	node.queue_free()
 	var main: Node = scene["main"]
-	main.free()
+	main.queue_free()
+	await get_tree().process_frame
 
 
 # ===== B8-B9: Arrow Drag from Node Anchor ===================================
@@ -333,9 +360,10 @@ func test_arrow_drag_from_node() -> void:
 	# Preview line should exist.
 	assert_bool(mgr.get("_preview_line") != null).is_true()
 
-	node.free()
+	node.queue_free()
 	var main: Node = scene["main"]
-	main.free()
+	main.queue_free()
+	await get_tree().process_frame
 
 
 ## B9: Arrow drag ending without snap discards the arrow.
@@ -358,7 +386,7 @@ func test_arrow_drag_no_snap_discards() -> void:
 	mgr.call("end_arrow_drag")
 
 	assert_bool(mgr.get("_arrow_drag_active")).is_false()
-	assert_int(mgr._arrows).is_equal(0)
+	assert_int(mgr._arrows.size()).is_equal(0)
 	assert_bool(mgr.get("_preview_line") == null or not is_instance_valid(mgr.get("_preview_line"))).is_true()
 
 	node.free()
@@ -396,7 +424,9 @@ func test_arrow_updates_on_node_move() -> void:
 	# Points should have changed.
 	assert_bool(original_points != updated_points).is_true()
 
-	shape.free()
-	node.free()
+	shape.queue_free()
+	node.queue_free()
+	await get_tree().process_frame
 	var main: Node = scene["main"]
-	main.free()
+	main.queue_free()
+	await get_tree().process_frame
