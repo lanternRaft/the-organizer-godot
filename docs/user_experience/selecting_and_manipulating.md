@@ -4,10 +4,6 @@
 
 World building on the canvas is an iterative process. The user moves things around, changes their size, repositions clusters, and removes things that don't fit. This document describes how the user grabs, adjusts, and cleans up their elements.
 
-### Shared base class
-
-Shapes (ovals and circles) and nodes (circle and triangle markers) share a common set of selection, drag, snap, and deletion behaviors inherited from a base class. Everything described in the sections below — except **Resizing Shapes** and **Text Editing** — applies identically to both element types. For a complete catalog of what is shared and what is specialized, see [`shared_element_base.md`](shared_element_base.md).
-
 ---
 
 ## Selecting Elements
@@ -83,8 +79,6 @@ The set moves as a single unit. There's no jitter, no lag between the dragged el
 ## Resizing Shapes
 
 Every shape has four resize handles — small squares at the top-left, top-right, bottom-left, and bottom-right corners of the shape's bounding box. The handles only appear when the shape is selected.
-
-> **Nodes are fixed-size** and do not show resize handles. The shared base class suppresses handles for elements that do not support resize. See [`shared_element_base.md`](shared_element_base.md).
 
 ### How it works
 
