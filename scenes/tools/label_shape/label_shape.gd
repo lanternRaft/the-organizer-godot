@@ -323,11 +323,6 @@ func _update_collision_shape() -> void:
 	_collision_shape.shape = shape
 
 
-## Returns the radius used for overlap detection: max(rx, ry).
-func overlap_radius() -> float:
-	return max(rx, ry)
-
-
 func _update_handle_positions() -> void:
 	if not is_node_ready():
 		return

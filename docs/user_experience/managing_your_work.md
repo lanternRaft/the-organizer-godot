@@ -24,7 +24,7 @@ All information about the selected elements is preserved:
 
 ### The paste offset
 
-Pasted elements appear shifted by a small buffer relative to the originals — just enough to make it clear they're new copies and not duplicates that need to be moved out of each other's way. The offset is consistent: every paste applies the same shift, so repeated paste operations create a cascading line of copies.
+Pasted elements appear shifted by **20px** (world-space) relative to the originals — just enough to make it clear they're new copies and not duplicates that need to be moved out of each other's way. The offset is consistent: every paste applies the same shift, so repeated paste operations create a cascading line of copies.
 
 ### How paste feels
 

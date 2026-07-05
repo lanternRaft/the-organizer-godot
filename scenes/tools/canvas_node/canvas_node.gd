@@ -172,19 +172,3 @@ func _update_collision_shape() -> void:
 			poly_shape.points = TRIANGLE_VERTICES
 			_collision_shape.shape = poly_shape
 
-
-# ----- Overlap Compatibility -------------------------------------------------
-
-## No-op for overlap resolution (CanvasNode does not support overlap pushing).
-func resolve_overlaps() -> void:
-	pass
-
-
-## Returns the overlap radius used for collision detection.
-func overlap_radius() -> float:
-	match sub_mode:
-		"circle_node":
-			return CIRCLE_RADIUS
-		"triangle_node":
-			return 8.0  # Inscribed circle radius approximates the triangle's bounding radius.
-	return 8.0
