@@ -2,7 +2,7 @@
 
 ## File: `res://scenes/main/main.gd`
 
-Selection uses a unified data model: a single `selected_set: Array[Node]` containing both `LabelShape` and `Arrow` nodes. There is no split state.
+Selection uses a unified data model: a single `selected_set: Array[Node]` containing `CanvasElement` subclasses (`LabelShape`, `CanvasNode`) and `Arrow` nodes. There is no split state.
 
 ## Key Variables in Main.gd
 
@@ -26,7 +26,7 @@ The `handle_drag_begin` early-return in ClickHandler is critical: if the clicked
 
 ### Flow: ClickHandler → Main
 
-1. ClickHandler detects an Area2D hit on a LabelShape
+1. ClickHandler detects an Area2D hit on a `CanvasElement` (discovered via `"clickable_element"` group)
 2. If element is already selected → `handle_drag_begin` returns true → drag starts immediately, no click processing
 3. If element is not selected → `handle_click` is called → emits `clicked` signal → Main selects it → `handle_drag_begin` called again → drag starts
 
@@ -37,7 +37,7 @@ For arrows (no Area2D), the secondary hit path calls `Main._on_arrow_clicked_at(
 ### `select_element(element, additive)`
 - If not additive, calls `clear_selection()` first
 - Appends element to `selected_set`
-- Calls `element.set_selected(true)` (duck-typed — both LabelShape and Arrow implement this)
+- Calls `element.set_selected(true)` — both `CanvasElement` subclasses and `Arrow` implement this method
 - Refreshes primary visuals and updates selection menu
 
 ### `_deselect_element(element)`
@@ -61,8 +61,10 @@ Defined in each element's `_draw()` or property setter:
 
 | Element | Primary (last-clicked) | Secondary (other selected) |
 |---|---|---|
-| **LabelShape** | `stroke_color = fill_color.lightened(0.4)`, `stroke_width = 3.0` | `stroke_color = fill_color.lightened(0.25)`, `stroke_width = 2.5` |
+| **CanvasElement subclasses** (LabelShape, CanvasNode) | `stroke_color = fill_color.lightened(0.4)`, `stroke_width = 3.0` | `stroke_color = fill_color.lightened(0.25)`, `stroke_width = 2.5` |
 | **Arrow** | `vis_line.default_color = Color(0.6, 0.8, 1.0)` (solid) | `vis_line.default_color = Color(0.6, 0.8, 1.0, 0.7)` (semi-transparent) |
+
+The base `CanvasElement` class provides `is_selected` and `is_primary` properties with `queue_redraw()` triggers. Subclasses override `on_selection_changed()` and `on_primary_changed()` to apply the specific visual parameters to their shape geometry.
 
 ## Multi-Drag Coordination
 
@@ -70,18 +72,18 @@ When multiple elements are selected, dragging any one moves all of them by the s
 
 ### Flow
 
-1. Dragged element (LabelShape or Arrow) computes incremental delta in `handle_drag_move()`
-2. Emits `multi_drag_moved(incremental_delta)`
-3. `Main._on_multi_drag_moved(delta, emitter)` applies the delta to every other element in `selected_set`:
-   - **LabelShape siblings**: `shape.position += delta`, emits `anchor_changed()`
+1. Dragged element (CanvasElement subclass or Arrow) computes incremental delta in `handle_drag_move()`
+2. Emits `dragged(incremental_delta, self)` (CanvasElement base signal) or `multi_drag_moved(incremental_delta)` (Arrow signal)
+3. `Main._on_dragged(delta, emitter)` applies the delta to every other element in `selected_set`:
+   - **CanvasElement siblings**: `element.position += delta`, emits `anchor_changed()`
    - **Arrow siblings**: `arrow.position += delta`
-4. On drag end, dragged element emits `multi_drag_ended()`
-5. `Main._on_multi_drag_ended(emitter)` snaps all LabelShape siblings to 20px grid and emits `anchor_changed()` on each
+4. On drag end, dragged element emits `drag_ended(self)` (CanvasElement) or `multi_drag_ended()` (Arrow)
+5. `Main._on_drag_ended(emitter)` snaps all CanvasElement siblings to grid (via their `grid_snap_size`) and emits `anchor_changed()` on each
 
 ### What moves in a multi-drag
 
-- All selected LabelShapes move by the same pixel delta
-- Arrows connected to moving shapes update automatically via `anchor_changed` signal → `ArrowManager.update_arrows_for_shape()`
+- All selected CanvasElements (LabelShape, CanvasNode) move by the same pixel delta
+- Arrows connected to moving elements update automatically via `anchor_changed` signal → `ArrowManager.update_arrows_for_element()`
 - Free-floating arrows in the set also move by the same delta (sibling dispatch)
 - Handle resizing is per-element only — only the primary shape can be resized
 
@@ -89,14 +91,14 @@ When multiple elements are selected, dragging any one moves all of them by the s
 
 `Main._select_all_elements()`:
 - Iterates all `ElementLayer` children
-- Selects every `LabelShape` and arrow (checked via `is_in_group("arrows")`)
+- Selects every `CanvasElement` (checked via `is_in_group("clickable_element")`) and arrow (checked via `is_in_group("arrows")`)
 - Sets the last element found as primary_selection
 
 ## Multi-Delete
 
 `Main._delete_selected_elements()`:
 1. Duplicates `selected_set` to avoid modification during iteration
-2. For each element: if `LabelShape`, calls `_delete_shape()` which removes connected arrows via `ArrowManager.delete_arrows_for_shape()`; if arrow, calls `ArrowManager.delete_arrow()`
+2. For each element: if `CanvasElement`, calls `_delete_element()` which triggers `delete_requested` signal (ArrowManager removes connected arrows); if arrow, calls `ArrowManager.delete_arrow()`
 3. Clears selection and saves
 
 ## Selection Menu Visibility
@@ -112,4 +114,5 @@ When multiple elements are selected, dragging any one moves all of them by the s
 - **Clicking an already-selected element without Shift**: It stays selected and becomes the new primary. This feels natural — the user might click the same shape again just to access the selection menu.
 - **Shift+click on an already-selected primary**: Removes it. The next-most-recently-clicked element becomes primary.
 - **Resize while multi-selected**: Only the primary shape shows handles. Other selected shapes don't show handles and can't be resized.
-- **Arrows connected to two selected shapes**: The arrow updates its path as both endpoints move, via `anchor_changed` emission from each moved shape.
+- **Arrows connected to two selected elements**: The arrow updates its path as both endpoints move, via `anchor_changed` emission from each moved element.
+- **CanvasNode**: Since `CanvasNode` has no resize handles and no text editing, its selection behavior is identical to LabelShape but without the extra UI elements.

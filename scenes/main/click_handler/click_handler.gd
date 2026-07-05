@@ -98,8 +98,10 @@ func _handle_pointer_down(event: InputEventMouseButton) -> void:
 			candidate = area.get_parent()
 
 		# Walk up if the Area2D is nested (defensive — currently Area2D is a
-		# direct child of the element node).
-		while candidate != null and not candidate.is_in_group("clickable") \
+		# direct child of the element node). Uses "clickable_element" group for
+		# primary discovery (set by CanvasElement._ready()), with a fallback to
+		# has_method("handle_click") for backward compatibility during transition.
+		while candidate != null and not candidate.is_in_group("clickable_element") \
 				and not candidate.has_method("handle_click"):
 			candidate = candidate.get_parent()
 			if candidate == element_layer or candidate is CanvasLayer:

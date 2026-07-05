@@ -65,9 +65,9 @@ func _create_test_scene() -> Dictionary:
 	# Add the full tree to the scene (triggers @onready and _ready on all children).
 	get_tree().root.add_child(main)
 
-	# Re-initialize _dot_nodes and _shapes (clears any state set during _ready).
+	# Re-initialize _dot_nodes and _elements (clears any state set during _ready).
 	arrow_mgr.set("_dot_nodes", {})
-	arrow_mgr.set("_shapes", [])
+	arrow_mgr.set("_elements", [])
 
 	# Set select_mode_active = true on Main so ArrowManager process shows dots.
 	main.set("select_mode_active", true)
@@ -217,11 +217,11 @@ func test_arrow_self_connection_node() -> void:
 	var initial_count: int = mgr._arrows.size()
 
 	# Simulate arrow drag from node's "top" released on same node's "bottom".
-	# ArrowManager's end_arrow_drag checks _drag_snapped_shape != _drag_start_shape,
+	# ArrowManager's end_arrow_drag checks _drag_snapped_element != _drag_start_element,
 	# so setting both to the same node should prevent creation.
-	mgr.set("_drag_start_shape", node)
+	mgr.set("_drag_start_element", node)
 	mgr.set("_drag_start_label", "top")
-	mgr.set("_drag_snapped_shape", node)
+	mgr.set("_drag_snapped_element", node)
 	mgr.set("_drag_snapped_label", "bottom")
 	mgr.call("end_arrow_drag")
 
@@ -248,8 +248,8 @@ func test_delete_node_removes_arrows() -> void:
 	_create_arrow(mgr, shape, "right", node, "left")
 	assert_int(mgr._arrows.size()).is_equal(1)
 
-	# Delete arrows for the node.
-	mgr.call("delete_arrows_for_shape", node)
+	# Delete arrows for the node (using new method name).
+	mgr.call("delete_arrows_for_element", node)
 
 	assert_int(mgr._arrows.size()).is_equal(0)
 
@@ -281,8 +281,8 @@ func test_circle_node_anchor_dots() -> void:
 	var node: Node2D = _create_circle_node(el, Vector2(0, 0))
 	await get_tree().process_frame
 
-	# Refresh shape list.
-	mgr.call("_refresh_shape_list")
+	# Refresh element list.
+	mgr.call("_refresh_element_list")
 
 	# Call _update_anchor_dots with mouse near the node.
 	var node_center: Vector2 = node.global_position
@@ -316,7 +316,7 @@ func test_triangle_node_anchor_dots() -> void:
 	el.add_child(node)
 	await get_tree().process_frame
 
-	mgr.call("_refresh_shape_list")
+	mgr.call("_refresh_element_list")
 	var node_center: Vector2 = node.global_position
 	mgr.call("_update_anchor_dots", node_center)
 
@@ -345,7 +345,7 @@ func test_arrow_drag_from_node() -> void:
 
 	var node: Node2D = _create_circle_node(el, Vector2(100, 100))
 	await get_tree().process_frame
-	mgr.call("_refresh_shape_list")
+	mgr.call("_refresh_element_list")
 
 	# Get the top anchor position.
 	var top_pos: Vector2 = node.call("get_anchor_position", "top")
@@ -355,7 +355,7 @@ func test_arrow_drag_from_node() -> void:
 
 	assert_bool(result).is_true()
 	assert_bool(mgr.get("_arrow_drag_active")).is_true()
-	assert_object(mgr.get("_drag_start_shape")).is_same(node)
+	assert_object(mgr.get("_drag_start_element")).is_same(node)
 	assert_str(mgr.get("_drag_start_label")).is_equal("top")
 	# Preview line should exist.
 	assert_bool(mgr.get("_preview_line") != null).is_true()
@@ -374,7 +374,7 @@ func test_arrow_drag_no_snap_discards() -> void:
 
 	var node: Node2D = _create_circle_node(el, Vector2(100, 100))
 	await get_tree().process_frame
-	mgr.call("_refresh_shape_list")
+	mgr.call("_refresh_element_list")
 
 	var top_pos: Vector2 = node.call("get_anchor_position", "top")
 
@@ -382,7 +382,7 @@ func test_arrow_drag_no_snap_discards() -> void:
 	mgr.call("handle_dot_mousedown", top_pos)
 	assert_bool(mgr.get("_arrow_drag_active")).is_true()
 
-	# End drag without snapping (drag_snapped_shape is null).
+	# End drag without snapping (drag_snapped_element is null).
 	mgr.call("end_arrow_drag")
 
 	assert_bool(mgr.get("_arrow_drag_active")).is_false()
@@ -417,8 +417,8 @@ func test_arrow_updates_on_node_move() -> void:
 	node.position = Vector2(300, 50)
 	await get_tree().process_frame
 
-	# Update arrows for the moved node.
-	mgr.call("update_arrows_for_shape", node)
+	# Update arrows for the moved node (using new method name).
+	mgr.call("update_arrows_for_element", node)
 
 	var updated_points: PackedVector2Array = arrow.get("_cached_bezier_points")
 	# Points should have changed.

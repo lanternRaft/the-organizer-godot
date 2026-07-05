@@ -1,7 +1,7 @@
 class_name Arrow
 extends Node2D
 
-## Cubic bezier arrow connecting two LabelShape anchors.
+## Cubic bezier arrow connecting two CanvasElement anchors.
 ## Renders a visible stroke, an invisible wider hit-line for click detection,
 ## and a mono-directional arrowhead at the end point.
 
@@ -16,7 +16,7 @@ signal multi_drag_moved(delta: Vector2)
 ## shape deletion doesn't leave dangling pointers.
 var start_shape_path: NodePath
 var end_shape_path: NodePath
-var start_anchor_label: String  # "top", "bottom", "left", "right"
+var start_anchor_label: String  # "top", "bottom", "left", "right", etc.
 var end_anchor_label: String
 
 var is_selected: bool = false:
@@ -94,22 +94,39 @@ func _draw() -> void:
 	draw_colored_polygon(PackedVector2Array([tip, base_left, base_right]), arrowhead_color)
 
 
-## Rebuilds the bezier path from the connected shapes' current anchor positions.
-## Must be called after either shape moves or resizes.
+## Rebuilds the bezier path from the connected elements' current anchor positions.
+## Uses the CanvasElement.get_anchor_positions() interface to find anchor offsets.
+## Must be called after either element moves or resizes.
 func rebuild_path() -> void:
 	var start_shape: Node = _resolve_shape(start_shape_path)
 	var end_shape: Node = _resolve_shape(end_shape_path)
 
 	if start_shape == null or end_shape == null:
-		# One of the connected shapes was deleted; queue free.
+		# One of the connected elements was deleted; queue free.
 		queue_free()
 		return
 
-	var p0: Vector2 = get_anchor_edge_position_static(start_shape, start_anchor_label)
-	var p3: Vector2 = get_anchor_edge_position_static(end_shape, end_anchor_label)
+	# Use CanvasElement interface if available; fall back to static utility.
+	var p0: Vector2
+	var p3: Vector2
+	var outward_start: Vector2
+	var outward_end: Vector2
 
-	var outward_start: Vector2 = get_anchor_outward_normal_static(start_anchor_label)
-	var outward_end: Vector2 = get_anchor_outward_normal_static(end_anchor_label)
+	var start_canvas: CanvasElement = start_shape as CanvasElement
+	if start_canvas != null:
+		p0 = get_canvas_element_anchor_edge(start_canvas, start_anchor_label)
+		outward_start = get_canvas_element_anchor_outward(start_canvas, start_anchor_label)
+	else:
+		p0 = get_anchor_edge_position_static(start_shape, start_anchor_label)
+		outward_start = get_anchor_outward_normal_static(start_anchor_label)
+
+	var end_canvas: CanvasElement = end_shape as CanvasElement
+	if end_canvas != null:
+		p3 = get_canvas_element_anchor_edge(end_canvas, end_anchor_label)
+		outward_end = get_canvas_element_anchor_outward(end_canvas, end_anchor_label)
+	else:
+		p3 = get_anchor_edge_position_static(end_shape, end_anchor_label)
+		outward_end = get_anchor_outward_normal_static(end_anchor_label)
 
 	var segment_len: float = p0.distance_to(p3)
 	var reach: float = clampf(segment_len * 0.35, 30.0, 100.0)
@@ -160,10 +177,41 @@ static func rebuild_arrows_for_shape(shape: Node, all_arrows: Array) -> void:
 			a.rebuild_path()
 
 
+# ----- CanvasElement-aware helpers -------------------------------------------
+
+## Returns the global edge position for a CanvasElement anchor by reading
+## the offset from get_anchor_positions().
+static func get_canvas_element_anchor_edge(element: CanvasElement, label: String) -> Vector2:
+	var anchors: Array[Dictionary] = element.get_anchor_positions()
+	for entry: Dictionary in anchors:
+		if entry.get("label", "") == label:
+			var local_offset: Vector2 = entry.get("offset", Vector2.ZERO)
+			return element.to_global(local_offset)
+	return element.global_position
+
+
+## Returns the outward normal for a CanvasElement anchor by reading the offset
+## from get_anchor_positions().
+static func get_canvas_element_anchor_outward(element: CanvasElement, label: String) -> Vector2:
+	var anchors: Array[Dictionary] = element.get_anchor_positions()
+	for entry: Dictionary in anchors:
+		if entry.get("label", "") == label:
+			var offset: Vector2 = entry.get("offset", Vector2.ZERO)
+			if offset.length_squared() > 0.001:
+				return offset.normalized()
+	# Fallback for cardinal directions.
+	match label:
+		"top": return Vector2(0, -1)
+		"bottom": return Vector2(0, 1)
+		"left": return Vector2(-1, 0)
+		"right": return Vector2(1, 0)
+	return Vector2.ZERO
+
+
 # ----- private helpers -------------------------------------------------------
 
 ## Unified setter called by Main during selection state changes.
-## Matches the LabelShape API so both types can be treated uniformly.
+## Matches the CanvasElement API so both types can be treated uniformly.
 func set_selected(value: bool) -> void:
 	self.is_selected = value
 

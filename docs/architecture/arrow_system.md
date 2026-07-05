@@ -6,48 +6,70 @@ The ArrowManager is the central controller for all arrow-related functionality: 
 
 ## ArrowManager Responsibilities
 
-- **Shape tracking**: Maintains a list of all LabelShape instances in ElementLayer
-- **Anchor dots**: Creates, positions, shows, hides, and highlights anchor dot nodes
+- **Element tracking**: Maintains a list of all `CanvasElement` instances in ElementLayer (both LabelShape and CanvasNode)
+- **Anchor dots**: Creates, positions, shows, hides, and highlights anchor dot nodes via the generic `CanvasElement.get_anchor_positions()` interface
 - **Arrow drag**: Manages the drag-from-anchor creation flow with bezier preview
 - **Arrow storage**: Maintains `_arrows: Array[Node]` of all active arrows
 - **Hit testing**: `get_arrow_near()` checks if a world-space point is near any arrow's bezier path
-- **Deletion**: Single arrow deletion and bulk deletion for connected shapes
+- **Deletion**: Single arrow deletion and bulk deletion for connected elements
 
-## Shape Tracking
+## Element Tracking
 
 ```gdscript
-var _shapes: Array[Node] = []     # All LabelShape instances
-var _arrows: Array[Node] = []     # All Arrow instances
+var _elements: Array[CanvasElement] = []  # All CanvasElement instances (LabelShape + CanvasNode)
+var _arrows: Array[Node] = []             # All Arrow instances
 ```
 
-- `_refresh_shape_list()` scans ElementLayer on ready
+- `_refresh_element_list()` scans ElementLayer on ready, collecting all `CanvasElement` nodes
 - `_on_element_child_added()` / `_on_element_child_removed()` maintain the lists dynamically via `child_entered_tree` / `child_exiting_tree` signals
+- Unlike the previous design (separate `_shapes` list for LabelShape only), a single `_elements` list holds all `CanvasElement` subclasses generically
 
 ## Anchor Dot System
 
 ### Dot Data Structure
 
 ```gdscript
-var _dot_nodes: Dictionary = {}  # shape_instance_id -> {label: Node2D}
+var _dot_nodes: Dictionary = {}  # element_instance_id -> {label: Node2D}
 ```
 
-Dots are created on demand and cached. Each shape can have up to 4 dot nodes (top, bottom, left, right).
+Dots are created on demand and cached. Each element can have up to N dot nodes (4 for LabelShape, 4 for circle node, 3 for triangle node), determined by `element.get_anchor_positions()`.
 
 ### Dot Visibility (per-frame in `_process`)
 
 1. Get mouse position in world space
-2. For each shape, check distance from mouse to each anchor dot position
-3. If any dot is within `ANCHOR_HOVER_RADIUS` (20px), show all dots for that shape
-4. If an arrow drag is active, show all dots for all shapes
-5. Otherwise, hide dots for that shape
+2. For each element, check distance from mouse to each anchor dot position
+3. If any dot is within `ANCHOR_HOVER_RADIUS` (20px), show all dots for that element
+4. If an arrow drag is active, show all dots for all elements
+5. Otherwise, hide dots for that element
+
+### Dot Positioning
+
+Dot positions are computed from `element.get_anchor_positions()`:
+
+```gdscript
+func _update_dot_positions(element: CanvasElement) -> void:
+    var anchors = element.get_anchor_positions()
+    var world_anchor_offset = 5.0  # ANCHOR_OFFSET — outward from edge
+    var eid = element.get_instance_id()
+    for anchor in anchors:
+        var label = anchor.label
+        var offset = anchor.offset
+        var world_pos = element.global_position + offset
+        # Outward offset for dot visual
+        var outward_dir = offset.normalized() if offset.length() > 0 else Vector2.DOWN
+        var dot_pos = world_pos + outward_dir * world_anchor_offset
+        # Position the dot node
+        if _dot_nodes.has(eid) and _dot_nodes[eid].has(label):
+            _dot_nodes[eid][label].global_position = dot_pos
+```
 
 ### Dot Highlighting
 
-The nearest dot (across all shapes) within hover radius gets highlighted:
+The nearest dot (across all elements) within hover radius gets highlighted:
 - Normal: radius 4, fill white `#ffffff`
 - Hover: radius 7, fill blue `#3b82f6`
 
-Highlighting also updates `_drag_snapped_shape` / `_drag_snapped_label` for arrow drag snapping.
+Highlighting also updates `_drag_snapped_element` / `_drag_snapped_label` for arrow drag snapping.
 
 ## Arrow Creation (Drag from Anchor)
 
@@ -55,11 +77,11 @@ Highlighting also updates `_drag_snapped_shape` / `_drag_snapped_label` for arro
 
 ```
 handle_dot_mousedown(mouse_pos)
-  → Check each shape's dot positions against mouse (within DOT_RADIUS_HOVER)
-  → begin_arrow_drag(shape, anchor_label)
+  → Check each element's dot positions against mouse (within DOT_RADIUS_HOVER)
+  → begin_arrow_drag(element, anchor_label)
 
-begin_arrow_drag(shape, anchor_label)
-  → Set _arrow_drag_active, _drag_start_shape, _drag_start_label, _drag_start_pos
+begin_arrow_drag(element, anchor_label)
+  → Set _arrow_drag_active, _drag_start_element, _drag_start_label, _drag_start_pos
   → Create preview Line2D (if not exists), add to ElementLayer
   → Show all anchors (_show_all_anchors)
 
@@ -73,7 +95,7 @@ handle_dot_mouseup()  (called from Main._on_pointer_up)
 
 end_arrow_drag()
   → Remove preview line
-  → If _drag_snapped_shape != null and != _drag_start_shape → _create_arrow()
+  → If _drag_snapped_element != null and != _drag_start_element → _create_arrow()
   → Reset drag state
 ```
 
@@ -87,8 +109,8 @@ end_arrow_drag()
 ### Arrow Creation (`_create_arrow`)
 
 1. Instantiate from `res://scenes/tools/arrow/arrow.tscn`
-2. Add to ElementLayer at index 0 (renders below shapes)
-3. Set start/end shape paths: `arrow.get_path_to(shape)` for both endpoints
+2. Add to ElementLayer at index 0 (renders below elements)
+3. Set start/end element paths: `arrow.get_path_to(element)` for both endpoints
 4. Set start/end anchor labels
 5. Call `rebuild_path()`
 6. Append to `_arrows` array
@@ -96,22 +118,24 @@ end_arrow_drag()
 
 ### Creation Rules
 
-- Arrow must connect two different shapes (self-connection prevented)
+- Arrow must connect two different elements (self-connection prevented)
 - Both endpoints must be valid anchors
-- Arrow is discarded if released on empty space or the same shape
+- Arrow is discarded if released on empty space or the same element
 
 ## Connected Arrow Updates
 
-When a shape moves or resizes (`anchor_changed` signal):
+When an element moves or resizes (`anchor_changed` signal):
 
 ```
-Main._on_shape_anchor_changed(shape)
-  → ArrowManager.update_arrows_for_shape(shape)
+Main._on_element_anchor_changed(element)
+  → ArrowManager.update_arrows_for_element(element)
     → For each arrow in _arrows:
-      → Resolve start/end shape paths
-      → If either matches the changed shape:
+      → Resolve start/end element paths
+      → If either matches the changed element:
         → arrow.rebuild_path()
 ```
+
+Arrow's `rebuild_path()` reads anchor positions from the `CanvasElement` via `get_anchor_positions()`, so no per‑type conditional logic is needed.
 
 ## Arrow Deletion
 
@@ -124,13 +148,15 @@ delete_arrow(arrow):
   → queue_free()
 ```
 
-### Bulk Deletion (for shape deletion)
+### Bulk Deletion (for element deletion)
 
 ```gdscript
-delete_arrows_for_shape(shape):
-  → Find all arrows connected to shape (check both endpoints)
+delete_arrows_for_element(element):
+  → Find all arrows connected to element (check both endpoints)
   → Call delete_arrow() on each
 ```
+
+When a `CanvasElement` emits `delete_requested`, ArrowManager listens and calls `delete_arrows_for_element()` before the element is freed.
 
 ### Delete All
 
@@ -158,7 +184,7 @@ Uses the cached bezier points (not the HitLine Line2D directly) for hit testing.
 | `ANCHOR_HOVER_RADIUS` | 20.0 | Distance for showing anchor dots |
 | `SNAP_RADIUS` | 15.0 | Snap distance for arrow endpoint attachment |
 | `ARROW_CLICK_DISTANCE` | 7.0 | Distance threshold for clicking an arrow |
-| `ANCHOR_OFFSET` | 5.0 | Offset of anchor dots from ellipse edge |
+| `ANCHOR_OFFSET` | 5.0 | Offset of anchor dots from element edge |
 | `DOT_RADIUS_NORMAL` | 4.0 | Normal anchor dot radius |
 | `DOT_RADIUS_HOVER` | 7.0 | Hovered/highlighted anchor dot radius |
 

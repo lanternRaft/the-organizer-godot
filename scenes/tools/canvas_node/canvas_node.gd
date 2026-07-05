@@ -1,14 +1,21 @@
 class_name CanvasNode
-extends Node2D
+extends CanvasElement
 
 ## A small fixed-size marker node (circle or triangle).
 ## Supports color changes, arrow connections, selection, and dragging.
 ## No text editing, no resize handles.
-
-signal clicked(input_event: InputEvent, node: Node)
-signal anchor_changed()
-signal multi_drag_moved(delta: Vector2)
-signal multi_drag_ended()
+##
+## Inherits from CanvasElement: selection state, drag lifecycle, grid snap,
+## group membership ("clickable", "clickable_element"), and multi-drag signals.
+##
+## Unique behavior:
+##   - handle_click override sets drag_mode body (no handles) and emits clicked.
+##   - handle_double_click override returns true (no-op; nodes cannot edit text).
+##   - Drawing: circle or triangle with selection-aware stroke.
+##   - Collision: switches between CircleShape2D and ConvexPolygonShape2D.
+##   - Anchors: 4 cardinal for circle, 3 vertex for triangle.
+##   - Fixed size (no resize handles).
+##   - No legend entry, no text editing.
 
 ## "circle_node" or "triangle_node". Setter triggers redraw and collision shape update.
 @export var sub_mode: String = "circle_node":
@@ -24,24 +31,6 @@ signal multi_drag_ended()
 	set(value):
 		fill_color = value
 		queue_redraw()
-
-## Whether this node is currently selected.
-var is_selected: bool = false
-
-## Whether this node is the primary (last-clicked) selection.
-var is_primary: bool = false
-
-## Drag mode: "body" or "" if idle.
-var _drag_mode: String = ""
-
-## World position where the current drag started.
-var _drag_start_world: Vector2 = Vector2.ZERO
-
-## Node position when the current drag started.
-var _drag_start_position: Vector2 = Vector2.ZERO
-
-## Cumulative delta from the previous frame, used to compute incremental delta.
-var _last_delta: Vector2 = Vector2.ZERO
 
 ## Circle radius in world-space pixels.
 const CIRCLE_RADIUS: float = 8.0
@@ -71,7 +60,7 @@ const ANCHOR_POSITIONS: Dictionary = {
 
 
 func _ready() -> void:
-	add_to_group("clickable")
+	super._ready()
 	_update_collision_shape()
 
 
@@ -110,20 +99,10 @@ func _draw() -> void:
 			draw_line(verts[2], verts[0], stroke_color, stroke_width)
 
 
-# ----- Selection interface ---------------------------------------------------
-
-## Sets selection state and triggers visual update.
-func set_selected(value: bool) -> void:
-	is_selected = value
-	if not value:
-		is_primary = false
-	queue_redraw()
-
-
-# ----- Clickable interface (duck-typing) -------------------------------------
+# ----- Clickable Interface (overrides) --------------------------------------
 
 ## Called by ClickHandler when a pointer-down hits this node's Area2D.
-## Emits clicked signal for Main to handle selection.
+## Sets drag mode to "body" (no resize handles) and emits clicked signal.
 func handle_click(event: Dictionary) -> bool:
 	_drag_mode = "body"
 	clicked.emit(event.get("original_event", InputEventMouseButton.new()), self)
@@ -135,42 +114,7 @@ func handle_double_click(_event: Dictionary) -> bool:
 	return true
 
 
-## Called after handle_click or when an already-selected node is clicked.
-## Returns true if the node is already selected (drag can begin).
-func handle_drag_begin(event: Dictionary) -> bool:
-	if not is_selected:
-		return false
-	_drag_start_world = event.get("world_pos", Vector2.ZERO)
-	_drag_start_position = position
-	_last_delta = Vector2.ZERO
-	_drag_mode = "body"
-	return true
-
-
-## Called by ClickHandler on mouse move while drag is active.
-func handle_drag_move(event: Dictionary) -> void:
-	if _drag_mode != "body":
-		return
-	var world_pos: Vector2 = event.get("world_pos", Vector2.ZERO)
-	var delta: Vector2 = world_pos - _drag_start_world
-	var incremental: Vector2 = delta - _last_delta
-	_last_delta = delta
-	position = _drag_start_position + delta
-	multi_drag_moved.emit(incremental)
-	anchor_changed.emit()
-
-
-## Called by ClickHandler on pointer up while drag is active.
-func handle_drag_end(_event: Dictionary) -> void:
-	if _drag_mode == "body":
-		position = position.snapped(Vector2(20.0, 20.0))
-		anchor_changed.emit()
-		multi_drag_ended.emit()
-	_drag_mode = ""
-	queue_redraw()
-
-
-# ----- Anchor system ---------------------------------------------------------
+# ----- Anchor System ---------------------------------------------------------
 
 ## Returns the list of anchor labels for this node's current sub-mode.
 func get_anchor_points() -> Array[String]:
@@ -188,7 +132,32 @@ func get_anchor_position(label: String) -> Vector2:
 	return to_global(local_pos)
 
 
-# ----- Collision shape -------------------------------------------------------
+## Returns anchor definitions as an Array of Dictionaries with "label" and "offset" keys.
+## Overrides the base class virtual method.
+func get_anchor_positions() -> Array[Dictionary]:
+	var labels: Array[String] = get_anchor_points()
+	var result: Array[Dictionary] = []
+	for label: String in labels:
+		result.append({
+			"label": label,
+			"offset": ANCHOR_POSITIONS.get(label, Vector2.ZERO)
+		})
+	return result
+
+
+# ----- Virtual Properties ----------------------------------------------------
+
+## CanvasNode does not support text editing.
+func supports_text_editing() -> bool:
+	return false
+
+
+## CanvasNode does not appear in the legend panel.
+func shows_in_legend() -> bool:
+	return false
+
+
+# ----- Collision Shape -------------------------------------------------------
 
 func _update_collision_shape() -> void:
 	if not is_node_ready():
@@ -203,6 +172,8 @@ func _update_collision_shape() -> void:
 			poly_shape.points = TRIANGLE_VERTICES
 			_collision_shape.shape = poly_shape
 
+
+# ----- Overlap Compatibility -------------------------------------------------
 
 ## No-op for overlap resolution (CanvasNode does not support overlap pushing).
 func resolve_overlaps() -> void:

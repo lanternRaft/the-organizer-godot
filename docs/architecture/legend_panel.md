@@ -39,7 +39,7 @@ var _group_counter: int = 0
 
 | Method | Signature | Purpose |
 |---|---|---|
-| `set_colors_in_use` | `(colors: Array[Color]) | Diff the given colors against current entries. Add rows for new colors (auto-naming them "Group N"). Remove rows for colors no longer in use. Preserve custom names for colors that persist. Cached custom names for removed colors survive in case they return. |
+| `set_colors_in_use` | `(colors: Array[Color])` | Diff the given colors against current entries. Add rows for new colors (auto-naming them "Group N"). Remove rows for colors no longer in use. Preserve custom names for colors that persist. Cached custom names for removed colors survive in case they return. |
 | `get_legend_data` | `() -> Dictionary` | Returns `{color_hash: custom_name}` for persistence. |
 | `load_legend_data` | `(data: Dictionary)` | Restores custom names from saved data. Colors not in the data get default names. |
 | `clear_all` | `()` | Clears all entries and resets the group counter. |
@@ -55,8 +55,8 @@ var _group_counter: int = 0
 `Main._refresh_legend()` is called after every color-affecting mutation:
 
 1. Scan `element_layer` children for unique `fill_color` values
-   - Current: `LabelShape` instances
-   - Extensible: adds `CircleNode`, `TriangleNode` (future), Arrow stroke colors
+   - Only elements with `shows_in_legend == true` are included (LabelShape contributes; CanvasNode does not)
+   - Extensible: Arrow stroke colors (future)
 2. Collect into an `Array[Color]` of unique values
 3. Call `legend_panel.set_colors_in_use(unique_colors)`
 
@@ -64,13 +64,32 @@ var _group_counter: int = 0
 
 | Trigger | Caller Method |
 |---|---|
-| Shape placed | `place_shape()` |
+| Element placed | `place_shape()` |
 | Color changed via palette | `_on_menu_color_selected()` |
-| Shape deleted | `_delete_selected_elements()` |
+| Element deleted | `_delete_selected_elements()` |
 | Canvas cleared | `clear_all_elements()` |
 | Canvas loaded | `load_canvas()` |
 
 The legend does NOT refresh during drag operations or text editing — only on mutation commit.
+
+## Determining Which Elements Show in Legend
+
+The base `CanvasElement` class provides a `shows_in_legend` property:
+
+| Element Type | `shows_in_legend` |
+|---|---|
+| `LabelShape` | `true` |
+| `CanvasNode` | `false` |
+
+`Main._refresh_legend()` checks this property when scanning elements:
+
+```gdscript
+for child in element_layer.get_children():
+    if child is CanvasElement and child.shows_in_legend:
+        colors.append(child.fill_color)
+```
+
+This replaces the previous approach of checking `has_method("set_selected")` or group membership to determine element capabilities.
 
 ## Default Name Generation
 
@@ -93,7 +112,7 @@ Stored as an array of `[Color, String]` pairs. The array format (vs. Dictionary)
 
 1. Check if `data` has `"legend"` key
 2. If present, iterate the array and call `legend_panel.load_legend_data()`
-3. After all elements are loaded, call `_refresh_legend()` to reconcile legend entries with actual shapes on the canvas
+3. After all elements are loaded, call `_refresh_legend()` to reconcile legend entries with actual elements on the canvas
 
 ### Backward Compatibility
 
@@ -105,8 +124,8 @@ The `PanelContainer` is hidden when no colors are in use (`set_colors_in_use([])
 
 ## Edge Cases
 
-- **Multiple shapes with the same color:** The legend shows one entry per color, regardless of how many shapes share it.
-- **Color reappears after being removed:** If a color's last shape is deleted, the row is removed but the custom name is cached in `_color_names`. If a new shape with that same color is added, the row reappears with the cached name.
+- **Multiple elements with the same color:** The legend shows one entry per color, regardless of how many elements share it.
+- **Color reappears after being removed:** If a color's last element is deleted, the row is removed but the custom name is cached in `_color_names`. If a new element with that same color is added, the row reappears with the cached name.
 - **Palette colors only:** The legend supports exactly the 8 palette colors. Colors outside the palette (set programmatically) are technically supported but won't normally occur since the palette is the only color input.
 - **Empty canvas:** Legend panel is hidden, `_color_names` is cleared.
 - **LineEdit appearance:** The LineEdit has a flat (no border) style in disabled state, and gains a subtle border on focus for editing. This keeps the legend looking clean when not being edited.

@@ -10,7 +10,7 @@ All pointer input (mouse and touch) is unified through a single `ClickHandler` n
 
 2. **On pointer down**: Runs a physics point query (`PhysicsPointQueryParameters2D`) on `ElementLayer`'s space to find the topmost `Area2D`. The query uses `collide_with_areas = true` and `collision_mask = 1`.
 
-3. **Walks up** from the `Area2D` to the owning element node by checking for `"clickable"` group membership or `handle_click` method.
+3. **Walks up** from the `Area2D` to the owning element node by checking for group membership in `"clickable_element"`. This replaces the previous duck‑typing approach that checked for `handle_click` method existence.
 
 4. **Double-click detection**: If the clicked element matches the last-clicked element within 400ms, calls `handle_double_click` on it (opens text editor on LabelShape). This takes priority over other processing.
 
@@ -44,20 +44,28 @@ When the physics query finds no Area2D hit, ClickHandler falls through to two se
 1. **Arrow hit detection**: Calls `Main._on_arrow_clicked_at(world_pos)` which checks `arrow_manager.get_arrow_near()` against the arrow's cached bezier points (the invisible `HitLine` Line2D has width=14).
 2. **Anchor dot hit detection**: Calls `Main._on_anchor_dot_mousedown(world_pos)` which delegates to `arrow_manager.handle_dot_mousedown()` to begin arrow drags from anchor dots.
 
-## Clickable Interface (Duck-Typing)
+## Clickable Interface (Group-Based Discovery)
 
-Any element node that implements `handle_click()`, `handle_drag_begin()`, `handle_drag_move()`, `handle_drag_end()` methods is auto-discovered. Nodes are also discoverable via the `"clickable"` group.
+All `CanvasElement` subclasses automatically add themselves to the `"clickable_element"` group in their `_ready()` method. ClickHandler uses this group to discover elements, eliminating the previous duck‑typing approach.
+
+```gdscript
+# In CanvasElement._ready()
+add_to_group("clickable_element")
+```
+
+The group replaces the earlier method‑name discovery pattern (`has_method("handle_click")`). Any node in this group is automatically treated as a clickable element.
 
 ### Current Implementors
 
-| Node | `handle_click` | `handle_double_click` | `handle_drag_begin` | `handle_drag_move` | `handle_drag_end` | Multi-Drag |
-|---|---|---|---|---|---|---|
-| `LabelShape` | ✅ Detects handle vs. body hit | ✅ Emits `double_clicked` | ✅ Returns true if selected | ✅ Handle resize or body drag | ✅ Snaps to 20px grid | Emits `multi_drag_moved(delta)` and `multi_drag_ended()` |
-| `Arrow` | ❌ (detected via secondary path) | ❌ | ✅ Returns true if selected | ✅ Moves by delta | ✅ Snaps to 20px grid | Emits `multi_drag_moved(delta)` |
+| Node | Clickable Group | `handle_click` | `handle_double_click` | `handle_drag_begin` | `handle_drag_move` | `handle_drag_end` | Multi-Drag Signal |
+|---|---|---|---|---|---|---|---|
+| `LabelShape` (CanvasElement) | `"clickable_element"` | ✅ Inherited from CanvasElement; detects handle vs. body hit | ✅ Emits `double_clicked` | ✅ Returns true if selected | ✅ Handle resize or body drag | ✅ Snaps to grid (20px) | `dragged(delta, self)` (inherited) |
+| `CanvasNode` (CanvasElement) | `"clickable_element"` | ✅ Inherited from CanvasElement; body drag only | ❌ (not supported) | ✅ Returns true if selected | ✅ Body drag only | ✅ Snaps to grid (20px) | `dragged(delta, self)` (inherited) |
+| `Arrow` | `"arrows"` | ❌ (detected via secondary path) | ❌ | ✅ Returns true if selected | ✅ Moves by delta | ✅ Snaps to 20px grid | `multi_drag_moved(delta)` |
 
 ## Resize Handle Interaction Fix
 
-The 4 corner `ColorRect` resize handles have `mouse_filter = MOUSE_FILTER_IGNORE`. This passes mouse events straight through to the `Area2D` child beneath, allowing the ClickHandler's physics query to find the `LabelShape` and dispatch the click/drag pipeline normally. Without this, Control nodes would absorb mouse events in the GUI phase before they reach `_unhandled_input`.
+The 4 corner `ColorRect` resize handles (LabelShape only) have `mouse_filter = MOUSE_FILTER_IGNORE`. This passes mouse events straight through to the `Area2D` child beneath, allowing the ClickHandler's physics query to find the `LabelShape` and dispatch the click/drag pipeline normally. Without this, Control nodes would absorb mouse events in the GUI phase before they reach `_unhandled_input`.
 
 ## Edge Cases
 

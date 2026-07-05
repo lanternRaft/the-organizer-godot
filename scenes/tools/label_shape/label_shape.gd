@@ -1,29 +1,15 @@
 class_name LabelShape
-extends Node2D
+extends CanvasElement
 
 ## Oval shape rendered via custom drawing (ellipse fill + stroke).
 ## Supports click-to-select via Area2D child and resize via 4 corner handles.
-
-## Emitted when the oval is clicked in Select mode.
-## Emitted from handle_click before drag-begin is evaluated.
-signal clicked(input_event: InputEvent, shape: Node)
+##
+## Inherits selection state, drag lifecycle, grid snapping, group membership,
+## anchor point interface, and multi-drag signals from CanvasElement.
 
 ## Emitted when the shape is double-clicked (two clicks within 400ms).
 ## Main connects to this to open the text editor.
 signal double_clicked(shape: Node)
-
-## Emitted when rx, ry, or position changes (after drag-end or resize).
-## ArrowManager uses this to update connected arrows.
-signal anchor_changed()
-
-## Emitted during a multi-drag to broadcast the per-frame incremental delta
-## to Main so it can shift all other selected elements by the same amount.
-## delta: per-frame movement increment in world-space pixels.
-signal multi_drag_moved(delta: Vector2)
-
-## Emitted when a body-drag ends, allowing Main to snap all selected shapes.
-## Only emitted when _drag_mode was "body" (not handle resize).
-signal multi_drag_ended()
 
 ## Shape sub-mode: "oval" or "circle". When set to "circle", rx and ry are
 ## constrained to equal dimensions. Mode conversion snaps dimensions:
@@ -79,29 +65,8 @@ signal multi_drag_ended()
 		fill_color = value
 		queue_redraw()
 
-## Whether this shape is currently selected. Controls stroke style and handle visibility.
-var is_selected: bool = false
-
-## Whether this shape is the primary (last-clicked) selection.
-## When true, uses stronger highlight (lightened 0.4, width 3.0).
-## When false, uses dimmer highlight (lightened 0.25, width 2.5).
-var is_primary: bool = false
-
-## Current drag mode: "handle", "body", or "" if idle.
-var _drag_mode: String = ""
-
 ## Handle being dragged, or "" if none (only valid when _drag_mode == "handle").
 var _dragging_handle: String = ""
-
-## World position where the current drag started.
-var _drag_start_world: Vector2 = Vector2.ZERO
-
-## Shape position when the current body-drag started.
-var _drag_start_position: Vector2 = Vector2.ZERO
-
-## Cumulative delta from the previous frame, used to compute incremental delta
-## for multi-drag broadcasting. Reset on each drag begin.
-var _last_delta: Vector2 = Vector2.ZERO
 
 @onready var _collision_shape: CollisionShape2D = $Area2D/CollisionShape2D
 @onready var _handle_tl: ColorRect = $HandleTL
@@ -115,7 +80,8 @@ const HANDLE_SIZE: float = 32.0
 
 
 func _ready() -> void:
-	add_to_group("clickable")
+	# CanvasElement._ready() adds to "clickable" and "clickable_element" groups.
+	super()
 	modulate.a = 0.9
 	_update_collision_shape()
 	_update_handle_positions()
@@ -142,20 +108,129 @@ func _draw() -> void:
 	draw_ellipse(Vector2.ZERO, rx, ry, stroke_color, false, stroke_width)
 
 
-## Updates selection state, visuals, and handle visibility.
-func set_selected(value: bool) -> void:
-	is_selected = value
-	if not value:
-		is_primary = false
-	queue_redraw()
-	_set_handles_visible(value)
-
-
 func _set_handles_visible(val: bool) -> void:
 	_handle_tl.visible = val
 	_handle_tr.visible = val
 	_handle_bl.visible = val
 	_handle_br.visible = val
+
+
+# ----- Clickable Interface (overrides) ---------------------------------------
+
+## Called by ClickHandler when a pointer-down hits this shape's Area2D.
+## Detects handle vs. body hit, emits clicked signal, and returns true.
+func handle_click(event: Dictionary) -> bool:
+	var local_pos: Vector2 = event.get("local_pos", Vector2.ZERO)
+	var handle: String = handle_at_pos(local_pos)
+
+	if handle != "":
+		_dragging_handle = handle
+		_drag_mode = "handle"
+	else:
+		_dragging_handle = ""
+		_drag_mode = "body"
+
+	clicked.emit(event["original_event"], self)
+	return true
+
+
+## Called by ClickHandler when a double-click is detected on this shape.
+## Opens the text editor overlay.
+func handle_double_click(_event: Dictionary) -> bool:
+	double_clicked.emit(self)
+	return true
+
+
+# ----- Drag Lifecycle (overrides for handle/resize) --------------------------
+
+## Called by ClickHandler after handle_click, or when an already-selected
+## element is clicked again (multi-drag on an already-selected element).
+## Returns true only if the shape is selected and a drag mode is set.
+## Overrides CanvasElement.handle_drag_begin to preserve handle detection
+## set by handle_click, and to detect handle vs body when handle_click
+## was skipped (multi-drag on already-selected element).
+func handle_drag_begin(event: Dictionary) -> bool:
+	if not is_selected:
+		return false
+	if _drag_mode == "":
+		# handle_click was skipped — detect drag mode from the event.
+		var local_pos: Vector2 = event.get("local_pos", Vector2.ZERO)
+		var handle: String = handle_at_pos(local_pos)
+		if handle != "":
+			_dragging_handle = handle
+			_drag_mode = "handle"
+		else:
+			_dragging_handle = ""
+			_drag_mode = "body"
+
+	_drag_start_world = event.get("world_pos", Vector2.ZERO)
+	_drag_start_position = position
+	_last_delta = Vector2.ZERO
+	return true
+
+
+## Called by ClickHandler on mouse move while drag is active.
+## Handles both body-drag (movement) and handle-drag (resize).
+func handle_drag_move(event: Dictionary) -> void:
+	var local_pos: Vector2 = event.get("local_pos", Vector2.ZERO)
+	var world_pos: Vector2 = event.get("world_pos", Vector2.ZERO)
+	var did_change: bool = false
+
+	if _drag_mode == "handle":
+		var new_rx: float = rx
+		var new_ry: float = ry
+
+		match _dragging_handle:
+			"br":
+				new_rx = snapped(local_pos.x, 10.0)
+				new_ry = snapped(local_pos.y, 10.0)
+			"bl":
+				new_rx = snapped(-local_pos.x, 10.0)
+				new_ry = snapped(local_pos.y, 10.0)
+			"tr":
+				new_rx = snapped(local_pos.x, 10.0)
+				new_ry = snapped(-local_pos.y, 10.0)
+			"tl":
+				new_rx = snapped(-local_pos.x, 10.0)
+				new_ry = snapped(-local_pos.y, 10.0)
+
+		# In circle mode, constrain both dimensions to the dominant axis.
+		if shape_mode == "circle":
+			var dominant: float = max(new_rx, new_ry)
+			new_rx = dominant
+			new_ry = dominant
+
+		rx = clamp(new_rx, 20.0, 500.0)
+		ry = clamp(new_ry, 20.0, 500.0)
+		did_change = true
+
+	elif _drag_mode == "body":
+		var delta: Vector2 = world_pos - _drag_start_world
+		var incremental: Vector2 = delta - _last_delta
+		_last_delta = delta
+		position = _drag_start_position + delta
+		did_change = true
+		# Broadcast incremental delta so Main can apply it additively
+		# without accumulating cumulative offsets on siblings.
+		multi_drag_moved.emit(incremental)
+	if did_change:
+		anchor_changed.emit()
+
+
+## Called by ClickHandler on pointer up while drag is active.
+## Snaps position to 20px grid (body drags) and emits completion signals.
+func handle_drag_end(_event: Dictionary) -> void:
+	if _drag_mode == "body":
+		position = position.snapped(Vector2(20.0, 20.0))
+		# Re-notify anchor_changed after snap so arrows match the snapped position.
+		anchor_changed.emit()
+		# Notify Main to snap other selected shapes too.
+		multi_drag_ended.emit()
+	_drag_mode = ""
+	_dragging_handle = ""
+	queue_redraw()
+	# Notify downstream systems (arrows) that anchor positions may have changed.
+	emit_signal("anchor_changed")
 
 
 # ----- Text Display ---------------------------------------------------------
@@ -237,14 +312,7 @@ func _estimate_line_count(text: String, max_width: float, font: Font, font_size:
 	return max(1, count)
 
 
-## Called by ClickHandler when a double-click is detected on this shape.
-func handle_double_click(_event: Dictionary) -> bool:
-	double_clicked.emit(self)
-	return true
-
-
 # ----- Resize / Position Updates --------------------------------------------
-
 
 func _update_collision_shape() -> void:
 	if not is_node_ready():
@@ -275,110 +343,6 @@ func _update_handle_positions() -> void:
 	_handle_br.color = handle_color
 
 
-# ClickHandler interface methods
-## Called by ClickHandler when a pointer-down hits this shape's Area2D.
-## Detects handle vs. body hit, emits clicked signal, and returns true.
-func handle_click(event: Dictionary) -> bool:
-	var local_pos: Vector2 = event.get("local_pos", Vector2.ZERO)
-	var handle: String = handle_at_pos(local_pos)
-
-	if handle != "":
-		_dragging_handle = handle
-		_drag_mode = "handle"
-	else:
-		_dragging_handle = ""
-		_drag_mode = "body"
-
-	clicked.emit(event["original_event"], self)
-	return true
-
-
-## Called by ClickHandler after handle_click, same pointer-down cycle.
-## Returns true only if the shape is selected and a drag mode is set.
-## When called without a preceding handle_click (multi-drag on an already-selected
-## element), detects the drag mode (handle vs body) from the event's local_pos.
-func handle_drag_begin(event: Dictionary) -> bool:
-	if not is_selected:
-		return false
-	if _drag_mode == "":
-		# handle_click was skipped — detect drag mode from the event.
-		var local_pos: Vector2 = event.get("local_pos", Vector2.ZERO)
-		var handle: String = handle_at_pos(local_pos)
-		if handle != "":
-			_dragging_handle = handle
-			_drag_mode = "handle"
-		else:
-			_dragging_handle = ""
-			_drag_mode = "body"
-
-	_drag_start_world = event.get("world_pos", Vector2.ZERO)
-	_drag_start_position = position
-	_last_delta = Vector2.ZERO
-	return true
-
-
-## Called by ClickHandler on mouse move while drag is active.
-func handle_drag_move(event: Dictionary) -> void:
-	var local_pos: Vector2 = event.get("local_pos", Vector2.ZERO)
-	var world_pos: Vector2 = event.get("world_pos", Vector2.ZERO)
-	var did_change: bool = false
-
-	if _drag_mode == "handle":
-		var new_rx: float = rx
-		var new_ry: float = ry
-
-		match _dragging_handle:
-			"br":
-				new_rx = snapped(local_pos.x, 10.0)
-				new_ry = snapped(local_pos.y, 10.0)
-			"bl":
-				new_rx = snapped(-local_pos.x, 10.0)
-				new_ry = snapped(local_pos.y, 10.0)
-			"tr":
-				new_rx = snapped(local_pos.x, 10.0)
-				new_ry = snapped(-local_pos.y, 10.0)
-			"tl":
-				new_rx = snapped(-local_pos.x, 10.0)
-				new_ry = snapped(-local_pos.y, 10.0)
-
-		# In circle mode, constrain both dimensions to the dominant axis.
-		if shape_mode == "circle":
-			var dominant: float = max(new_rx, new_ry)
-			new_rx = dominant
-			new_ry = dominant
-
-		rx = clamp(new_rx, 20.0, 500.0)
-		ry = clamp(new_ry, 20.0, 500.0)
-		did_change = true
-
-	elif _drag_mode == "body":
-		var delta: Vector2 = world_pos - _drag_start_world
-		var incremental: Vector2 = delta - _last_delta
-		_last_delta = delta
-		position = _drag_start_position + delta
-		did_change = true
-		# Broadcast incremental delta so Main can apply it additively
-		# without accumulating cumulative offsets on siblings.
-		multi_drag_moved.emit(incremental)
-	if did_change:
-		anchor_changed.emit()
-
-
-## Called by ClickHandler on pointer up while drag is active.
-func handle_drag_end(_event: Dictionary) -> void:
-	if _drag_mode == "body":
-		position = position.snapped(Vector2(20.0, 20.0))
-		# Re-notify anchor_changed after snap so arrows match the snapped position.
-		anchor_changed.emit()
-		# Notify Main to snap other selected shapes too.
-		multi_drag_ended.emit()
-	_drag_mode = ""
-	_dragging_handle = ""
-	queue_redraw()
-	# Notify downstream systems (arrows) that anchor positions may have changed.
-	emit_signal("anchor_changed")
-
-
 ## Returns the handle name ("tl", "tr", "bl", "br") if local_pos is within a handle rect,
 ## or an empty string if no handle is hit.
 func handle_at_pos(local_pos: Vector2) -> String:
@@ -397,3 +361,25 @@ func handle_at_pos(local_pos: Vector2) -> String:
 			return key
 
 	return ""
+
+
+# ----- Anchor System (overrides) ---------------------------------------------
+
+## Returns 4 cardinal anchor offsets based on current rx/ry dimensions.
+func get_anchor_positions() -> Array[Dictionary]:
+	return [
+		{"label": "top", "offset": Vector2(0, -ry)},
+		{"label": "bottom", "offset": Vector2(0, ry)},
+		{"label": "left", "offset": Vector2(-rx, 0)},
+		{"label": "right", "offset": Vector2(rx, 0)},
+	]
+
+
+# ----- Virtual Properties (overrides) ----------------------------------------
+
+func supports_text_editing() -> bool:
+	return true
+
+
+func shows_in_legend() -> bool:
+	return true

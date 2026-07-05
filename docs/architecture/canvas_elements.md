@@ -1,17 +1,49 @@
 # Canvas Elements
 
-Two element types exist on the canvas: **LabelShape** (text-bearing ellipses) and **Arrow** (bezier curve connectors between shapes). Nodes (CircleNode, TriangleNode) are planned but not implemented.
+Two element types exist on the canvas: **LabelShape** (text-bearing ellipses), **CanvasNode** (fixed-size circle/triangle nodes), and **Arrow** (bezier curve connectors between elements). All shape-like elements inherit from the `CanvasElement` base class.
+
+---
+
+## Class Hierarchy
+
+```
+Node2D
+└── CanvasElement (script-only base class)
+    ├── LabelShape — ellipse shapes with text, resize handles, legend entry
+    └── CanvasNode — fixed-size circle/triangle nodes, no text, no legend entry
+```
+
+`Arrow` remains a standalone `Node2D` subclass (not a `CanvasElement`), since arrows are connectors, not independently interactable canvas elements with anchors and selection state.
+
+---
+
+## CanvasElement (Base Class)
+
+**File**: `res://scenes/canvas_elements/canvas_element.gd`
+
+All common behaviors are consolidated in this base class:
+
+- **Selection state**: `is_selected`, `is_primary` properties with redraw triggers
+- **Drag lifecycle**: `handle_click()`, `handle_drag_begin()`, `handle_drag_move()`, `handle_drag_end()` methods called by ClickHandler
+- **Grid snapping**: `grid_snap_size = 20.0` applied on drag release
+- **Anchor point system**: `get_anchor_positions()` returns an array of `{label, offset}` dictionaries
+- **Deletion cascade**: `delete_requested` signal triggers ArrowManager to remove connected arrows
+- **Signals**: `clicked`, `double_clicked`, `selected_changed`, `primary_changed`, `dragged`, `drag_ended`, `anchor_changed`, `delete_requested`
+- **Group membership**: Auto-registers in `"clickable_element"` group for ClickHandler discovery
+
+See [shared_element_base.md](shared_element_base.md) for the full API.
 
 ---
 
 ## LabelShape
 
 **File**: `res://scenes/tools/label_shape/label_shape.gd`
+**Extends**: `CanvasElement`
 
 ### Class Hierarchy
 
 ```
-Node2D (LabelShape)
+CanvasElement (LabelShape)
 ├── Area2D                   — Hit detection + overlap detection
 │   └── CollisionShape2D     — CircleShape2D with radius = max(rx, ry)
 ├── HandleTL (ColorRect)     — Top-left resize handle
@@ -23,7 +55,7 @@ Node2D (LabelShape)
 
 All handles have `mouse_filter = MOUSE_FILTER_IGNORE` so clicks pass through to the Area2D beneath.
 
-### Exported Properties
+### Exported Properties (in addition to CanvasElement)
 
 | Property | Type | Default | Description |
 |---|---|---|---|
@@ -31,7 +63,17 @@ All handles have `mouse_filter = MOUSE_FILTER_IGNORE` so clicks pass through to 
 | `rx` | float | 80.0 | Horizontal radius. Triggers redraw, collision update, handle positions, text rescale |
 | `ry` | float | 50.0 | Vertical radius. Same triggers as rx |
 | `text_content` | String | `""` | Label text displayed on shape |
-| `fill_color` | Color | `#3b82f6` | Fill color; stroke is darkened/lightened version |
+
+### CanvasElement Overrides
+
+| Property/Method | Value |
+|---|---|
+| `supports_text_editing` | `true` |
+| `shows_in_legend` | `true` |
+| `get_element_type()` | `"LabelShape"` |
+| `get_anchor_positions()` | 4 cardinal points at ellipse edge |
+| `on_drag_move(delta)` | Detects handle vs. body drag. Handle drag resizes rx/ry. Body drag moves position. |
+| `on_drag_end()` | Inherits grid snap. Resize snaps to 10px. |
 
 ### Custom Drawing (`_draw()`)
 
@@ -39,6 +81,8 @@ The shape draws itself each frame via `draw_ellipse()`:
 
 - **Fill**: Ellipse filled with `fill_color`, opacity 0.9
 - **Stroke**: Ellipse outline. When not selected, stroke is `fill_color.darkened(0.4)` at width 2. When selected as primary, stroke is `fill_color.lightened(0.4)` at width 3. When selected as secondary, stroke is `fill_color.lightened(0.25)` at width 2.5.
+
+Selection highlight parameters come from the base class's `_draw()` convention — subclasses apply `is_primary` / `is_selected` to their own stroke rendering.
 
 ### Drag Modes
 
@@ -57,8 +101,8 @@ LabelShape supports two drag modes, detected in `handle_click()`:
 ### Move (Body Drag) Behavior
 
 - **Free movement**: Drag follows cursor with no snap during movement.
-- **20px snap on release**: `position = position.snapped(Vector2(20.0, 20.0))`
-- **Multi-drag broadcast**: During body drag, emits `multi_drag_moved(incremental_delta)` each frame so Main can shift sibling elements.
+- **20px snap on release**: `position = position.snapped(Vector2(20.0, 20.0))` — inherited from CanvasElement.
+- **Multi-drag broadcast**: During body drag, emits `dragged(incremental_delta, self)` each frame so Main can shift sibling elements.
 
 ### Text Display
 
@@ -72,13 +116,62 @@ LabelShape supports two drag modes, detected in `handle_click()`:
 
 When `shape_mode` transitions:
 - **oval → circle**: `new_r = max(rx, ry)`, both set to that value
-- **circle → oval`: `ry` resets to 50.0
+- **circle → oval**: `ry` resets to 50.0
+
+---
+
+## CanvasNode
+
+**File**: `res://scenes/canvas_elements/canvas_node.gd`
+**Extends**: `CanvasElement`
+
+### Class Hierarchy
+
+```
+CanvasElement (CanvasNode)
+├── Area2D
+│   └── CollisionShape2D (circle) or CollisionPolygon2D (triangle)
+└── (no other children — fixed size, no text, no legend entry)
+```
+
+### Exported Properties (in addition to CanvasElement)
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `node_type` | String | `"circle"` | `"circle"` or `"triangle"` |
+| `radius` | float | 40.0 | Fixed radius. Not resizable via handles. |
+
+### CanvasElement Overrides
+
+| Property/Method | Value |
+|---|---|
+| `supports_text_editing` | `false` |
+| `shows_in_legend` | `false` |
+| `get_element_type()` | `"CanvasNode"` |
+| `get_anchor_positions()` | 4 anchors (circle) or 3 anchors (triangle) |
+| `on_drag_move(delta)` | Body drag only (no resize handles). Moves position by delta. |
+| `on_drag_end()` | Inherits grid snap (position snapped to 20px). |
+
+### Custom Drawing (`_draw()`)
+
+- **Circle**: Filled circle with `fill_color`, stroke outline based on selection state.
+- **Triangle**: Filled equilateral triangle (pointing up) with `fill_color`, stroke outline based on selection state.
+
+Selection visual parameters follow the base class convention (same lightening/darkening pattern as LabelShape).
+
+### Behavior
+
+- **Fixed size**: Nodes cannot be resized. No resize handles are created.
+- **No text editing**: `supports_text_editing = false` disables the text overlay.
+- **No legend entry**: `shows_in_legend = false` excludes node colors from the legend panel.
+- **Body drag only**: Clicks anywhere on the body initiate a body drag.
 
 ---
 
 ## Arrow
 
 **File**: `res://scenes/tools/arrow/arrow.gd`
+**Extends**: `Node2D` (not CanvasElement)
 
 ### Class Hierarchy
 
@@ -90,31 +183,32 @@ Node2D (Arrow)
 
 ### Data Model
 
-Arrows store references to their connected shapes via `NodePath` rather than direct references. This prevents dangling pointers when shapes are deleted:
+Arrows store references to their connected elements via `NodePath`:
 
 ```gdscript
-var start_shape_path: NodePath
-var end_shape_path: NodePath
-var start_anchor_label: String  # "top", "bottom", "left", "right"
+var start_element_path: NodePath
+var end_element_path: NodePath
+var start_anchor_label: String  # e.g., "top", "bottom", "left", "right"
 var end_anchor_label: String
 ```
 
-Paths are set relative to the arrow node at creation time (`arrow.get_path_to(shape)`).
+Paths are set relative to the arrow node at creation time (`arrow.get_path_to(element)`).
 
 ### Bezier Path Computation (`rebuild_path()`)
 
-Called whenever either endpoint shape moves or resizes:
+Called whenever either endpoint element moves or resizes:
 
-1. Resolve `start_shape_path` and `end_shape_path` to actual nodes
-2. Get edge positions: `get_anchor_edge_position_static(shape, label)` returns the point on the ellipse boundary for the given cardinal anchor
-3. Get outward normals: `get_anchor_outward_normal_static(label)` returns the direction from anchor (e.g., `"top"` → `Vector2(0, -1)`)
-4. Compute control points with Catmull-Rom-style tangents:
+1. Resolve `start_element_path` and `end_element_path` to actual `CanvasElement` nodes
+2. Get edge positions via `get_anchor_world_positions()` on each element
+3. Find the anchor position matching the stored label
+4. Compute outward normals: derived from anchor label (e.g., `"top"` → `Vector2(0, -1)`)
+5. Compute control points with Catmull-Rom-style tangents:
    - Control-point reach: `clamp(segment_len * 0.35, 30.0, 100.0)` along the outward normal
    - p1 = p0 + outward_start * reach
    - p2 = p3 + outward_end * reach
-5. Sample the cubic bezier at 40 points (`CURVE_SAMPLES`)
-6. Cache bezier points, arrowhead tip position, and arrowhead direction for `_draw()`
-7. Update both `vis_line.points` and `hit_line.points`
+6. Sample the cubic bezier at 40 points (`CURVE_SAMPLES`)
+7. Cache bezier points, arrowhead tip position, and arrowhead direction for `_draw()`
+8. Update both `vis_line.points` and `hit_line.points`
 
 ### Arrowhead Rendering (`_draw()`)
 
@@ -133,7 +227,7 @@ A filled triangle drawn at the endpoint:
 
 ### Multi-Drag Support
 
-Emits `multi_drag_moved(delta)` during body drags. Main relays the delta to all other selected elements. Arrows do not implement `handle_drag_begin` returning true based on click detection — they are discovered through the secondary arrow-hit path in ClickHandler.
+Emits `multi_drag_moved(delta)` during body drags. Main relays the delta to all other selected elements. Arrows are discovered through the secondary arrow-hit path in ClickHandler.
 
 ### Drag Behavior
 
@@ -142,79 +236,45 @@ Emits `multi_drag_moved(delta)` during body drags. Main relays the delta to all 
 
 ---
 
-## Anchors
+## Anchor Positions (via CanvasElement.get_anchor_positions())
 
-Every LabelShape has 4 cardinal anchor points. Anchor dots are managed by `ArrowManager`, not embedded in the shape scene.
+Anchor data is now data-driven via the base class. ArrowManager calls `get_anchor_positions()` generically — no per-type conditional logic.
 
-### Edge Positions (for arrow endpoints)
+### LabelShape (4 cardinal points)
 
-Relative to shape center:
-
-| Label | Position |
+| Label | Offset (from center) |
 |---|---|
 | `top` | `Vector2(0, -ry)` |
 | `bottom` | `Vector2(0, ry)` |
 | `left` | `Vector2(-rx, 0)` |
 | `right` | `Vector2(rx, 0)` |
 
-### Dot Positions (for visual markers)
+### CanvasNode — Circle (4 points)
 
-Offset 5px outward from ellipse edge:
-
-| Label | Position |
+| Label | Offset (from center) |
 |---|---|
-| `top` | `Vector2(0, -ry - 5)` |
-| `bottom` | `Vector2(0, ry + 5)` |
-| `left` | `Vector2(-rx - 5, 0)` |
-| `right` | `Vector2(rx + 5, 0)` |
+| `top` | `Vector2(0, -radius)` |
+| `bottom` | `Vector2(0, radius)` |
+| `left` | `Vector2(-radius, 0)` |
+| `right` | `Vector2(radius, 0)` |
+
+### CanvasNode — Triangle (3 points)
+
+| Label | Offset (from center) |
+|---|---|
+| `top` | `Vector2(0, -radius)` |
+| `bottom_left` | `Vector2(-radius * 0.866, radius * 0.5)` |
+| `bottom_right` | `Vector2(radius * 0.866, radius * 0.5)` |
 
 ### Anchor Dot Nodes
 
-Dots are lightweight `Node2D` nodes with `anchor_dot.gd` script, dynamically created/destroyed by `ArrowManager`. Visual properties are stored as node meta:
-
-- `dot_radius`: 4px normal, 7px hover
-- `dot_fill`: `Color(1, 1, 1)` normal, `Color(0.23, 0.51, 0.965)` hover
-- `dot_stroke`: `Color(0.23, 0.51, 0.965)`
-- `parent_shape`: reference to the owning LabelShape
-- `anchor_label`: `"top"`, `"bottom"`, `"left"`, or `"right"`
-
-### Visibility Rules
-
-- Hidden by default
-- Shown when cursor is within 20px (`ANCHOR_HOVER_RADIUS`) of any dot on a shape
-- All anchors shown when an arrow drag is in progress
-- All anchors hidden when not in Select mode
-
-### Highlighting
-
-The nearest anchor within hover radius gets highlighted: radius 7px, filled `#3b82f6` (same as default shape color). This is the snap target for arrow creation.
+Dots are managed by `ArrowManager`, not embedded in element scenes. Dot positions are offset 5px outward from the anchor edge position. See [arrow_system.md](arrow_system.md) for full dot management details.
 
 ---
 
 ## Arrow Creation Flow (Drag from Anchor)
 
-Managed by `ArrowManager`:
-
-1. **Detection**: `handle_dot_mousedown()` checks if mouse is over any anchor dot (within `DOT_RADIUS_HOVER`)
-2. **Begin**: `begin_arrow_drag()` sets drag state, creates preview Line2D, shows all anchors
-3. **During**: `_update_drag_preview()` computes bezier from start anchor to mouse/snapped position
-4. **Snap**: `_highlight_dot()` sets `_drag_snapped_shape`/`_drag_snapped_label` when cursor is within `SNAP_RADIUS` (15px) of a dot
-5. **End**: `end_arrow_drag()` checks validity (different shapes), creates arrow via `_create_arrow()`, or discards
-
-### Arrow Preview
-
-- Dashed `Line2D` child of `ElementLayer` during drag
-- 20 sample points for real-time preview
-- Color: `Color(0.6, 0.8, 1.0, 0.8)` when free, `Color(0.6, 0.8, 1.0, 1.0)` when snapped
-
-### Arrow Creation
-
-- Instantiated from `res://scenes/tools/arrow/arrow.tscn`
-- Parented to ElementLayer at index 0 (below shapes)
-- Paths set via `arrow.get_path_to(shape)` for each endpoint
-- `rebuild_path()` called immediately
-- `multi_drag_moved` signal connected to Main
-- Arrow added to `_arrows` array in ArrowManager
+Managed by `ArrowManager` — see [arrow_system.md](arrow_system.md). The flow is identical for both element types since ArrowManager now uses the generic `CanvasElement` anchor interface.
 
 ---
 
@@ -233,6 +293,18 @@ Managed by `ArrowManager`:
 }
 ```
 
+### CanvasNode serialization:
+
+```gdscript
+{
+    "type": "CanvasNode",
+    "position_x": float, "position_y": float,
+    "node_type": String,  # "circle" or "triangle"
+    "radius": float,
+    "fill_r": float, "fill_g": float, "fill_b": float, "fill_a": float,
+}
+```
+
 ### Arrow serialization (design doc, not yet implemented):
 
-Anchor references use element-index pointers (the index of the referenced shape in the serialized array). Arrows are currently not serialized/deserialized due to the need for two-pass loading (first pass: shapes; second pass: arrows resolving indices).
+Anchor references use element-index pointers (the index of the referenced element in the serialized array). Arrows are currently not serialized/deserialized due to the need for two-pass loading (first pass: elements; second pass: arrows resolving indices).

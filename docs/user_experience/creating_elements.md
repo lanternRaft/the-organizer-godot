@@ -2,7 +2,11 @@
 
 ## Overview
 
-The user populates the canvas with three kinds of things: **shapes** (ovals and circles that hold text), **arrows** (curved connectors between shapes), and **nodes** (small fixed-size circle and triangle markers). Each element is placed using a distinct interaction.
+The user populates the canvas with three kinds of things: **shapes** (ovals and circles that hold text), **arrows** (curved connectors between elements), and **nodes** (small fixed-size circle and triangle markers). Each element is placed using a distinct interaction.
+
+### Shared base class
+
+Shapes and nodes are both subclasses of a common base that provides anchor points, selection, drag, grid snap, and deletion. The base class ensures that arrow creation works identically whether the user connects two shapes, two nodes, or a shape and a node — all anchor points are provided by the same infrastructure. See [`shared_element_base.md`](shared_element_base.md).
 
 ---
 
@@ -16,13 +20,13 @@ There are three tool categories:
 - **Shape tool** — click the canvas to drop a new shape. A dropdown on this button lets the user choose between Oval and Circle before placing.
 - **Node tool** — click the canvas to drop a small fixed-size marker. A dropdown on this button lets the user choose between Circle Node and Triangle Node before placing.
 
-The user is never stuck in a tool they don't want. Every shape placement automatically returns them to Select mode. If they accidentally enter a tool, Escape gets them out.
+The user is never stuck in a tool they don't want. Every element placement automatically returns them to Select mode. If they accidentally enter a tool, Escape gets them out.
 
 ### How tool switching feels
 
 Buttons in the toolbar are toggle-style — when Select is active, the Select button looks pressed in. Switching to a shape tool or node tool pops the Select button back up. There's a quiet, mechanical finality to it: tools snap into place.
 
-The info bar at the bottom of the screen shows a brief hint for the current tool, so the user always knows what will happen if they click. In Select mode it says "Click to select an oval"; in Shape mode it says "Click the canvas to place a (oval/circle)"; in Node mode it says "Click the canvas to place a (circle/triangle) node".
+The info bar at the bottom of the screen shows a brief hint for the current tool, so the user always knows what will happen if they click. In Select mode it says "Click to select an oval or node"; in Shape mode it says "Click the canvas to place a (oval/circle)"; in Node mode it says "Click the canvas to place a (circle/triangle) node".
 
 ---
 
@@ -54,7 +58,7 @@ When the user switches from Oval to Circle, any shape they place from that point
 
 ### Edge cases
 
-- **Placing on top of existing shapes:** New shapes can overlap existing shapes if placed on top of them. The user can freely position shapes anywhere on the canvas, including on top of other elements.
+- **Placing on top of existing elements:** New shapes can overlap existing shapes or nodes if placed on top of them. The user can freely position elements anywhere on the canvas, including on top of other elements.
 - **Rapid placement:** The user can click multiple times quickly to drop several shapes in sequence — but only if they re-enter Shape mode each time. Each placement returns to Select mode, which is a deliberate trade-off: it prevents accidental mass placement while letting the user build up a canvas quickly through repetition.
 - **Tool deactivation:** Pressing Escape while in shape mode deactivates the tool without placing anything. The user returns to Select mode with a clean slate.
 
@@ -62,26 +66,26 @@ When the user switches from Oval to Circle, any shape they place from that point
 
 ## Creating Arrows
 
-Arrows connect shapes to each other. They represent relationships — dependencies, influences, flows, hierarchies.
+Arrows connect elements to each other. They represent relationships — dependencies, influences, flows, hierarchies. Because shapes and nodes both inherit anchor points from the shared base class, arrows can connect any combination of element types.
 
 ### How it works
 
-Arrows are created by dragging from one shape's anchor point to another, all within Select mode:
+Arrows are created by dragging from one element's anchor point to another, all within Select mode:
 
-1. The user is in Select mode with at least one shape on the canvas
-2. As the user moves the cursor near a shape (within a comfortable proximity), four small anchor dots appear at the shape's cardinal points: top, bottom, left, right
+1. The user is in Select mode with at least one shape or node on the canvas
+2. As the user moves the cursor near an element (within a comfortable proximity), small anchor dots appear at the element's anchor positions
 3. Moving the cursor directly over an anchor dot makes it grow larger and turn blue — it's ready to grab
-4. The user clicks and holds on that anchor dot, then drags toward another shape
+4. The user clicks and holds on that anchor dot, then drags toward another element
 5. A dashed preview line stretches from the start anchor to the cursor, showing the path the arrow will take
-6. As the cursor nears another shape's anchor (within a forgiving snap radius), the nearest anchor highlights — a valid landing zone
+6. As the cursor nears another element's anchor (within a forgiving snap radius), the nearest anchor highlights — a valid landing zone
 7. Releasing the mouse over a highlighted anchor creates the arrow: a curved line from start anchor to end anchor, with an arrowhead at the end
-8. Releasing anywhere else (empty space, back on the starting shape) cancels the creation — nothing happens
+8. Releasing anywhere else (empty space, back on the starting element) cancels the creation — nothing happens
 
 ### How it feels
 
-Arrow creation should feel like connecting two points with invisible string. The user reaches out from one shape, the anchor dots appear automatically when they're near — no button toggling, no mode switching. The preview line shows what the connection will look like, so there's no guesswork.
+Arrow creation should feel like connecting two points with invisible string. The user reaches out from one element, the anchor dots appear automatically when they're near — no button toggling, no mode switching. The preview line shows what the connection will look like, so there's no guesswork.
 
-The snap radius is generous: the arrow doesn't need to land exactly on the anchor, just close to it. This makes quick connections between densely-packed shapes easy — the user can build up an entire diagram without precise aiming.
+The snap radius is generous: the arrow doesn't need to land exactly on the anchor, just close to it. This makes quick connections between densely-packed elements easy — the user can build up an entire diagram without precise aiming.
 
 ### Why drag-from-anchor instead of click-drag-release on the canvas
 
@@ -93,24 +97,26 @@ During the drag, a dashed line shows the arrow-to-be. The line curves naturally 
 
 ### Anchor dots
 
-Each shape has four anchors at its cardinal points. The dots sit just outside the shape's edge — a small buffer so they're visually distinct from the shape itself.
+Each element has anchors at positions defined by its subclass — 4 cardinal points for shapes and circle nodes, 3 vertex points for triangle nodes. The dots sit just outside the element's edge — a small buffer so they're visually distinct from the element itself.
 
 - **Default state:** Small white dots with a blue border
-- **Hover state (nearby):** Dots become visible only when the cursor is near the shape. They fade into awareness rather than cluttering the canvas constantly
+- **Hover state (nearby):** Dots become visible only when the cursor is near the element. They fade into awareness rather than cluttering the canvas constantly
 - **Active state (grabbing):** The dot being dragged from stays highlighted
 - **Snap target (valid landing):** The nearest anchor under the cursor during a drag grows larger and turns solid blue
 
-### Why four anchors
+### Why per-element anchor counts
 
-Four cardinal points (top, bottom, left, right) cover the most common connection directions without overwhelming the user with choices. More anchors would create visual noise; fewer would force awkward arrow paths. Four is the sweet spot for diagrams, flowcharts, and relationship maps.
+- **4 cardinal points (top, bottom, left, right):** Used by shapes (oval/circle) and circle nodes. Four directions cover the most common connection paths without overwhelming the user.
+- **3 vertex points (top, bottom-left, bottom-right):** Used by triangle nodes. The vertices provide natural attachment points that follow the triangle's geometry.
 
 ### Edge cases
 
-- **Connecting a shape to itself:** The system prevents this. If the user drags from a shape back to the same shape, the preview shows the connection won't land (no snap highlight), and releasing cancels the arrow. This enforces meaningful connections.
+- **Connecting an element to itself:** The system prevents this. If the user drags from an anchor back to the same element, the preview shows the connection won't land (no snap highlight), and releasing cancels the arrow. This enforces meaningful connections.
+- **Cross-type connections:** Arrows can connect shape→node, node→shape, node→node, or shape→shape. The same anchor-based drag interaction applies regardless of type.
 - **Dragging over existing arrows:** The preview line renders above other elements so the user always sees what they're creating. Existing arrows are ignored during the drag — they're not valid targets.
 - **Accidental release on empty space:** Nothing happens. The user can continue dragging, or release and try again. No penalty for a missed connection.
 - **Arrow starts from any anchor, ends at any anchor:** The user can connect top-to-bottom, left-to-right, or any combination. The arrow path adjusts automatically.
-- **If a connected shape moves or is deleted:** Arrows attached to that shape update their path to follow (or are destroyed if the shape is gone).
+- **If a connected element moves or is deleted:** Arrows attached to that element update their path to follow (or are destroyed if the element is gone).
 
 ---
 
@@ -139,14 +145,14 @@ Both default to the same friendly blue fill color as shapes, configurable via th
 ### What nodes support
 
 - **Color changes** — same palette and flow as shapes (via selection menu)
-- **Arrow connections** — each node has its own set of anchor points for creating arrows
+- **Arrow connections** — each node has its own set of anchor points for creating arrows, provided by the shared base class
   - **Circle Node anchors:** 4 cardinal points (top, bottom, left, right) — identical to shapes
   - **Triangle Node anchors:** 3 vertex points (top, bottom-left, bottom-right)
 - **Selection and dragging** — nodes can be clicked, shift+clicked, and dragged like shapes (20px snap)
 
 ### What nodes don't support
 
-- **Resize handles** — nodes are fixed-size; no resize interaction appears on selection
+- **Resize handles** — nodes are fixed-size; no resize interaction appears on selection (enforced by the shared base class)
 - **Text editing** — nodes have no text overlay; they're purely visual markers
 - **Appearing in the legend** — nodes are not included in the legend panel (they are decoration, not categories)
 

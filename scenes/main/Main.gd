@@ -26,7 +26,7 @@ var node_sub_mode: String = "circle_node"
 ## Whether select mode is currently active.
 var select_mode_active: bool = false
 
-## Reference to the last placed shape (useful for future undo / selection).
+## Reference to the last placed element (useful for future undo / selection).
 var last_placed: Node2D = null
 
 ## Most recent zoom level (cached from camera_controller signal).
@@ -35,8 +35,7 @@ var current_zoom: float = 1.0
 ## Whether the grid is currently visible.
 var grid_enabled: bool = true
 
-## Current multi-selection set. Contains LabelShape, CanvasNode, and/or Arrow nodes.
-## Replaces the old split state (selected_set + selected_arrow).
+## Current multi-selection set. Contains CanvasElement and/or Arrow nodes.
 var selected_set: Array[Node] = []
 
 ## Last-clicked (primary) selection. Determines which element gets the stronger highlight.
@@ -137,7 +136,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
-	## Delete/Backspace key removes the selected arrow or shape.
+	## Delete/Backspace key removes the selected element or arrow.
 	if event is InputEventKey:
 		var key_event: InputEventKey = event as InputEventKey
 		if not key_event.pressed or key_event.echo:
@@ -223,11 +222,11 @@ func place_shape(world_pos: Vector2) -> void:
 	last_placed = shape
 
 	# Connect the click signal for selection.
-	shape.clicked.connect(_on_shape_clicked)
+	shape.clicked.connect(_on_element_clicked)
 	# Connect double-click for text editing.
 	shape.double_clicked.connect(_on_shape_double_clicked)
 	# Connect anchor_changed so ArrowManager updates connected arrows.
-	shape.anchor_changed.connect(_on_shape_anchor_changed.bind(shape))
+	shape.anchor_changed.connect(_on_element_anchor_changed.bind(shape))
 	shape.multi_drag_moved.connect(_on_multi_drag_moved.bind(shape))
 	shape.multi_drag_ended.connect(_on_multi_drag_ended.bind(shape))
 	# Auto-switch to Select mode and select the new shape.
@@ -291,9 +290,9 @@ func place_node(world_pos: Vector2) -> void:
 	last_placed = node
 
 	# Connect signals for selection.
-	node.connect("clicked", _on_node_clicked)
+	node.connect("clicked", _on_element_clicked)
 	# Connect anchor_changed so ArrowManager updates connected arrows.
-	node.connect("anchor_changed", _on_node_anchor_changed.bind(node))
+	node.connect("anchor_changed", _on_element_anchor_changed.bind(node))
 	node.connect("multi_drag_moved", _on_multi_drag_moved.bind(node))
 	node.connect("multi_drag_ended", _on_multi_drag_ended.bind(node))
 	# Auto-switch to Select mode and select the new node.
@@ -354,23 +353,16 @@ func _on_empty_canvas_clicked(world_pos: Vector2) -> void:
 		clear_selection()
 
 
-## Handles a click on a shape. Connected to LabelShape.clicked signal.
+## Handles a click on any CanvasElement (LabelShape or CanvasNode).
+## Connected to clicked signal on both element types.
 ## Shift-click toggles additive; single click re-selects.
-func _on_shape_clicked(_event: InputEvent, shape: Node) -> void:
+func _on_element_clicked(_event: InputEvent, element: Node) -> void:
 	if not select_mode_active:
 		return
-	_handle_element_clicked(shape)
+	_handle_element_clicked(element)
 
 
-## Handles a click on a node. Connected to CanvasNode.clicked signal.
-## Shift-click toggles additive; single click re-selects.
-func _on_node_clicked(_event: InputEvent, node: Node) -> void:
-	if not select_mode_active:
-		return
-	_handle_element_clicked(node)
-
-
-## Unified click handler for both shapes and arrows.
+## Unified click handler for both CanvasElements and arrows.
 ## Shift-click toggles additive; no-Shift clears and selects just this element.
 func _handle_element_clicked(element: Node) -> void:
 	if not select_mode_active:
@@ -391,14 +383,14 @@ func _handle_element_clicked(element: Node) -> void:
 		set_primary_selection(element)
 
 
-## Adds the element (LabelShape or Arrow) to the selection set.
+## Adds the element (CanvasElement or Arrow) to the selection set.
 ## If additive is false, clears first.
 func select_element(element: Node, additive: bool = false) -> void:
 	if not additive:
 		clear_selection()
 	if not element in selected_set:
 		selected_set.append(element)
-	# Duck-type: both LabelShape and Arrow have set_selected / is_selected.
+	# Duck-type: both CanvasElement and Arrow have set_selected / is_selected.
 	if element.has_method(&"set_selected"):
 		element.call("set_selected", true)
 	_refresh_primary_visuals()
@@ -469,7 +461,7 @@ func update_info_bar() -> void:
 		if selected_set.size() > 1:
 			info_bar.text = "Drag to move %d selected elements" % selected_set.size() + zoom_suffix
 		else:
-			if primary_selection is Node2D and primary_selection.has_method("get_anchor_points"):
+			if primary_selection is CanvasElement:
 				info_bar.text = "Drag to move   Click color to change" + zoom_suffix
 			else:
 				info_bar.text = "Enter to edit text   Drag handles to resize" + zoom_suffix
@@ -545,37 +537,38 @@ func _on_text_cancelled(_shape: Node) -> void:
 func serialize_canvas() -> Dictionary:
 	var elements: Array[Dictionary] = []
 	for child: Node in element_layer.get_children():
-		if child is LabelShape:
-			var shape: LabelShape = child as LabelShape
-			var pos: Vector2 = shape.position
-			var color: Color = shape.fill_color
-			elements.append({
-				"type": "LabelShape",
-				"position_x": pos.x,
-				"position_y": pos.y,
-				"rx": shape.rx,
-				"ry": shape.ry,
-				"fill_r": color.r,
-				"fill_g": color.g,
-				"fill_b": color.b,
-				"fill_a": color.a,
-				"text": shape.text_content,
-				"shape_mode": shape.shape_mode,
-			})
-		elif child is Node2D and child.has_method("get_anchor_points"):
-			var node: Node2D = child as Node2D
-			var pos: Vector2 = node.position
-			var color: Color = node.get("fill_color")
-			elements.append({
-				"type": "CanvasNode",
-				"position_x": pos.x,
-				"position_y": pos.y,
-				"fill_r": color.r,
-				"fill_g": color.g,
-				"fill_b": color.b,
-				"fill_a": color.a,
-				"sub_mode": node.get("sub_mode"),
-			})
+		if child is CanvasElement:
+			var elem: CanvasElement = child as CanvasElement
+			var pos: Vector2 = elem.position
+			if child is LabelShape:
+				var shape: LabelShape = child as LabelShape
+				var color: Color = shape.fill_color
+				elements.append({
+					"type": "LabelShape",
+					"position_x": pos.x,
+					"position_y": pos.y,
+					"rx": shape.rx,
+					"ry": shape.ry,
+					"fill_r": color.r,
+					"fill_g": color.g,
+					"fill_b": color.b,
+					"fill_a": color.a,
+					"text": shape.text_content,
+					"shape_mode": shape.shape_mode,
+				})
+			elif child is CanvasNode:
+				var node: CanvasNode = child as CanvasNode
+				var color: Color = node.fill_color
+				elements.append({
+					"type": "CanvasNode",
+					"position_x": pos.x,
+					"position_y": pos.y,
+					"fill_r": color.r,
+					"fill_g": color.g,
+					"fill_b": color.b,
+					"fill_a": color.a,
+					"sub_mode": node.sub_mode,
+				})
 	var result: Dictionary = {"elements": elements}
 	result["legend"] = legend_panel.call("get_legend_data")
 	return result
@@ -630,16 +623,16 @@ func _load_label_shape(data: Dictionary) -> void:
 	shape.text_content = str(data.get("text", ""))
 
 	element_layer.add_child(shape)
-	shape.clicked.connect(_on_shape_clicked)
+	shape.clicked.connect(_on_element_clicked)
 	shape.double_clicked.connect(_on_shape_double_clicked)
-	shape.anchor_changed.connect(_on_shape_anchor_changed.bind(shape))
+	shape.anchor_changed.connect(_on_element_anchor_changed.bind(shape))
 	shape.multi_drag_moved.connect(_on_multi_drag_moved.bind(shape))
 	shape.multi_drag_ended.connect(_on_multi_drag_ended.bind(shape))
 
 
 ## Instantiates a CanvasNode from serialised data and adds it to the canvas.
 func _load_canvas_node(data: Dictionary) -> void:
-	var node: Node2D = CANVAS_NODE_SCENE.instantiate()
+	var node: CanvasNode = CANVAS_NODE_SCENE.instantiate()
 	var px: float = data.get("position_x", 0.0)
 	var py: float = data.get("position_y", 0.0)
 	node.position = Vector2(px, py)
@@ -647,12 +640,12 @@ func _load_canvas_node(data: Dictionary) -> void:
 	var fg: float = data.get("fill_g", 0.51)
 	var fb: float = data.get("fill_b", 0.965)
 	var fa: float = data.get("fill_a", 1.0)
-	node.set("fill_color", Color(fr, fg, fb, fa))
-	node.set("sub_mode", str(data.get("sub_mode", "circle_node")))
+	node.fill_color = Color(fr, fg, fb, fa)
+	node.sub_mode = str(data.get("sub_mode", "circle_node"))
 
 	element_layer.add_child(node)
-	node.connect("clicked", _on_node_clicked)
-	node.connect("anchor_changed", _on_node_anchor_changed.bind(node))
+	node.connect("clicked", _on_element_clicked)
+	node.connect("anchor_changed", _on_element_anchor_changed.bind(node))
 	node.connect("multi_drag_moved", _on_multi_drag_moved.bind(node))
 	node.connect("multi_drag_ended", _on_multi_drag_ended.bind(node))
 
@@ -668,43 +661,35 @@ func _on_multi_drag_moved(delta: Vector2, emitter: Node) -> void:
 	for elem: Node in selected_set:
 		if elem == emitter:
 			continue
-		if elem is LabelShape:
-			var shape: LabelShape = elem as LabelShape
-			shape.position += delta
-			shape.anchor_changed.emit()
-		elif elem is Node2D and elem.has_method("get_anchor_points"):
-			var node: Node2D = elem as Node2D
-			node.position += delta
-			node.emit_signal("anchor_changed")
+		if elem is CanvasElement:
+			var ce: CanvasElement = elem as CanvasElement
+			ce.position += delta
+			ce.anchor_changed.emit()
 		elif elem.is_in_group("arrows"):
 			var arrow_node: Node = elem
 			if arrow_node is Node2D:
 				(arrow_node as Node2D).position += delta
 
 
-## Called when a body-drag ends on a LabelShape or CanvasNode. Snaps all other selected
+## Called when a body-drag ends on a CanvasElement. Snaps all other selected
 ## elements to the 20px grid so they stay aligned with the dragged element.
 func _on_multi_drag_ended(_emitter: Node) -> void:
 	if selected_set.size() <= 1:
 		return
 	for elem: Node in selected_set:
-		if elem is LabelShape:
-			var shape: LabelShape = elem as LabelShape
-			shape.position = shape.position.snapped(Vector2(20.0, 20.0))
-			shape.anchor_changed.emit()
-		elif elem is Node2D and elem.has_method("get_anchor_points"):
-			var node: Node2D = elem as Node2D
-			node.position = node.position.snapped(Vector2(20.0, 20.0))
-			node.emit_signal("anchor_changed")
+		if elem is CanvasElement:
+			var ce: CanvasElement = elem as CanvasElement
+			ce.position = ce.position.snapped(Vector2(20.0, 20.0))
+			ce.anchor_changed.emit()
 
 
-## Selects all LabelShapes, CanvasNodes, and Arrows currently on the canvas.
+## Selects all CanvasElements and Arrows currently on the canvas.
 func _select_all_elements() -> void:
 	if not select_mode_active:
 		return
 	clear_selection()
 	for child: Node in element_layer.get_children():
-		if child is LabelShape or (child is Node2D and child.has_method("get_anchor_points")) or child.is_in_group("arrows"):
+		if child is CanvasElement or child.is_in_group("arrows"):
 			select_element(child, true)
 	if not selected_set.is_empty():
 		set_primary_selection(selected_set[-1])
@@ -772,18 +757,12 @@ func _on_pointer_up(_world_pos: Vector2) -> void:
 	arrow_manager.call("handle_dot_mouseup")
 
 
-## Called by Main when a shape emits anchor_changed (resized or moved).
-func _on_shape_anchor_changed(shape: LabelShape) -> void:
+## Called by Main when any CanvasElement emits anchor_changed (resized or moved).
+## Routes to ArrowManager's unified update_arrows_for_element method.
+func _on_element_anchor_changed(element: CanvasElement) -> void:
 	if arrow_manager == null:
 		return
-	arrow_manager.call("update_arrows_for_shape", shape)
-
-
-## Called by Main when a node emits anchor_changed (moved).
-func _on_node_anchor_changed(node: Node2D) -> void:
-	if arrow_manager == null:
-		return
-	arrow_manager.call("update_arrows_for_shape", node)
+	arrow_manager.call("update_arrows_for_element", element)
 
 
 # ----- Selection Menu & Deletion ---------------------------------------------
@@ -817,22 +796,12 @@ func _delete_selected_elements() -> void:
 		if not is_instance_valid(element):
 			selected_set.erase(element)
 			continue
-		if element is LabelShape:
-			var shape: LabelShape = element as LabelShape
-			if shape == null:
-				continue
-			selected_set.erase(shape)
-			if primary_selection == shape:
+		if element is CanvasElement:
+			var ce: CanvasElement = element as CanvasElement
+			selected_set.erase(ce)
+			if primary_selection == ce:
 				primary_selection = null
-			_delete_shape_element(shape)
-		elif element is Node2D and element.has_method("get_anchor_points"):
-			var node: Node2D = element as Node2D
-			if node == null:
-				continue
-			selected_set.erase(node)
-			if primary_selection == node:
-				primary_selection = null
-			_delete_node_element(node)
+			_delete_element(ce)
 		elif element.is_in_group("arrows"):
 			selected_set.erase(element)
 			if primary_selection == element:
@@ -845,28 +814,15 @@ func _delete_selected_elements() -> void:
 	_refresh_legend()
 
 
-## Removes a LabelShape and any connected arrows from the canvas and selection.
-func _delete_shape_element(shape: LabelShape) -> void:
-	if not is_instance_valid(shape):
+## Removes a CanvasElement and any connected arrows from the canvas and selection.
+func _delete_element(element: CanvasElement) -> void:
+	if not is_instance_valid(element):
 		return
-	arrow_manager.call("delete_arrows_for_shape", shape)
-	selected_set.erase(shape)
-	if primary_selection == shape:
+	arrow_manager.call("delete_arrows_for_element", element)
+	selected_set.erase(element)
+	if primary_selection == element:
 		primary_selection = null
-	shape.queue_free()
-	_update_selection_menu()
-	update_info_bar()
-
-
-## Removes a CanvasNode and any connected arrows from the canvas and selection.
-func _delete_node_element(node: Node2D) -> void:
-	if not is_instance_valid(node):
-		return
-	arrow_manager.call("delete_arrows_for_shape", node)
-	selected_set.erase(node)
-	if primary_selection == node:
-		primary_selection = null
-	node.queue_free()
+	element.queue_free()
 	_update_selection_menu()
 	update_info_bar()
 
@@ -879,9 +835,9 @@ func _on_menu_color_selected(color: Color) -> void:
 			shape.fill_color = color
 			save_canvas()
 			_refresh_legend()
-		elif primary_selection is Node2D and primary_selection.has_method("get_anchor_points"):
-			var node: Node2D = primary_selection as Node2D
-			node.set("fill_color", color)
+		elif primary_selection is CanvasNode:
+			var node: CanvasNode = primary_selection as CanvasNode
+			node.fill_color = color
 			save_canvas()
 
 

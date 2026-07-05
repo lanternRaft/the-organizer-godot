@@ -14,24 +14,39 @@ State is managed locally in `Main.gd`, not via autoload singletons. There is no 
 | `last_placed` | `Node2D` | Reference to the last placed shape |
 | `current_zoom` | `float` | Most recent zoom level (cached from `camera_controller.zoom_changed`) |
 | `grid_enabled` | `bool` | Whether the grid is currently visible |
-| `selected_set` | `Array[Node]` | All currently selected elements (LabelShape + Arrow) |
+| `selected_set` | `Array[Node]` | All currently selected elements (CanvasElement subclasses + Arrow) |
 | `primary_selection` | `Node` | Last-clicked element; determines stronger visual highlight |
 
 ## Communication Patterns
 
-Since there are no autoloads, communication follows a strict parent-child signal pattern:
+Since there are no autoloads, communication follows a strict parent-child signal pattern.
 
-### Signals from Children (connected in `Main._ready()`)
+### Base-Class Signals from CanvasElement
+
+All `CanvasElement` subclasses (`LabelShape`, `CanvasNode`) emit the same set of standardized signals, defined on the base class. `Main.gd` connects to these signals uniformly, eliminating per‑type connection patterns.
+
+| Signal | Arguments | When |
+|---|---|---|
+| `clicked` | `event: Dictionary, element: CanvasElement` | Element is clicked (not already selected). |
+| `double_clicked` | `element: CanvasElement` | Double-click detected on element. |
+| `selected_changed` | `element: CanvasElement, selected: bool` | Selection state changed. |
+| `primary_changed` | `element: CanvasElement, primary: bool` | Primary state changed. |
+| `dragged` | `delta: Vector2, element: CanvasElement` | Element is being dragged each frame. |
+| `drag_ended` | `element: CanvasElement` | Drag finished; caller should snap positions. |
+| `anchor_changed` | `element: CanvasElement` | Anchor positions changed (move or resize). |
+| `delete_requested` | `element: CanvasElement` | Element requested deletion. |
+
+### Signals from Other Children (connected in `Main._ready()`)
 
 | Emitter | Signal | Receiver | Purpose |
 |---|---|---|---|
 | `ClickHandler` | `empty_canvas_clicked(world_pos)` | `Main._on_empty_canvas_clicked` | Routes placement / selection clear |
 | `ClickHandler` | `pointer_up(world_pos)` | `Main._on_pointer_up` | Ends arrow drag in ArrowManager |
-| `LabelShape` | `clicked(event, shape)` | `Main._on_shape_clicked` | Selection on shape click |
-| `LabelShape` | `double_clicked(shape)` | `Main._on_shape_double_clicked` | Opens text editor |
-| `LabelShape` | `anchor_changed()` | `Main._on_shape_anchor_changed(shape)` | Updates connected arrows |
-| `LabelShape` | `multi_drag_moved(delta)` | `Main._on_multi_drag_moved(delta, shape)` | Broadcasts drag delta to siblings |
-| `LabelShape` | `multi_drag_ended()` | `Main._on_multi_drag_ended(shape)` | Snaps all selected shapes to grid |
+| `CanvasElement` (any subclass) | `clicked(event, element)` | `Main._on_element_clicked` | Selection on element click |
+| `CanvasElement` | `double_clicked(element)` | `Main._on_element_double_clicked` | Opens text editor (LabelShape) or no-op (CanvasNode) |
+| `CanvasElement` | `anchor_changed(element)` | `Main._on_element_anchor_changed` | Updates connected arrows |
+| `CanvasElement` | `dragged(delta, element)` | `Main._on_dragged` | Broadcasts drag delta to siblings |
+| `CanvasElement` | `drag_ended(element)` | `Main._on_drag_ended` | Snaps all selected elements to grid |
 | `Arrow` | `multi_drag_moved(delta)` | `Main._on_multi_drag_moved(delta, arrow)` | Broadcasts drag delta to siblings |
 | `CameraController` | `zoom_changed(level)` | `Main._on_zoom_changed` | Updates InfoBar |
 | `Toolbar` | `shape_sub_mode_changed(sub_mode)` | `Main._on_shape_sub_mode_changed` | Activates shape mode |
@@ -49,18 +64,19 @@ Since there are no autoloads, communication follows a strict parent-child signal
 
 When multiple elements are selected, `Main` acts as a relay:
 
-1. A dragged `LabelShape` or `Arrow` emits `multi_drag_moved(delta)`
-2. `Main._on_multi_drag_moved()` receives the delta and applies it to every other element in `selected_set`
-3. On drag end, `Main._on_multi_drag_ended()` snaps all `LabelShape` positions to the 20px grid
+1. A dragged `CanvasElement` emits `dragged(delta, self)` (or `Arrow` emits `multi_drag_moved(delta)`)
+2. `Main._on_dragged()` receives the delta and applies it to every other element in `selected_set`
+3. On drag end, `Main._on_drag_ended()` snaps all `CanvasElement` positions to their respective `grid_snap_size`
 
 This avoids direct coupling between sibling elements while keeping coordination logic in one place.
 
 ### Method-Based Dispatch
 
-Because `selected_set` can contain both `LabelShape` and `Arrow` nodes (which share no common base class), `Main` uses duck-typing and method-based dispatch:
+Because `selected_set` can contain both `CanvasElement` subclasses and `Arrow` nodes (which share no common base class), `Main` uses duck-typing and method-based dispatch:
 
 - `element.has_method(&"set_selected")` to check selection capability
 - `element.is_in_group("arrows")` to identify arrows
+- `element.is_in_group("clickable_element")` to identify CanvasElement subclasses
 - `element.call("method_name", args)` for signal/dispatch calls
 
 ## Why No Autoloads?
