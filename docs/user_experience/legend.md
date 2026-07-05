@@ -33,7 +33,7 @@ When the user clicks a legend label to edit it and then clicks anywhere outside 
 - **No colors in use:** The legend panel hides entirely. An empty legend is just dead space.
 - **Multiple shapes with the same color:** The legend shows the color once, with one name. The name applies to all shapes of that color — changing a shape's color to one already in the legend doesn't create a duplicate entry.
 - **Last shape of a color removed:** The legend entry remains (preserving the custom name) in case the user adds that color back. It only disappears when no shapes of that color exist anywhere on the canvas.
-- **Auto-generated default names count:** The "Group N" counter for default names uses a global increment so no two entries ever share the same default name by coincidence.
+- **Auto-generated default names count:** Default names are always unique — no two entries ever share the same label.
 
 ---
 

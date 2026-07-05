@@ -71,7 +71,7 @@ The set moves as a single unit. There's no jitter, no lag between the dragged el
 
 ### Edge cases
 
-- **Resizing in a multi-select set:** Only the primary (last-clicked) shape can be resized via its handles. Nodes never show handles and can't be resized — this behavior is enforced by the shared base class, so even if a node is the primary selection in a mixed set, no resize handles appear.
+- **Resizing in a multi-select set:** Only the primary (last-clicked) shape can be resized via its handles. Nodes never show handles and can't be resized — even if a node is the primary selection in a mixed set, no resize handles appear.
 - **Arrows that connect two selected elements:** The arrow updates its path as both of its endpoints move. It stretches, bends, and stays connected throughout the drag.
 
 ---
@@ -128,7 +128,7 @@ Deletion is immediate and complete. The element vanishes, and if it was a shape 
 
 ### Safety
 
-There's no undo yet (planned for future), so deletion is a permanent action. The auto-save system records the deletion as the new canvas state. The confirmation dialog for clearing the entire canvas provides a safety net for the nuclear option, but individual deletions are intentionally one-step — requiring a confirmation on every delete would be tedious.
+Deletion is permanent — there's no undo. The confirmation dialog for clearing the entire canvas provides a safety net for the nuclear option, but individual deletions are intentionally one-step — requiring a confirmation on every delete would be tedious.
 
 ### Edge cases
 

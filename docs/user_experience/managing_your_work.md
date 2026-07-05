@@ -11,7 +11,7 @@ The user works on their canvas over multiple sessions. They copy elements they l
 ### How it works
 
 1. Select one or more elements
-2. Press **Ctrl/Cmd + C** — the selected elements are copied to an in-memory clipboard
+2. Press **Ctrl/Cmd + C** — the selected elements are copied
 3. Press **Ctrl/Cmd + V** — copies of the copied elements appear on the canvas, offset slightly from their originals
 4. The pasted copies are automatically selected, ready to be moved into position
 
@@ -19,7 +19,7 @@ The user works on their canvas over multiple sessions. They copy elements they l
 
 All information about the selected elements is preserved:
 
-- **Shapes:** Position, dimensions (rx/ry), fill color, text content, shape mode (oval/circle)
+- **Shapes:** Position, dimensions, fill color, text content, shape mode (oval/circle)
 - **Arrows:** Path points, color, connection anchors (if both endpoints are in the selection)
 
 ### The paste offset
@@ -52,7 +52,7 @@ The canvas saves itself automatically after every meaningful action. The user ne
 - Committing text → save
 - Pasting → save
 
-The save goes to a file stored in the application's persistent data directory. It happens silently in the background — no progress bar, no "saving" indicator, no confirmation dialog.
+It happens silently in the background — no progress bar, no "saving" indicator, no confirmation dialog.
 
 ### How auto-save feels
 
@@ -62,9 +62,9 @@ The canvas remembers everything. The user can close the application at any momen
 
 Every element on the canvas, with all of its properties:
 - Shapes: type, position, dimensions, color, text, shape mode
-- Arrows: points, endpoints (by reference), direction, color
+- Arrows: points, endpoints, direction, color
 - Legend: color-to-name mappings
-- Grid state and theme preference are saved to a separate config file
+- Grid state and theme preference are remembered across sessions
 
 ### When saving doesn't happen
 
@@ -74,7 +74,7 @@ Every element on the canvas, with all of its properties:
 
 ### Edge cases
 
-- **Save failure:** If the save file can't be written (permissions, disk full), an error is logged but the user isn't interrupted. The in-memory canvas is preserved, and the user can manually export their work as a PNG backup.
+- **Save failure:** If the save file can't be written (permissions, disk full), the user isn't interrupted. Their work on the canvas is preserved, and the user can manually export their work as a PNG backup.
 - **Corrupted save file:** If the save file is corrupted, the application starts with an empty canvas. The corrupted file is left in place for potential recovery but isn't loaded.
 - **First launch:** No save file exists. The user starts with a clean, empty canvas. Auto-save kicks in as soon as they place their first element.
 
@@ -112,7 +112,7 @@ Wiping the canvas should feel decisive. Everything vanishes — shapes, arrows, 
 1. Open the hamburger menu (top-left corner)
 2. Select **Export PNG**
 3. The application computes the bounding box of all elements, adds padding, and renders a high-resolution (2×) image
-4. The image is saved to `user://exports/the-organizer-YYYY-MM-DD.png`
+4. The image is saved with a date-stamped filename (e.g., `the-organizer-YYYY-MM-DD.png`)
 
 The export captures everything on the canvas — shapes, text, arrows, colors — but not the grid. The exported image is a clean representation of the diagram.
 
@@ -129,7 +129,7 @@ Asking for a file path in a dialog would break the flow. The user wants to captu
 ### Edge cases
 
 - **Empty canvas export:** The export produces a small image containing just the padding area — effectively a blank image. This is technically correct but unlikely to be useful. The menu doesn't disable the export option for empty canvases.
-- **Export with hidden elements:** There's no way to hide elements (not yet implemented), so exports always include everything.
+- **Export with hidden elements:** Exports always include everything on the canvas.
 - **High-resolution rendering:** The 2× resolution means the exported image looks crisp even on retina displays. The trade-off is a slightly larger file and a brief render pause for very complex canvases.
 
 ---

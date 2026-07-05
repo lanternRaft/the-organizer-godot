@@ -4,10 +4,6 @@
 
 The user populates the canvas with three kinds of things: **shapes** (ovals and circles that hold text), **arrows** (curved connectors between elements), and **nodes** (small fixed-size circle and triangle markers). Each element is placed using a distinct interaction.
 
-### Shared base class
-
-Shapes and nodes are both subclasses of a common base that provides anchor points, selection, drag, grid snap, and deletion. The base class ensures that arrow creation works identically whether the user connects two shapes, two nodes, or a shape and a node — all anchor points are provided by the same infrastructure. See [`shared_element_base.md`](shared_element_base.md).
-
 ---
 
 ## Tools
@@ -66,7 +62,7 @@ When the user switches from Oval to Circle, any shape they place from that point
 
 ## Creating Arrows
 
-Arrows connect elements to each other. They represent relationships — dependencies, influences, flows, hierarchies. Because shapes and nodes both inherit anchor points from the shared base class, arrows can connect any combination of element types.
+Arrows connect elements to each other. They represent relationships — dependencies, influences, flows, hierarchies. Shapes and nodes both work the same way — arrows can connect any combination of element types.
 
 ### How it works
 
@@ -97,7 +93,7 @@ During the drag, a dashed line shows the arrow-to-be. The line curves naturally 
 
 ### Anchor dots
 
-Each element has anchors at positions defined by its subclass — 4 cardinal points for shapes and circle nodes, 3 vertex points for triangle nodes. The dots sit just outside the element's edge — a small buffer so they're visually distinct from the element itself.
+Each element has anchors at specific positions depending on its type — 4 cardinal points for shapes and circle nodes, 3 vertex points for triangle nodes. The dots sit just outside the element's edge — a small buffer so they're visually distinct from the element itself.
 
 - **Default state:** Small white dots with a blue border
 - **Hover state (nearby):** Dots become visible only when the cursor is near the element. They fade into awareness rather than cluttering the canvas constantly
@@ -145,14 +141,14 @@ Both default to the same friendly blue fill color as shapes, configurable via th
 ### What nodes support
 
 - **Color changes** — same palette and flow as shapes (via selection menu)
-- **Arrow connections** — each node has its own set of anchor points for creating arrows, provided by the shared base class
+- **Arrow connections** — each node has its own set of anchor points for creating arrows, following the same pattern as shapes
   - **Circle Node anchors:** 4 cardinal points (top, bottom, left, right) — identical to shapes
   - **Triangle Node anchors:** 3 vertex points (top, bottom-left, bottom-right)
 - **Selection and dragging** — nodes can be clicked, shift+clicked, and dragged like shapes (20px snap)
 
 ### What nodes don't support
 
-- **Resize handles** — nodes are fixed-size; no resize interaction appears on selection (enforced by the shared base class)
+- **Resize handles** — nodes are fixed-size; no resize interaction appears on selection
 - **Text editing** — nodes have no text overlay; they're purely visual markers
 - **Appearing in the legend** — nodes are not included in the legend panel (they are decoration, not categories)
 

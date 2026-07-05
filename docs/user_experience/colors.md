@@ -41,7 +41,7 @@ The menu that holds the Color button only appears when exactly one element is se
 
 ### Edge cases
 
-- **Color change on a multi-select:** The selection menu hides when more than one element is selected. To change colors of multiple shapes, the user must do them one at a time (planned: batch color change for multi-select).
+- **Color change on a multi-select:** The selection menu hides when more than one element is selected. To change colors of multiple shapes, the user must do them one at a time.
 - **Color closes the palette:** Selecting a swatch closes the palette. This keeps the UI clean — no lingering popups after an action is taken.
 - **Palette click prevention:** Clicks on the palette don't pass through to the canvas behind it. The palette captures the click and uses it only for swatch selection.
 

@@ -11,7 +11,6 @@ Quick-reference index for agents to find the UX doc they need. Each file covers 
 | [`managing_your_work.md`](managing_your_work.md) | Copy/paste mechanics (what transfers, paste offset, arrow reconnection), auto-save triggers and persistence, clearing the canvas with confirmation, PNG export, hamburger menu |
 | [`navigating_the_canvas.md`](navigating_the_canvas.md) | Panning (scroll, shift+scroll, middle-click drag, trackpad), zooming (cursor-centered via scroll, button stack, keyboard shortcuts, pinch), grid toggle and state persistence |
 | [`selecting_and_manipulating.md`](selecting_and_manipulating.md) | Single-click, shift+click additive, Ctrl+A select-all, primary vs secondary selection, single/multi drag with 20px snap, four-handle resize with 10px snap, circle-mode constraint, deletion |
-| [`shared_element_base.md`](shared_element_base.md) | Common behaviors of LabelShape and CanvasNode: selection lifecycle, drag/multi-drag, grid snap, configurable anchor points, deletion with arrow cascade, and which behaviors each subclass overrides |
 
 ## Quick topic lookup
 
@@ -32,7 +31,6 @@ Quick-reference index for agents to find the UX doc they need. Each file covers 
 | Resize shapes | `selecting_and_manipulating.md` |
 | Select (click, shift, Ctrl+A) | `selecting_and_manipulating.md` |
 | Shape placement | `creating_elements.md` |
-| Shared element base class | `shared_element_base.md` |
 | Text editing | `editing_text.md` |
 | Toolbar, tool switching | `creating_elements.md` |
 | Zoom (scroll, buttons, pinch) | `navigating_the_canvas.md` |

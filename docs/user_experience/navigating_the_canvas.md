@@ -29,7 +29,7 @@ Offering multiple pan methods acknowledges that different users work in differen
 
 ### Edge cases
 
-- **Trackpad gesture suppression:** When a user finishes a two-finger pan, some trackpads generate a synthetic scroll-wheel event. The system ignores wheel events that arrive within a short window after a trackpad gesture. Without this, the canvas would lurch an extra step after every pan.
+- **Trackpad cleanup:** After a two-finger pan, the canvas doesn't lurch or jump — it settles exactly where the user left it.
 - **Middle-click on elements:** Middle-click pans through everything — shapes, selections, arrows. It never triggers a selection, drag, or tool action. The middle button is reserved exclusively for canvas navigation.
 
 ---

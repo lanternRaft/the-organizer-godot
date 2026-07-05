@@ -171,4 +171,3 @@ func _update_collision_shape() -> void:
 			var poly_shape: ConvexPolygonShape2D = ConvexPolygonShape2D.new()
 			poly_shape.points = TRIANGLE_VERTICES
 			_collision_shape.shape = poly_shape
-
