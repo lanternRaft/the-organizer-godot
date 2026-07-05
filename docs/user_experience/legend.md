@@ -4,9 +4,21 @@ A compact panel anchored to the bottom-left corner of the screen automatically l
 
 The legend depends on the [color palette](colors.md) — every color that appears in the legend is one of the eight palette colors applied to shapes on the canvas.
 
-## The panel layout
+## How it works
+
+### The panel layout
 
 The panel is fixed in the bottom-left corner, sized snugly around its contents. Each entry is a single row with a small colored circle swatch followed by the editable name text. Entries stack vertically as colors are used. The panel never scrolls — there are at most eight entries (one per palette color), so everything fits at a glance.
+
+### How names work
+
+- **Default names:** When a color first appears on the canvas, its default label is "Group 1", "Group 2", etc. in order of first appearance. This avoids two colors both defaulting to "Group 1".
+- **Editing a name:** Click any label to edit it inline. The change is saved as part of the canvas state.
+- **Name survival:** If the user renames "Red" to "Danger" and later deletes all red shapes, the name "Danger" is still stored. If they add a new red shape next session, the legend shows "Danger" again — it only resets if the color is genuinely unused and they clear the canvas.
+
+### Clicking away from an edit
+
+When the user clicks a legend label to edit it and then clicks anywhere outside the legend panel — on the canvas, a shape, the toolbar, or any other UI element — the label exits editing mode immediately. If the text is non-empty, it saves automatically. If the text is empty, it reverts to the previous name. This feels natural and quick — like renaming a file in a folder — no extra Enter press needed.
 
 ## How it feels
 
@@ -14,19 +26,9 @@ The legend builds itself. As the user changes a shape's color (via the [color pa
 
 Editing a legend name is as simple as clicking it and typing. The name persists even if the user removes all red shapes (in case they add more later) — it only disappears from the legend when the color is genuinely unused across the entire canvas.
 
-## Why a legend
+## Why this approach
 
 In a complex world-building diagram with a dozen colored factions, the user needs a reference. The legend is that reference — a key that maps colors to concepts. Without it, the user would have to remember that "amber means resources" every time they look at the canvas.
-
-## How names work
-
-- **Default names:** When a color first appears on the canvas, its default label is "Group 1", "Group 2", etc. in order of first appearance. This avoids two colors both defaulting to "Group 1".
-- **Editing a name:** Click any label to edit it inline. The change is saved as part of the canvas state.
-- **Name survival:** If the user renames "Red" to "Danger" and later deletes all red shapes, the name "Danger" is still stored. If they add a new red shape next session, the legend shows "Danger" again — it only resets if the color is genuinely unused and they clear the canvas.
-
-## Clicking away from an edit
-
-When the user clicks a legend label to edit it and then clicks anywhere outside the legend panel — on the canvas, a shape, the toolbar, or any other UI element — the label exits editing mode immediately. If the text is non-empty, it saves automatically. If the text is empty, it reverts to the previous name. This feels natural and quick — like renaming a file in a folder — no extra Enter press needed.
 
 ## Edge cases
 

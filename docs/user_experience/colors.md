@@ -2,9 +2,9 @@
 
 Color gives meaning to shapes beyond their text and position. A red oval might represent a hostile faction, a green one a safe location, a blue one a neutral character. The color palette (documented here) and the [legend panel](legend.md) work together to create a visual coding system that the user defines.
 
-## Changing a Shape's Color
+## How it works
 
-### How to do it
+### Changing a shape's color
 
 1. Select a single shape
 2. The selection menu appears below it with two buttons: Del and Color
@@ -25,21 +25,21 @@ Eight colors, chosen for readability and distinctiveness:
 - **White** — blank, empty, unaffiliated, or paper-like.
 - **Dark** — shadow, background, void, or contrast.
 
-### How it feels
+### The selection menu
+
+The menu that holds the Color button only appears when exactly one element is selected. It positions itself below the selected element, following it if the element moves or the camera zooms. It's always just out of the way — accessible but not intrusive.
+
+## How it feels
 
 Color changes are instant.
 
 Palette is small and focused — eight colors, no more. This is intentional: too many choices would slow down the workflow. The user can always distinguish these eight at a glance, and they cover a broad enough spectrum for most world-building coding systems.
 
-### Why only eight colors
+## Why this approach
 
 A palette with more colors would require scrolling, searching, or a complex picker. For a world-building tool where colors are used as categorical signals (this faction is red, that faction is blue), a limited, carefully-chosen set encourages the user to think in terms of categories rather than shades. Eight is enough to represent distinct groups without overwhelming.
 
-### The selection menu
-
-The menu that holds the Color button only appears when exactly one element is selected. It positions itself below the selected element, following it if the element moves or the camera zooms. It's always just out of the way — accessible but not intrusive.
-
-### Edge cases
+## Edge cases
 
 - **Color change on a multi-select:** The selection menu hides when more than one element is selected. To change colors of multiple shapes, the user must do them one at a time.
 - **Color closes the palette:** Selecting a swatch closes the palette. This keeps the UI clean — no lingering popups after an action is taken.
