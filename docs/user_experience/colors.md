@@ -14,32 +14,16 @@ Color gives meaning to shapes beyond their text and position. A red oval might r
 
 ### The palette
 
-Eight colors, chosen for readability and distinctiveness:
-
-- **Blue** — the default. Neutral, friendly, good for general-purpose use.
-- **Red** — urgency, danger, opposition.
-- **Green** — safety, nature, allies.
-- **Amber** — warning, resources, neutral factions.
-- **Purple** — magic, mystery, royalty.
-- **Pink** — affection, intrigue, distinctiveness.
-- **White** — blank, empty, unaffiliated, or paper-like.
-- **Dark** — shadow, background, void, or contrast.
+Eight colors, chosen for readability and distinctiveness: blue, red, green, amber, purple, white, black
 
 ### The selection menu
 
 The menu that holds the Color button only appears when exactly one element is selected. It positions itself below the selected element, following it if the element moves or the camera zooms. It's always just out of the way — accessible but not intrusive.
-
-## How it feels
-
-Color changes are instant.
-
-Palette is small and focused — eight colors, no more. This is intentional: too many choices would slow down the workflow. The user can always distinguish these eight at a glance, and they cover a broad enough spectrum for most world-building coding systems.
-
 ## Why this approach
 
 A palette with more colors would require scrolling, searching, or a complex picker. For a world-building tool where colors are used as categorical signals (this faction is red, that faction is blue), a limited, carefully-chosen set encourages the user to think in terms of categories rather than shades. Eight is enough to represent distinct groups without overwhelming.
 
-## Edge cases
+## Behavior
 
 - **Color change on a multi-select:** The selection menu hides when more than one element is selected. To change colors of multiple shapes, the user must do them one at a time.
 - **Color closes the palette:** Selecting a swatch closes the palette. This keeps the UI clean — no lingering popups after an action is taken.

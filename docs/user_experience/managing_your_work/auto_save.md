@@ -28,12 +28,7 @@ Every element on the canvas, with all of its properties:
 - During a drag (only on release)
 - While text is being edited (only on commit or cancel)
 - During view-only actions like panning, zooming, or selecting
-
-## How it feels
-
-The canvas remembers everything. The user can close the application at any moment, and when they come back, everything is exactly as they left it. There's no implicit trust required — the save happens so frequently that losing work is essentially impossible under normal use.
-
-## Edge cases
+## Behavior
 
 - **Save failure:** If the save file can't be written (permissions, disk full), the user isn't interrupted. Their work on the canvas is preserved, and the user can manually export their work as a PNG backup.
 - **Corrupted save file:** If the save file is corrupted, the application starts with an empty canvas. The corrupted file is left in place for potential recovery but isn't loaded.

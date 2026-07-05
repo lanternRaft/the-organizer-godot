@@ -19,11 +19,7 @@ When a shape is in Circle mode, both dimensions grow together. Dragging any hand
 
 Shapes can't be smaller than 20px in either dimension, or larger than 500px. At minimum size, a shape is just large enough to see and click. At maximum size, it can fill a good portion of the viewport — useful for a central concept that everything connects to.
 
-## How it feels
-
-Resizing should feel like stretching a rubber band. The shape expands or contracts immediately under the cursor. The 10px snap provides gentle guidance toward round numbers without fighting the user's intent.
-
-## Edge cases
+## Behavior
 
 - **Resize past minimum/maximum:** The shape stops at the limit. The handle keeps following the cursor, but the shape doesn't shrink or grow beyond the bounds. There's no pushback or stuttering — it simply stops.
 - **Resize while text is inside:** The text reflows to fit the new dimensions. If the shape gets smaller, the text font size scales down (down to a minimum of 8px). If the shape gets bigger, the text scales up to match (up to 20px max).

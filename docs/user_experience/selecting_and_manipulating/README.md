@@ -4,14 +4,15 @@ World building on the canvas is an iterative process. The user moves things arou
 
 ## File Map
 
-| File | When to read |
-|---|---|
+| File                                           | When to read                                                                          |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------- |
 | [selecting_elements.md](selecting_elements.md) | Single click, shift+click additive, Ctrl+A select-all, primary vs secondary selection |
-| [moving_elements.md](moving_elements.md) | Single drag, multi-drag, snap behavior, arrow reconnection during drag |
-| [resizing_shapes.md](resizing_shapes.md) | Four-handle resize, circle constraint, size limits, text reflow on resize |
-| [deleting_elements.md](deleting_elements.md) | Delete/Backspace key, selection menu delete, arrow cleanup, safety considerations |
+| [moving_elements.md](moving_elements.md)       | Single drag, multi-drag, snap behavior, arrow reconnection during drag                |
+| [resizing_shapes.md](resizing_shapes.md)       | Four-handle resize, circle constraint, size limits, text reflow on resize             |
+| [deleting_elements.md](deleting_elements.md)   | Delete/Backspace key, selection menu delete, arrow cleanup, safety considerations     |
+|                                                |                                                                                       |
 
-## Cross-Feature Edge Cases
+## Cross-Feature Behavior
 
 - **Selection while a text overlay is open:** The selection menu hides while the text editor is active (only shapes support text editing; nodes have no text overlay). This prevents the menu from overlapping with the editing interface.
 - **Resizing in a multi-select set:** Only the primary (last-clicked) shape can be resized via its handles. Nodes never show handles and can't be resized — even if a node is the primary selection in a mixed set, no resize handles appear.

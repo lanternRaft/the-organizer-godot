@@ -16,12 +16,7 @@ The export uses the full canvas extent, not the current viewport. This means the
 ### Why auto-named export files
 
 Asking for a file path in a dialog would break the flow. The user wants to capture their work quickly, not navigate a file picker. The auto-named file with date stamps means the user can export multiple times in a session and each export produces a distinct file.
-
-## How it feels
-
-Export is fire-and-forget. There's no dialog asking for a file name or location (the filename is auto-generated with the current date). The user clicks Export PNG, and a moment later the image exists in the exports directory. They can then open that directory to get the file.
-
-## Edge cases
+## Behavior
 
 - **Empty canvas export:** The export produces a small image containing just the padding area — effectively a blank image. This is technically correct but unlikely to be useful. The menu doesn't disable the export option for empty canvases.
 - **Export with hidden elements:** Exports always include everything on the canvas.

@@ -30,7 +30,7 @@ Editing a legend name is as simple as clicking it and typing. The name persists 
 
 In a complex world-building diagram with a dozen colored factions, the user needs a reference. The legend is that reference — a key that maps colors to concepts. Without it, the user would have to remember that "amber means resources" every time they look at the canvas.
 
-## Edge cases
+## Behavior
 
 - **No colors in use:** The legend panel hides entirely. An empty legend is just dead space.
 - **Multiple shapes with the same color:** The legend shows the color once, with one name. The name applies to all shapes of that color — changing a shape's color to one already in the legend doesn't create a duplicate entry.

@@ -22,11 +22,7 @@ This is the primary way to rearrange a diagram. The user selects a cluster of re
 - Arrows connected to moving elements automatically stretch and curve to follow their endpoints
 - Free-floating arrows (arrows selected as part of the set, without their endpoint elements) also move by the same delta
 
-## How it feels
-
-The set moves as a single unit. There's no jitter, no lag between the dragged element and the others — they all arrive at the same time. On release, every element in the set snaps to the grid, keeping the group internally consistent.
-
-## Edge cases
+## Behavior
 
 - **Arrows that connect two selected elements:** The arrow updates its path as both of its endpoints move. It stretches, bends, and stays connected throughout the drag.
 

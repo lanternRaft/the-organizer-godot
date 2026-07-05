@@ -24,13 +24,7 @@ Selects every shape, node, and arrow on the canvas. The last element added becom
 
 In a multi-select set, some actions only apply to the primary element (resizing, text editing, the selection menu). The distinction lets the user work on one thing without losing the multi-drag capability of the whole set.
 
-## How it feels
-
-Selection should feel crisp and unambiguous. The visual feedback is immediate: a selected element's stroke brightens and thickens the moment it's clicked. Handles appear (only for shapes), the info bar updates, and if it's the only selection a floating menu appears below it with actions.
-
-The difference between primary and secondary selection is subtle but noticeable. The primary selection has the most prominent highlight because that's where the user's attention is — it's the thing they just clicked. The secondary elements are visibly part of the set but clearly subordinate.
-
-## Edge cases
+## Behavior
 
 - **Clicking an element that's already selected:** Unless the user holds Shift, clicking a selected element doesn't deselect it — it keeps it selected and makes it the primary selection. This feels natural: the user might click the same shape again just to bring the selection menu into view.
 - **Shift+click on an already-selected primary:** Removes it from the set. The next-most-recently-clicked element becomes the new primary.

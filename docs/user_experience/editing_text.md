@@ -40,13 +40,7 @@ Clearing all text is valid — a shape can exist without text. The user backspac
 
 **Escape** closes the editor and discards any changes made since opening. The shape reverts to its previous text. This is the safety net: if the user started editing by accident or decided the text doesn't work, one key gets them out with no consequences.
 
-## How it feels
-
-The shape opens up to accept words the moment the user presses Enter or double-clicks. There's no loading, no transition — the text overlay is there instantly. The live preview makes text editing feel responsive: every keystroke updates the shape in real time, so there's no guesswork about how the final label will look.
-
-The commit-or-cancel choice puts the user in control. They can experiment with a label, decide it doesn't work, and Escape away with nothing changed. Or they can type it out, press Enter, and have it locked in permanently.
-
-## Edge cases
+## Behavior
 
 - **Shift+Enter:** Does not commit. Shift+Enter inserts a newline instead. Only a bare Enter (no Shift) commits. This matches standard text editor behavior across most applications.
 - **Clicking outside the overlay:** Clicking anywhere outside the overlay commits the current text, even if blank. This is different from pressing Escape (which cancels entirely) — it's equivalent to pressing Enter. A blank shape with no text is a valid visual state.

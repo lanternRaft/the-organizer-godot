@@ -39,13 +39,7 @@ The anchor-based approach makes the relationship explicit: arrows connect things
 
 The drag-from-anchor method (rather than click-drag-release on the canvas) ensures arrows are never floating in space. Every arrow has two connected endpoints, keeping the diagram meaningful.
 
-## How it feels
-
-Arrow creation should feel like connecting two points with invisible string. The user reaches out from one element, the anchor dots appear automatically when they're near — no button toggling, no mode switching. The preview line shows what the connection will look like, so there's no guesswork.
-
-The snap radius is generous: the arrow doesn't need to land exactly on the anchor, just close to it. This makes quick connections between densely-packed elements easy — the user can build up an entire diagram without precise aiming.
-
-## Edge cases
+## Behaviors
 
 - **Connecting an element to itself:** The system prevents this. If the user drags from an anchor back to the same element, the preview shows the connection won't land (no snap highlight), and releasing cancels the arrow. This enforces meaningful connections.
 - **Cross-type connections:** Arrows can connect shape→node, node→shape, node→node, or shape→shape. The same anchor-based drag interaction applies regardless of type.

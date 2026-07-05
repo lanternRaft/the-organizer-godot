@@ -32,17 +32,7 @@ Both default to the same friendly blue fill color as shapes, configurable via th
 
 - **Resize handles** — nodes are fixed-size; no resize interaction appears on selection
 - **Text editing** — nodes have no text overlay; they're purely visual markers
-- **Appearing in the legend** — nodes are not included in the legend panel (they are decoration, not categories)
-
-## How it feels
-
-Placing a node should feel even lighter than placing a shape — a quick tap to leave a small visual marker. Where a shape says "this is a labeled thing," a node says "this spot matters." The small size makes them suitable for dense, detailed diagrams where full shapes would be too heavy.
-
-## Edge cases
-
-- **Placing on top of existing elements:** Nodes can overlap shapes and other nodes if placed on top of them.
-- **Rapid placement:** Each placement returns to Select mode (same trade-off as shapes). The user can click, return to Node mode, click again — no mass-placement risk.
-- **Tool deactivation:** Escape exits Node mode without placing, returning to Select.
+## Behavior
 - **Arrow connections from/to nodes:** Arrows can originate from a node's anchor and land on a shape's anchor (or vice versa). Nodes can connect to other nodes. The same anchor-based drag interaction applies.
 - **Deleting a node with connected arrows:** Arrows attached to the node are destroyed when the node is removed (consistent with shape deletion).
 - **Copy/paste:** Nodes can be copied and pasted following the same rules as shapes (paste offset, same-layer placement).

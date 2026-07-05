@@ -11,11 +11,7 @@ The user populates the canvas with three kinds of things: **shapes** (ovals and 
 | [creating_arrows.md](creating_arrows.md) | Anchor dots, drag-to-connect, preview line, snap behavior |
 | [placing_nodes.md](placing_nodes.md) | Placing circle and triangle nodes, supported vs unsupported features |
 
-## How it feels
-
-The flow between creation and manipulation feels seamless. The user places a shape and it's already selected, ready to move or edit. They create an arrow and stay in Select mode — the arrow is now part of the diagram. They finish editing text and return to Select with the shape still selected. Creation is a single action, but manipulation is where the user spends most of their time. Defaulting to Select mode means they never have to switch tools just to pick up what they just put down.
-
-## Cross-Feature Edge Cases
+## Cross-Feature Behavior
 
 - **Transitioning between modes:** Placing a shape auto-selects it → ready to move/resize/color/text. Creating an arrow stays in Select mode → arrow is now part of the diagram. Finishing text editing returns to Select mode with the shape still selected. Placing a node auto-selects it → ready to move/color/connect.
 - **Tool deactivation:** Pressing Escape while in any creation tool deactivates it without placing anything, returning to Select mode with a clean slate.

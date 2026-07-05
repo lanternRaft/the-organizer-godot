@@ -12,13 +12,7 @@ There are three tool categories:
 
 The user is never stuck in a tool they don't want. Every element placement automatically returns them to Select mode. If they accidentally enter a tool, Escape gets them out.
 
-### How tool switching feels
-
-Buttons in the toolbar are toggle-style — when Select is active, the Select button looks pressed in. Switching to a shape tool or node tool pops the Select button back up. There's a quiet, mechanical finality to it: tools snap into place.
-
-The info bar at the bottom of the screen shows a brief hint for the current tool, so the user always knows what will happen if they click. In Select mode it says "Click to select an oval or node"; in Shape mode it says "Click the canvas to place a (oval/circle)"; in Node mode it says "Click the canvas to place a (circle/triangle) node".
-
-## Edge cases
+## Behavior
 
 - **Tool deactivation:** Pressing Escape while in any creation tool deactivates it without placing anything, returning to Select mode with a clean slate.
 - **Switching tools mid-placement:** Switching from Shape tool to Node tool (or vice versa) while in placement mode is safe — the old tool deactivates and the new one activates. No partial placement state persists.
