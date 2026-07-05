@@ -1,0 +1,50 @@
+# Colors
+
+Color gives meaning to shapes beyond their text and position. A red oval might represent a hostile faction, a green one a safe location, a blue one a neutral character. The color palette (documented here) and the [legend panel](legend.md) work together to create a visual coding system that the user defines.
+
+## Changing a Shape's Color
+
+### How to do it
+
+1. Select a single shape
+2. The selection menu appears below it with two buttons: Del and Color
+3. Click the **Color** button
+4. A small palette appears above the button with eight color swatches in a 2×4 grid
+5. Click a swatch — the shape changes color instantly, the palette closes, and the canvas auto-saves
+
+### The palette
+
+Eight colors, chosen for readability and distinctiveness:
+
+- **Blue** — the default. Neutral, friendly, good for general-purpose use.
+- **Red** — urgency, danger, opposition.
+- **Green** — safety, nature, allies.
+- **Amber** — warning, resources, neutral factions.
+- **Purple** — magic, mystery, royalty.
+- **Pink** — affection, intrigue, distinctiveness.
+- **White** — blank, empty, unaffiliated, or paper-like.
+- **Dark** — shadow, background, void, or contrast.
+
+### How it feels
+
+Color changes are instant.
+
+Palette is small and focused — eight colors, no more. This is intentional: too many choices would slow down the workflow. The user can always distinguish these eight at a glance, and they cover a broad enough spectrum for most world-building coding systems.
+
+### Why only eight colors
+
+A palette with more colors would require scrolling, searching, or a complex picker. For a world-building tool where colors are used as categorical signals (this faction is red, that faction is blue), a limited, carefully-chosen set encourages the user to think in terms of categories rather than shades. Eight is enough to represent distinct groups without overwhelming.
+
+### The selection menu
+
+The menu that holds the Color button only appears when exactly one element is selected. It positions itself below the selected element, following it if the element moves or the camera zooms. It's always just out of the way — accessible but not intrusive.
+
+### Edge cases
+
+- **Color change on a multi-select:** The selection menu hides when more than one element is selected. To change colors of multiple shapes, the user must do them one at a time (planned: batch color change for multi-select).
+- **Color closes the palette:** Selecting a swatch closes the palette. This keeps the UI clean — no lingering popups after an action is taken.
+- **Palette click prevention:** Clicks on the palette don't pass through to the canvas behind it. The palette captures the click and uses it only for swatch selection.
+
+---
+
+Once colors are applied to shapes, the [legend panel](legend.md) automatically lists them with editable names.

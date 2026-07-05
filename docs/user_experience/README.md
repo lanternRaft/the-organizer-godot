@@ -4,7 +4,8 @@ Quick-reference index for agents to find the UX doc they need. Each file covers 
 
 | File | When to read |
 |---|---|
-| [`colors_and_legend.md`](colors_and_legend.md) | Changing a shape's fill color via the selection menu → palette, legend panel auto-population and inline name editing, color survival when shapes are removed |
+| [`colors.md`](colors.md) | Changing a shape's fill color via the selection menu → palette, the eight-color palette, selection menu behavior, edge cases |
+| [`legend.md`](legend.md) | Legend panel auto-population, inline name editing, name survival when shapes are removed, panel layout and edge cases |
 | [`creating_elements.md`](creating_elements.md) | Toolbar and tool switching, placing ovals/circles, dragging anchor dots to create curved arrows between elements, node markers |
 | [`editing_text.md`](editing_text.md) | Opening the text overlay (Enter or double-click), typing/editing with live preview, auto-scaling font size, commit vs cancel behavior |
 | [`managing_your_work.md`](managing_your_work.md) | Copy/paste mechanics (what transfers, paste offset, arrow reconnection), auto-save triggers and persistence, clearing the canvas with confirmation, PNG export, hamburger menu |
@@ -19,7 +20,8 @@ Quick-reference index for agents to find the UX doc they need. Each file covers 
 | Anchor dots, arrow creation | `creating_elements.md` |
 | Auto-save | `managing_your_work.md` |
 | Canvas clearing | `managing_your_work.md` |
-| Color palette, legend | `colors_and_legend.md` |
+| Color palette | `colors.md` |
+| Legend | `legend.md` |
 | Copy / paste | `managing_your_work.md` |
 | Delete elements | `selecting_and_manipulating.md` |
 | Export PNG | `managing_your_work.md` |
