@@ -138,8 +138,8 @@ func test_place_circle_node() -> void:
 	assert_object(_main.get("primary_selection")).is_same(node)
 	assert_object(_main.get("last_placed")).is_same(node)
 
-	assert_bool(node.is_connected("clicked", Callable(_main, "_on_node_clicked"))).is_true()
-	assert_bool(node.is_connected("anchor_changed", Callable(_main, "_on_node_anchor_changed").bind(node))).is_true()
+	assert_bool(node.is_connected("clicked", Callable(_main, "_on_element_clicked"))).is_true()
+	assert_bool(node.is_connected("anchor_changed", Callable(_main, "_on_element_anchor_changed").bind(node))).is_true()
 	assert_bool(node.is_connected("multi_drag_moved", Callable(_main, "_on_multi_drag_moved").bind(node))).is_true()
 	assert_bool(node.is_connected("multi_drag_ended", Callable(_main, "_on_multi_drag_ended").bind(node))).is_true()
 
@@ -204,7 +204,7 @@ func test_node_click_selects() -> void:
 
 	var node: Node2D = _el().get_child(0)
 	var dummy_event: InputEventMouseButton = InputEventMouseButton.new()
-	_main.call("_on_node_clicked", dummy_event, node)
+	_main.call("_on_element_clicked", dummy_event, node)
 
 	assert_bool(node in selected_set).is_true()
 	assert_object(_main.get("primary_selection")).is_same(node)
@@ -224,7 +224,7 @@ func test_node_shift_click_multiselect() -> void:
 	_main.call("activate_select_mode")
 
 	var dummy_event: InputEventMouseButton = InputEventMouseButton.new()
-	_main.call("_on_node_clicked", dummy_event, node1)
+	_main.call("_on_element_clicked", dummy_event, node1)
 	var selected_set: Array = _main.get("selected_set")
 	assert_int(selected_set.size()).is_equal(1)
 
@@ -236,7 +236,7 @@ func test_node_shift_click_multiselect() -> void:
 	Input.parse_input_event(shift_press)
 	await get_tree().process_frame
 
-	_main.call("_on_node_clicked", dummy_event, node2)
+	_main.call("_on_element_clicked", dummy_event, node2)
 
 	selected_set = _main.get("selected_set")
 	assert_int(selected_set.size()).is_equal(2)
@@ -256,7 +256,7 @@ func test_node_shift_click_multiselect() -> void:
 ## C10: Node click clears shape selection.
 func test_node_click_clears_shape_selection() -> void:
 	var shape: Node2D = _create_label_shape(Vector2(0, 0))
-	shape.connect("clicked", Callable(_main, "_on_shape_clicked"))
+	shape.connect("clicked", Callable(_main, "_on_element_clicked"))
 	_main.call("activate_select_mode")
 	_main.call("select_element", shape, false)
 	var selected_set: Array = _main.get("selected_set")
@@ -272,7 +272,7 @@ func test_node_click_clears_shape_selection() -> void:
 
 	var node: Node2D = _el().get_child(1)
 	var dummy_event: InputEventMouseButton = InputEventMouseButton.new()
-	_main.call("_on_node_clicked", dummy_event, node)
+	_main.call("_on_element_clicked", dummy_event, node)
 
 	selected_set = _main.get("selected_set")
 	assert_bool(shape in selected_set).is_false()
@@ -420,8 +420,8 @@ func test_canvas_node_deserialization() -> void:
 	assert_float(_fill.b).is_equal_approx(0.2, 0.01)
 	assert_float(_fill.a).is_equal_approx(1.0, 0.01)
 
-	assert_bool(node.is_connected("clicked", Callable(_main, "_on_node_clicked"))).is_true()
-	assert_bool(node.is_connected("anchor_changed", Callable(_main, "_on_node_anchor_changed").bind(node))).is_true()
+	assert_bool(node.is_connected("clicked", Callable(_main, "_on_element_clicked"))).is_true()
+	assert_bool(node.is_connected("anchor_changed", Callable(_main, "_on_element_anchor_changed").bind(node))).is_true()
 	assert_bool(node.is_connected("multi_drag_moved", Callable(_main, "_on_multi_drag_moved").bind(node))).is_true()
 	assert_bool(node.is_connected("multi_drag_ended", Callable(_main, "_on_multi_drag_ended").bind(node))).is_true()
 
@@ -489,15 +489,15 @@ func test_on_node_sub_mode_changed() -> void:
 	assert_str(_main.get("node_sub_mode")).is_equal("triangle_node")
 
 
-# ===== C23: _on_node_clicked Routes Correctly ===============================
+# ===== C23: _on_element_clicked Routes Correctly ===============================
 
-## C23: _on_node_clicked routes to _handle_element_clicked.
-func test_on_node_clicked_routes_correctly() -> void:
+## C23: _on_element_clicked routes to _handle_element_clicked.
+func test_on_element_clicked_routes_correctly() -> void:
 	var node: Node2D = _create_circle_node(Vector2(100, 100))
 
 	_main.call("activate_select_mode")
 	var dummy_event: InputEventMouseButton = InputEventMouseButton.new()
-	_main.call("_on_node_clicked", dummy_event, node)
+	_main.call("_on_element_clicked", dummy_event, node)
 
 	var selected_set: Array = _main.get("selected_set")
 	assert_bool(node in selected_set).is_true()
