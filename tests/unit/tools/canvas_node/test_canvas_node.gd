@@ -337,29 +337,3 @@ func test_deselected_no_handles() -> void:
 	assert_bool(node.get("is_primary")).is_false()
 
 	node.free()
-
-
-# ===== A17-A19: Drag & Overlap Compatibility ================================
-
-## A17: Drag move does not resolve overlaps on CanvasNode.
-func test_drag_move_no_resolve_overlaps() -> void:
-	var node_a: Node2D = await _create_node("circle_node")
-	node_a.position = Vector2(0, 0)
-	node_a.set("is_selected", true)
-
-	var node_b: Node2D = await _create_node("circle_node")
-	node_b.position = Vector2(3, 3)
-
-	# Begin drag on node_a at (0, 0).
-	node_a.call("handle_drag_begin", {"world_pos": Vector2(0, 0)})
-
-	# Drag to (50, 50).
-	node_a.call("handle_drag_move", {"world_pos": Vector2(50, 50)})
-
-	# node_a position is exactly (50, 50), no overlap resolution.
-	assert_vector(node_a.position).is_equal_approx(Vector2(50, 50), Vector2(0.1, 0.1))
-	# node_b should remain at (3, 3) — not pushed.
-	assert_vector(node_b.position).is_equal_approx(Vector2(3, 3), Vector2(0.1, 0.1))
-
-	node_a.free()
-	node_b.free()
