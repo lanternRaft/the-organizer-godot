@@ -331,7 +331,7 @@ func test_delete_node_with_arrows() -> void:
 	_main.call("place_node", Vector2(200, 0))
 	var node: Node2D = _el().get_child(1)
 
-	mgr.call("_refresh_shape_list")
+	mgr.call("_refresh_element_list")
 	mgr.call("_create_arrow", shape, "right", node, "left")
 	var arrows: Array = mgr.get("_arrows")
 	assert_int(arrows.size()).is_equal(1)
