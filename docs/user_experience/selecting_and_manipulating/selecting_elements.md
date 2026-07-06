@@ -16,7 +16,7 @@ Holding Shift while clicking adds the element to the current selection set, or r
 
 Shift+click never clears the existing selection. It's strictly additive or subtractive.
 
-### Ctrl+A / Cmd+A
+### Ctrl+A / cmd+A
 
 Selects every shape, node, and arrow on the canvas. The last element added becomes the primary selection.
 
