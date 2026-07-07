@@ -1,15 +1,15 @@
 [gd_scene format=3 uid="uid://d24b8ikqxnp5q"]
 
-[ext_resource type="Script" path="res://scenes/tools/arrow/arrow.gd" id="1_rj5bm"]
+[ext_resource type="Script" uid="uid://b2mt5x6ektrtc" path="res://scenes/tools/arrow/arrow.gd" id="1_rj5bm"]
 
-[node name="Arrow" type="Node2D"]
+[node name="Arrow" type="Node2D" unique_id=1192776215]
 script = ExtResource("1_rj5bm")
 
-[node name="VisLine" type="Line2D" parent="."]
+[node name="VisLine" type="Line2D" parent="." unique_id=2127362466]
 width = 2.0
 antialiased = true
 
-[node name="HitLine" type="Line2D" parent="."]
+[node name="HitLine" type="Line2D" parent="." unique_id=522473186]
 width = 14.0
 default_color = Color(0, 0, 0, 0)
 antialiased = true

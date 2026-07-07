@@ -164,28 +164,26 @@ func test_arrow_manager_label_shape_anchors() -> void:
 	# Create an arrow from shape_a's "right" to shape_b's "left".
 	mgr.call("_create_arrow", shape_a, "right", shape_b, "left")
 
-	var arrows: Array = mgr.get("_arrows")
+	var arrows: Array[Arrow] = mgr.get("_arrows")
 	assert_int(arrows.size()).is_equal(1)
 
-	var arrow: Node = arrows[0]
-	arrow.call("rebuild_path")
-	assert_str(arrow.get("start_anchor_label")).is_equal("right")
-	assert_str(arrow.get("end_anchor_label")).is_equal("left")
+	var arrow: Arrow = arrows[0]
+	arrow.rebuild_path()
+	assert_str(arrow.start_anchor_label).is_equal("right")
+	assert_str(arrow.end_anchor_label).is_equal("left")
 
 	# Move shape_a and update arrows.
 	shape_a.position = Vector2(50, 0)
 	mgr.call("update_arrows_for_element", shape_a)
 
-	var updated_points: Variant = arrow.get("_cached_bezier_points")
-	assert_bool(updated_points is PackedVector2Array).is_true()
-	var pts: Variant = updated_points
-	assert_bool(pts.size() > 0).is_true()
+	var updated_points: PackedVector2Array = arrow._cached_bezier_points
+	assert_bool(updated_points.size() > 0).is_true()
 
 	# The first point (start) should have changed since shape_a moved.
 	# Original position was (0, 0), now it's (50, 0), so the right anchor
 	# is now at (130, 0) instead of (80, 0).
 	var expected_start: Vector2 = Vector2(130.0, 0.0)
-	assert_vector(pts[0]).is_equal(expected_start)
+	assert_vector(updated_points[0]).is_equal(expected_start)
 
 	shape_a.queue_free()
 	shape_b.queue_free()
@@ -232,13 +230,13 @@ func test_arrow_manager_canvas_node_circle_anchors() -> void:
 	await get_tree().process_frame
 
 	mgr.call("_create_arrow", node, "right", shape, "left")
-	var arrows: Array = mgr.get("_arrows")
+	var arrows: Array[Arrow] = mgr.get("_arrows")
 	assert_int(arrows.size()).is_equal(1)
 
-	var arrow: Node = arrows[0]
-	arrow.call("rebuild_path")
+	var arrow: Arrow = arrows[0]
+	arrow.rebuild_path()
 	# Arrow path should start at node's right edge and end at shape's left edge.
-	var pts: Variant = arrow.get("_cached_bezier_points")
+	var pts: PackedVector2Array = arrow._cached_bezier_points
 	assert_bool(pts.size() > 0).is_true()
 	# Start should be node's right edge: (0,0) + (8,0) = (8,0).
 	# End should be shape's left edge: (200,0) + (-80,0) = (120,0).
@@ -299,12 +297,12 @@ func test_arrow_manager_canvas_node_triangle_anchors() -> void:
 	await get_tree().process_frame
 
 	mgr.call("_create_arrow", node, "bottom_right", shape, "left")
-	var arrows: Array = mgr.get("_arrows")
+	var arrows: Array[Arrow] = mgr.get("_arrows")
 	assert_int(arrows.size()).is_equal(1)
 
-	var arrow: Node = arrows[0]
-	arrow.call("rebuild_path")
-	var pts: Variant = arrow.get("_cached_bezier_points")
+	var arrow: Arrow = arrows[0]
+	arrow.rebuild_path()
+	var pts: PackedVector2Array = arrow._cached_bezier_points
 	assert_bool(pts.size() > 0).is_true()
 	# Start should be triangle's bottom_right edge: (7, 4).
 	assert_vector(pts[0]).is_equal(Vector2(7.0, 4.0))
