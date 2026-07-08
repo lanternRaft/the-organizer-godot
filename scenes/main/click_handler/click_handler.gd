@@ -171,17 +171,22 @@ func _handle_pointer_down(event: InputEventMouseButton) -> void:
 			get_viewport().set_input_as_handled()
 		return
 
-	## -- Secondary path: arrow hit detection ---------------------------------
-	## If the physics query found nothing (no Area2D), try arrow and anchor dots.
+	## -- Secondary path: anchor dot / arrow hit detection --------------------
+	## The physics query found no Area2D (no canvas element). Fall through to
+	## secondary hit targets: anchor dots (highest priority) and arrow bodies.
+	## Anchor dots are checked first so that clicking an anchor dot always
+	## initiates a new arrow drag, even if an arrow endpoint is at the same
+	## position. Arrow body selection (click on the curved bezier path) is
+	## only reached when no anchor dot is present at that point.
 	var main: Node = get_parent()
 	var handled: bool = false
 
-	if main.has_method("_on_arrow_clicked_at"):
-		handled = main.call("_on_arrow_clicked_at", world_pos)
-
-	if not handled and main.has_method("_on_anchor_dot_mousedown"):
+	if main.has_method("_on_anchor_dot_mousedown"):
 		# ArrowManager checks if click is on an anchor dot to begin arrow drag.
 		handled = main.call("_on_anchor_dot_mousedown", world_pos)
+
+	if not handled and main.has_method("_on_arrow_clicked_at"):
+		handled = main.call("_on_arrow_clicked_at", world_pos)
 
 	if not handled:
 		## Truly empty canvas — let Main decide what to do.

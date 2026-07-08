@@ -8,7 +8,7 @@ The ArrowManager is the central controller for all arrow-related functionality: 
 
 - **Element tracking**: Maintains a list of all `CanvasElement` instances in ElementLayer (both LabelShape and CanvasNode)
 - **Anchor dots**: Creates, positions, shows, hides, and highlights anchor dot nodes via the generic `CanvasElement.get_anchor_positions()` interface
-- **Arrow drag**: Manages the drag-from-anchor creation flow with bezier preview
+- **Arrow drag**: Manages the drag-from-anchor creation flow with bezier preview, using a two-phase initiation (pending registration then activation on threshold)
 - **Arrow storage**: Maintains `_arrows: Array[Node]` of all active arrows
 - **Hit testing**: `get_arrow_near()` checks if a world-space point is near any arrow's bezier path
 - **Deletion**: Single arrow deletion and bulk deletion for connected elements
@@ -73,31 +73,74 @@ Highlighting also updates `_drag_snapped_element` / `_drag_snapped_label` for ar
 
 ## Arrow Creation (Drag from Anchor)
 
-### Flow
+### Two-Phase Drag Initiation
 
-```
+Arrow drag creation uses a **two-phase initiation** to avoid accidental arrow creation on simple clicks while maintaining priority of anchor dots over arrow endpoints.
+
+#### Phase 1: Registration (on pointer down)
+
+When ClickHandler detects a pointer down on an anchor dot (via secondary hit detection), it calls `handle_dot_mousedown(mouse_pos)`. This method does **not** immediately begin the drag. Instead, it records a pending drag state:
+
+```gdscript
 handle_dot_mousedown(mouse_pos)
   → Check each element's dot positions against mouse (within DOT_RADIUS_HOVER)
-  → begin_arrow_drag(element, anchor_label)
+  → If a dot is hit, register pending drag:
+    → Set _pending_drag_element, _pending_drag_label, _pending_drag_origin
+    → Do NOT create preview line yet
+    → Do NOT set _arrow_drag_active yet
+```
 
+#### Phase 2: Activation (on pointer move past threshold)
+
+ClickHandler routes pointer motion events to ArrowManager via `handle_dot_mousemove(mouse_pos)`. ArrowManager checks whether a pending drag exists and whether the pointer has moved past `ARROW_DRAG_THRESHOLD` (5px) from the origin:
+
+```gdscript
+handle_dot_mousemove(mouse_pos)
+  → If _pending_drag_element != null:
+    → If mouse_pos.distance_to(_pending_drag_origin) >= ARROW_DRAG_THRESHOLD:
+      → Call begin_arrow_drag(_pending_drag_element, _pending_drag_label)
+      → Clear pending state
+    → Else: ignore the motion (below threshold)
+```
+
+Once activated, the standard drag flow runs:
+
+```gdscript
 begin_arrow_drag(element, anchor_label)
   → Set _arrow_drag_active, _drag_start_element, _drag_start_label, _drag_start_pos
   → Create preview Line2D (if not exists), add to ElementLayer
   → Show all anchors (_show_all_anchors)
+```
 
+#### Phase 3: Update (during drag)
+
+```gdscript
 _process() (while drag active)
   → _update_drag_preview(mouse_pos)
     → Compute bezier from start anchor to mouse (or snapped anchor)
     → Update preview line points
+```
 
+#### Phase 4: End (on pointer up)
+
+```gdscript
 handle_dot_mouseup()  (called from Main._on_pointer_up)
-  → end_arrow_drag()
+  → If pending drag exists (pointer released before threshold):
+    → Clear pending state (no arrow created, no preview shown)
+  → If drag is active:
+    → end_arrow_drag()
 
 end_arrow_drag()
   → Remove preview line
   → If _drag_snapped_element != null and != _drag_start_element → _create_arrow()
   → Reset drag state
 ```
+
+### Threshold Constant
+
+| Constant | Value | Purpose |
+|---|---|---|
+| `ARROW_DRAG_THRESHOLD` | 5.0 | Minimum pointer movement (in px) before arrow drag activates. Reuses the same value as `DRAG_THRESHOLD` in ClickHandler. |
 
 ### Preview Line
 
@@ -177,6 +220,8 @@ get_arrow_near(pos, radius = 7.0):
 
 Uses the cached bezier points (not the HitLine Line2D directly) for hit testing. The HitLine (width=14) is an additional invisible visual for click detection, but the primary hit path uses the cached points.
 
+**Arrow endpoints are part of the cached bezier point set**, so clicking near an arrow endpoint can select the arrow. However, because ClickHandler's secondary hit detection checks anchor dots **before** arrow bodies, an arrow endpoint at the same screen position as an anchor dot will never be selected — the anchor dot takes priority.
+
 ## Constants
 
 | Constant | Value | Purpose |
@@ -184,6 +229,7 @@ Uses the cached bezier points (not the HitLine Line2D directly) for hit testing.
 | `ANCHOR_HOVER_RADIUS` | 20.0 | Distance for showing anchor dots |
 | `SNAP_RADIUS` | 15.0 | Snap distance for arrow endpoint attachment |
 | `ARROW_CLICK_DISTANCE` | 7.0 | Distance threshold for clicking an arrow |
+| `ARROW_DRAG_THRESHOLD` | 5.0 | Minimum movement to activate arrow drag from anchor dot |
 | `ANCHOR_OFFSET` | 5.0 | Offset of anchor dots from element edge |
 | `DOT_RADIUS_NORMAL` | 4.0 | Normal anchor dot radius |
 | `DOT_RADIUS_HOVER` | 7.0 | Hovered/highlighted anchor dot radius |

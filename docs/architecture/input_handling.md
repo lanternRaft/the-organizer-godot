@@ -39,10 +39,21 @@ Events are normalised into a common dictionary by ClickHandler before dispatchin
 
 ## Secondary Hit Detection
 
-When the physics query finds no Area2D hit, ClickHandler falls through to two secondary paths:
+When the physics query finds no Area2D hit, ClickHandler falls through to two secondary paths. The order of these checks determines click priority when an anchor dot and an arrow endpoint occupy the same screen position.
 
-1. **Arrow hit detection**: Calls `Main._on_arrow_clicked_at(world_pos)` which checks `arrow_manager.get_arrow_near()` against the arrow's cached bezier points (the invisible `HitLine` Line2D has width=14).
-2. **Anchor dot hit detection**: Calls `Main._on_anchor_dot_mousedown(world_pos)` which delegates to `arrow_manager.handle_dot_mousedown()` to begin arrow drags from anchor dots.
+1. **Anchor dot hit detection (first)**: Calls `Main._on_anchor_dot_mousedown(world_pos)` which delegates to `arrow_manager.handle_dot_mousedown()` to register a pending arrow drag from an anchor dot. If the pointer is over an anchor dot (within hover radius), this check succeeds and arrow hit detection is skipped entirely. This ensures anchor dots always take priority over arrow endpoints at the same position.
+
+2. **Arrow hit detection (second)**: Calls `Main._on_arrow_clicked_at(world_pos)` which checks `arrow_manager.get_arrow_near()` against the arrow's cached bezier points (the invisible `HitLine` Line2D has width=14). This is only reached when no anchor dot was hit. Arrow endpoints are part of the bezier point cache used for hit testing, so they continue to be selectable — but only when no anchor dot exists at the same position.
+
+### Drag Threshold Delay for Arrow Initiation
+
+When an anchor dot is hit on pointer down, ClickHandler does **not** immediately begin an arrow drag. Instead, it records a pending drag state. On subsequent pointer motion events, ClickHandler notifies ArrowManager via `handle_dot_mousemove(world_pos)`. ArrowManager checks whether the pointer has moved past a threshold (`ARROW_DRAG_THRESHOLD`, 5px) from the original click position. Only when the threshold is exceeded does ArrowManager activate the drag, creating the preview line and entering the drag state.
+
+If the pointer is released without moving past the threshold, no arrow drag is started — the click is effectively ignored. This prevents accidental arrow creation when the user clicks an anchor dot without intending to drag.
+
+### Arrow Endpoints in Hit Testing
+
+Arrow endpoints remain part of the bezier point cache used by `get_arrow_near()`. They are not removed from hit testing. The deprioritization of arrow endpoints relative to anchor dots is enforced purely by the **order of detection** in ClickHandler's secondary hit path, not by modifying hit shapes or radii. This keeps arrow body selection via click on the bezier path unchanged.
 
 ## Clickable Interface (Group-Based Discovery)
 
