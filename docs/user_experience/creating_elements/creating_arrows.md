@@ -1,6 +1,6 @@
 # Creating Arrows
 
-Arrows connect elements to each other. They represent relationships — dependencies, influences, flows, hierarchies. Shapes and nodes both work the same way — arrows can connect any combination of element types.
+Arrows connect elements to each other. They represent relationships — dependencies, influences, flows, hierarchies. Shapes and nodes both work the same way — arrows can connect any combination of element types. Anchor dots always have click priority over arrow endpoints at the same position, so clicking an anchor always starts a new arrow regardless of existing connections.
 
 ## How it works
 
@@ -9,7 +9,7 @@ Arrows are created by dragging from one element's anchor point to another, all w
 1. The user is in Select mode with at least one shape or node on the canvas
 2. As the user moves the cursor near an element (within a comfortable proximity), small anchor dots appear at the element's anchor positions
 3. Moving the cursor directly over an anchor dot makes it grow larger and turn blue — it's ready to grab
-4. The user clicks and holds on that anchor dot, then drags toward another element
+4. The user clicks and holds on that anchor dot, then drags toward another element. Even if an existing arrow already connects to this anchor, clicking the anchor dot always starts a new arrow — the anchor has priority over any arrow endpoint at that position
 5. A dashed preview line stretches from the start anchor to the cursor, showing the path the arrow will take
 6. As the cursor nears another element's anchor (within a forgiving snap radius), the nearest anchor highlights — a valid landing zone
 7. Releasing the mouse over a highlighted anchor creates the arrow: a curved line from start anchor to end anchor, with an arrowhead at the end
@@ -39,11 +39,14 @@ The anchor-based approach makes the relationship explicit: arrows connect things
 
 The drag-from-anchor method (rather than click-drag-release on the canvas) ensures arrows are never floating in space. Every arrow has two connected endpoints, keeping the diagram meaningful.
 
+Giving anchor dots priority over arrow endpoints prevents a common disorienting scenario: the user clicks an anchor intending to create a connection, but instead selects an existing arrow. By making anchor dots the unambiguous target at their position, the interaction stays predictable.
+
 ## Behaviors
 
 - **Connecting an element to itself:** The system prevents this. If the user drags from an anchor back to the same element, the preview shows the connection won't land (no snap highlight), and releasing cancels the arrow. This enforces meaningful connections.
 - **Cross-type connections:** Arrows can connect shape→node, node→shape, node→node, or shape→shape. The same anchor-based drag interaction applies regardless of type.
 - **Dragging over existing arrows:** The preview line renders above other elements so the user always sees what they're creating. Existing arrows are ignored during the drag — they're not valid targets.
+- **Anchor click priority:** Anchor dots always have click priority over arrow endpoints at the same position. Clicking and holding on an anchor dot starts a new arrow regardless of how many arrows already connect to that anchor. Arrow endpoints at anchors never intercept pointer events intended for the anchor.
 - **Accidental release on empty space:** Nothing happens. The user can continue dragging, or release and try again. No penalty for a missed connection.
 - **Arrow starts from any anchor, ends at any anchor:** The user can connect top-to-bottom, left-to-right, or any combination. The arrow path adjusts automatically.
 - **If a connected element moves or is deleted:** Arrows attached to that element update their path to follow (or are destroyed if the element is gone).

@@ -8,6 +8,8 @@ Every interaction starts with selection. The user picks what they want to act on
 
 Clicking an element selects it and deselects everything else. The clicked element becomes the **primary selection** — it gets the strongest visual highlight (a brightened stroke). Selected elements show resize handles (only shapes) and a bright connecting line (arrows).
 
+Arrows are selected by clicking on their curved body. Arrow endpoints are not valid selection targets — they coincide with anchor dots, and anchors always have priority over arrows at those positions.
+
 Clicking empty canvas deselects everything.
 
 ### Shift+click (additive)
@@ -28,6 +30,7 @@ In a multi-select set, some actions only apply to the primary element (resizing,
 
 - **Clicking an element that's already selected:** Unless the user holds Shift, clicking a selected element doesn't deselect it — it keeps it selected and makes it the primary selection. This feels natural: the user might click the same shape again just to bring the selection menu into view.
 - **Shift+click on an already-selected primary:** Removes it from the set. The next-most-recently-clicked element becomes the new primary.
+- **Selecting an arrow:** Clicking the curved body of an arrow selects it. Clicking near an arrow's endpoint (where it meets an anchor dot) is treated as a click on the anchor, not on the arrow — the anchor has priority. This ensures the user always starts an arrow drag when intending to.
 - **Empty selection:** When nothing is selected, the info bar shows a neutral hint and the selection menu is hidden. The canvas is quiet — ready for the user's next action.
 
 ---
