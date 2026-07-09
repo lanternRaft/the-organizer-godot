@@ -1,12 +1,13 @@
 # GdUnit generated TestSuite
 class_name LegendPanelTest
 extends GdUnitTestSuite
-@warning_ignore('unused_parameter')
-@warning_ignore('return_value_discarded')
+@warning_ignore("unused_parameter")
+@warning_ignore("return_value_discarded")
 
 # TestSuite generated from
-const __source: String = 'res://scenes/ui/legend_panel/legend_panel.gd'
+const __source: String = "res://scenes/ui/legend_panel/legend_panel.gd"
 const __scene: PackedScene = preload("res://scenes/ui/legend_panel/legend_panel.tscn")
+
 
 ## Helper: creates a LegendPanel, adds it to the tree so _ready() fires, and returns it.
 func _create_panel() -> PanelContainer:
@@ -139,21 +140,18 @@ func test_lineedit_edit_emits_name_changed_signal() -> void:
 
 	# Watch for the signal using a dictionary so lambda mutation works.
 	var signal_result: Dictionary = {
-		"fired": false,
-		"color_r": 0.0,
-		"color_g": 0.0,
-		"color_b": 0.0,
-		"color_a": 0.0,
-		"name": ""
+		"fired": false, "color_r": 0.0, "color_g": 0.0, "color_b": 0.0, "color_a": 0.0, "name": ""
 	}
-	panel.connect("name_changed", func(color: Color, new_name: String) -> void:
-		signal_result["fired"] = true
-		# Store components individually so we can assert without unsafe casts.
-		signal_result["color_r"] = color.r
-		signal_result["color_g"] = color.g
-		signal_result["color_b"] = color.b
-		signal_result["color_a"] = color.a
-		signal_result["name"] = new_name
+	panel.connect(
+		"name_changed",
+		func(color: Color, new_name: String) -> void:
+			signal_result["fired"] = true
+			# Store components individually so we can assert without unsafe casts.
+			signal_result["color_r"] = color.r
+			signal_result["color_g"] = color.g
+			signal_result["color_b"] = color.b
+			signal_result["color_a"] = color.a
+			signal_result["name"] = new_name
 	)
 
 	# Simulate a name change by calling the internal apply function.
@@ -253,13 +251,12 @@ func test_focus_exited_commits_non_empty_name() -> void:
 	_set_colors(panel, [BLUE])
 
 	# Watch for the signal using a dictionary so lambda mutation works.
-	var signal_result: Dictionary = {
-		"fired": false,
-		"name": ""
-	}
-	panel.connect("name_changed", func(_color: Color, new_name: String) -> void:
-		signal_result["fired"] = true
-		signal_result["name"] = new_name
+	var signal_result: Dictionary = {"fired": false, "name": ""}
+	panel.connect(
+		"name_changed",
+		func(_color: Color, new_name: String) -> void:
+			signal_result["fired"] = true
+			signal_result["name"] = new_name
 	)
 
 	# Get the LineEdit, change the text, then trigger focus release.
@@ -284,11 +281,10 @@ func test_focus_exited_reverts_empty_name() -> void:
 	_set_colors(panel, [BLUE])
 
 	# Track signal using a dictionary — should NOT fire for revert.
-	var signal_result: Dictionary = {
-		"fired": false
-	}
-	panel.connect("name_changed", func(_color: Color, _new_name: String) -> void:
-		signal_result["fired"] = true
+	var signal_result: Dictionary = {"fired": false}
+	panel.connect(
+		"name_changed",
+		func(_color: Color, _new_name: String) -> void: signal_result["fired"] = true
 	)
 
 	# Clear the LineEdit text directly, then trigger focus_exited.
@@ -313,11 +309,10 @@ func test_text_submitted_reverts_empty_name() -> void:
 	_set_colors(panel, [BLUE])
 
 	# Track signal using a dictionary — should NOT fire for revert.
-	var signal_result: Dictionary = {
-		"fired": false
-	}
-	panel.connect("name_changed", func(_color: Color, _new_name: String) -> void:
-		signal_result["fired"] = true
+	var signal_result: Dictionary = {"fired": false}
+	panel.connect(
+		"name_changed",
+		func(_color: Color, _new_name: String) -> void: signal_result["fired"] = true
 	)
 
 	# Call the handler directly with empty text.
@@ -339,11 +334,10 @@ func test_focus_exited_noop_on_unchanged_name() -> void:
 	_set_colors(panel, [BLUE])
 
 	# Track signal using a dictionary — should NOT fire for unchanged name.
-	var signal_result: Dictionary = {
-		"fired": false
-	}
-	panel.connect("name_changed", func(_color: Color, _new_name: String) -> void:
-		signal_result["fired"] = true
+	var signal_result: Dictionary = {"fired": false}
+	panel.connect(
+		"name_changed",
+		func(_color: Color, _new_name: String) -> void: signal_result["fired"] = true
 	)
 
 	# Get the LineEdit, the text is already "My Faction" — unchanged.

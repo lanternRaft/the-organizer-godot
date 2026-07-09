@@ -25,7 +25,9 @@ var is_selected: bool = false:
 		queue_redraw()
 		if vis_line != null:
 			if value:
-				vis_line.default_color = Color(0.6, 0.8, 1.0) if is_primary else Color(0.6, 0.8, 1.0, 0.7)
+				vis_line.default_color = (
+					Color(0.6, 0.8, 1.0) if is_primary else Color(0.6, 0.8, 1.0, 0.7)
+				)
 			else:
 				vis_line.default_color = Color(1, 1, 1)
 
@@ -37,7 +39,9 @@ var is_primary: bool = false:
 		queue_redraw()
 		if vis_line != null:
 			if is_selected:
-				vis_line.default_color = Color(0.6, 0.8, 1.0) if value else Color(0.6, 0.8, 1.0, 0.7)
+				vis_line.default_color = (
+					Color(0.6, 0.8, 1.0) if value else Color(0.6, 0.8, 1.0, 0.7)
+				)
 			else:
 				vis_line.default_color = Color(1, 1, 1)
 
@@ -179,6 +183,7 @@ static func rebuild_arrows_for_shape(shape: Node, all_arrows: Array) -> void:
 
 # ----- CanvasElement-aware helpers -------------------------------------------
 
+
 ## Returns the global edge position for a CanvasElement anchor by reading
 ## the offset from get_anchor_positions().
 static func get_canvas_element_anchor_edge(element: CanvasElement, label: String) -> Vector2:
@@ -201,14 +206,19 @@ static func get_canvas_element_anchor_outward(element: CanvasElement, label: Str
 				return offset.normalized()
 	# Fallback for cardinal directions.
 	match label:
-		"top": return Vector2(0, -1)
-		"bottom": return Vector2(0, 1)
-		"left": return Vector2(-1, 0)
-		"right": return Vector2(1, 0)
+		"top":
+			return Vector2(0, -1)
+		"bottom":
+			return Vector2(0, 1)
+		"left":
+			return Vector2(-1, 0)
+		"right":
+			return Vector2(1, 0)
 	return Vector2.ZERO
 
 
 # ----- private helpers -------------------------------------------------------
+
 
 ## Unified setter called by Main during selection state changes.
 ## Matches the CanvasElement API so both types can be treated uniformly.
@@ -256,10 +266,14 @@ static func get_anchor_edge_position_static(shape: Node, label: String) -> Vecto
 	var ry: float = shape.get("ry")
 	var local_pos: Vector2
 	match label:
-		"top": local_pos = Vector2(0, -ry)
-		"bottom": local_pos = Vector2(0, ry)
-		"left": local_pos = Vector2(-rx, 0)
-		"right": local_pos = Vector2(rx, 0)
+		"top":
+			local_pos = Vector2(0, -ry)
+		"bottom":
+			local_pos = Vector2(0, ry)
+		"left":
+			local_pos = Vector2(-rx, 0)
+		"right":
+			local_pos = Vector2(rx, 0)
 		_:
 			local_pos = Vector2.ZERO
 	var shape_2d: Node2D = shape as Node2D
@@ -271,10 +285,14 @@ static func get_anchor_edge_position_static(shape: Node, label: String) -> Vecto
 ## Static utility: returns the outward normal for an anchor label.
 static func get_anchor_outward_normal_static(label: String) -> Vector2:
 	match label:
-		"top": return Vector2(0, -1)
-		"bottom": return Vector2(0, 1)
-		"left": return Vector2(-1, 0)
-		"right": return Vector2(1, 0)
+		"top":
+			return Vector2(0, -1)
+		"bottom":
+			return Vector2(0, 1)
+		"left":
+			return Vector2(-1, 0)
+		"right":
+			return Vector2(1, 0)
 	return Vector2.ZERO
 
 

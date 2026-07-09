@@ -92,6 +92,7 @@ func clear_all() -> void:
 
 ## --- Private helpers ---
 
+
 ## Gets or generates a name for the given color.
 ## Checks cached custom names first; falls back to "Group N".
 func _get_name_for_color(color: Color) -> String:

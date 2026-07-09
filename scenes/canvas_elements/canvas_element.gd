@@ -21,7 +21,7 @@ signal clicked(input_event: InputEvent, element: Node)
 ## Emitted when the element's anchor positions may have changed
 ## (after drag-end snap, resize, or position change).
 ## ArrowManager uses this to update connected arrows.
-signal anchor_changed()
+signal anchor_changed
 
 ## Emitted during a multi-drag to broadcast the per-frame incremental delta
 ## to Main so it can shift all other selected elements by the same amount.
@@ -29,7 +29,7 @@ signal anchor_changed()
 signal multi_drag_moved(delta: Vector2)
 
 ## Emitted when a body-drag ends, allowing Main to snap all selected elements.
-signal multi_drag_ended()
+signal multi_drag_ended
 
 # ----- Selection State -------------------------------------------------------
 
@@ -63,6 +63,7 @@ func _ready() -> void:
 
 # ----- Selection Interface ---------------------------------------------------
 
+
 ## Updates selection state and triggers visual update.
 ## When deselected, is_primary is cleared.
 func set_selected(value: bool) -> void:
@@ -73,6 +74,7 @@ func set_selected(value: bool) -> void:
 
 
 # ----- Clickable Interface (duck-typing) -------------------------------------
+
 
 ## Called by ClickHandler when a pointer-down hits this element's Area2D.
 ## Default implementation: sets drag mode to "body" and emits clicked signal.
@@ -133,6 +135,7 @@ func handle_drag_end(_event: Dictionary) -> void:
 
 # ----- Anchor System (virtual) -----------------------------------------------
 
+
 ## Returns an array of anchor definitions, each a Dictionary with keys:
 ##   "label": String — unique identifier for the anchor (e.g., "top", "left")
 ##   "offset": Vector2 — local offset from the element's origin
@@ -142,6 +145,7 @@ func get_anchor_positions() -> Array[Dictionary]:
 
 
 # ----- Virtual Properties ----------------------------------------------------
+
 
 ## Whether this element supports text editing (double-click opens text overlay).
 ## Subclasses override to return true (LabelShape) or keep false (CanvasNode).

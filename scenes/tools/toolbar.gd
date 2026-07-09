@@ -13,17 +13,11 @@ signal node_sub_mode_changed(sub_mode: String)
 
 ## Shape sub-mode tracking and labels.
 const SHAPE_SUB_MODES: Array[String] = ["oval", "circle"]
-const SHAPE_LABELS: Dictionary = {
-	"oval": "Oval",
-	"circle": "Circle"
-}
+const SHAPE_LABELS: Dictionary = {"oval": "Oval", "circle": "Circle"}
 
 ## Node sub-mode tracking and labels.
 const NODE_SUB_MODES: Array[String] = ["circle_node", "triangle_node"]
-const NODE_LABELS: Dictionary = {
-	"circle_node": "Circle Node",
-	"triangle_node": "Triangle Node"
-}
+const NODE_LABELS: Dictionary = {"circle_node": "Circle Node", "triangle_node": "Triangle Node"}
 
 ## Currently selected shape sub-mode ("oval" or "circle").
 var current_shape_sub_mode: String = "oval"

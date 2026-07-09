@@ -64,6 +64,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 # ----- private helpers -------------------------------------------------------
 
+
 ## Responds to a left-button press: runs physics query, dispatches click + drag-begin.
 ## Also releases GUI focus so that legend labels and text overlays exit edit mode
 ## when the user clicks on the canvas (Node2D/Area2D nodes don't trigger focus loss naturally).
@@ -72,7 +73,7 @@ func _handle_pointer_down(event: InputEventMouseButton) -> void:
 	## This triggers focus_exited on legend LineEdits and the TextEdit overlay,
 	## which commit/revert their edits. GUI-captured Control clicks never reach
 	## _unhandled_input, so clicking a legend label itself doesn't release focus here.
-	var focused_input: Control = 	get_viewport().gui_get_focus_owner()
+	var focused_input: Control = get_viewport().gui_get_focus_owner()
 	if focused_input != null:
 		focused_input.release_focus()
 
@@ -101,8 +102,11 @@ func _handle_pointer_down(event: InputEventMouseButton) -> void:
 		# direct child of the element node). Uses "clickable_element" group for
 		# primary discovery (set by CanvasElement._ready()), with a fallback to
 		# has_method("handle_click") for backward compatibility during transition.
-		while candidate != null and not candidate.is_in_group("clickable_element") \
-				and not candidate.has_method("handle_click"):
+		while (
+			candidate != null
+			and not candidate.is_in_group("clickable_element")
+			and not candidate.has_method("handle_click")
+		):
 			candidate = candidate.get_parent()
 			if candidate == element_layer or candidate is CanvasLayer:
 				candidate = null
@@ -126,8 +130,7 @@ func _handle_pointer_down(event: InputEventMouseButton) -> void:
 		# 1. Double-click detection — same element within 400ms.
 		var now: int = Time.get_ticks_msec()
 		var is_double_click: bool = (
-			hit_element == _last_clicked_element
-			and now - _last_click_time < DOUBLE_CLICK_TIME_MS
+			hit_element == _last_clicked_element and now - _last_click_time < DOUBLE_CLICK_TIME_MS
 		)
 		_last_clicked_element = hit_element
 		_last_click_time = now

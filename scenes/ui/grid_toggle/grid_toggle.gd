@@ -8,7 +8,6 @@ extends Control
 ## Emitted when the button is pressed to toggle the grid.
 signal grid_toggle_requested
 
-
 @onready var button: Button = $Button
 
 

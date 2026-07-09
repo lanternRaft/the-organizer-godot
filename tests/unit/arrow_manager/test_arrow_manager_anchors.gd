@@ -1,11 +1,11 @@
 # GdUnit generated TestSuite
 class_name ArrowManagerAnchorsTest
 extends GdUnitTestSuite
-@warning_ignore('unused_parameter')
-@warning_ignore('return_value_discarded')
+@warning_ignore("unused_parameter")
+@warning_ignore("return_value_discarded")
 
 # TestSuite generated from
-const __source: String = 'res://scenes/arrow_manager/arrow_manager.gd'
+const __source: String = "res://scenes/arrow_manager/arrow_manager.gd"
 
 const CANVAS_NODE_SCENE: PackedScene = preload("res://scenes/tools/canvas_node/canvas_node.tscn")
 const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
@@ -20,6 +20,7 @@ const CIRCLE_RADIUS: float = 8.0
 ## that ArrowManager and the test assertions rely on, without pulling in
 ## Main.gd's complex scene structure requirements.
 const _MAIN_STUB_SCRIPT: GDScript = preload("res://tests/unit/arrow_manager/main_stub.gd")
+
 
 ## Creates a minimal test scene with ElementLayer and AnchorLayer under a dummy Main node.
 ## ArrowManager is added as a child of Main.
@@ -110,6 +111,7 @@ func _create_label_shape(element_layer: Node2D, position: Vector2) -> LabelShape
 
 # ===== Test: ArrowManager reads anchor positions via get_anchor_positions ====
 
+
 ## Verifies that ArrowManager's internal anchor-reading helpers use
 ## get_anchor_positions() from CanvasElement to determine positions.
 func test_arrow_manager_reads_anchor_positions() -> void:
@@ -149,6 +151,7 @@ func test_arrow_manager_reads_anchor_positions() -> void:
 
 
 # ===== Test: ArrowManager handles LabelShape anchors correctly ===============
+
 
 ## Verifies that ArrowManager works with LabelShape anchors end-to-end:
 ## creating an arrow between two LabelShapes and updating arrows after move.
@@ -194,6 +197,7 @@ func test_arrow_manager_label_shape_anchors() -> void:
 
 
 # ===== Test: ArrowManager handles CanvasNode circle anchors correctly ========
+
 
 ## Verifies that ArrowManager correctly reads circle node anchors
 ## (4 cardinal points) and creates/updates arrows correctly.
@@ -260,6 +264,7 @@ func test_arrow_manager_canvas_node_circle_anchors() -> void:
 
 
 # ===== Test: ArrowManager handles CanvasNode triangle anchors correctly ======
+
 
 ## Verifies that ArrowManager correctly reads triangle node anchors
 ## (3 vertex points) and creates/updates arrows correctly.

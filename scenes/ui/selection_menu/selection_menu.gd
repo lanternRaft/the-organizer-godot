@@ -6,7 +6,7 @@ extends PanelContainer
 ##
 ## Positioned in screen-space (child of UI CanvasLayer in Main scene).
 
-signal delete_requested()
+signal delete_requested
 signal color_selected(color: Color)
 
 ## Padding below the element's bounding box (screen-space pixels).
@@ -139,8 +139,7 @@ func _reposition() -> void:
 
 	# Position menu centered horizontally below the element.
 	var menu_pos: Vector2 = Vector2(
-		screen_center.x - menu_size.x / 2.0,
-		screen_center.y + screen_half_h + BELOW_PADDING
+		screen_center.x - menu_size.x / 2.0, screen_center.y + screen_half_h + BELOW_PADDING
 	)
 
 	# Clamp to viewport edges so the menu stays on-screen.
@@ -157,6 +156,7 @@ func refresh_position() -> void:
 
 ## --- Signal handlers ---
 
+
 func _on_delete_pressed() -> void:
 	delete_requested.emit()
 
@@ -168,8 +168,7 @@ func _on_color_button_pressed() -> void:
 		# Position the palette to the right of the color button.
 		var btn_global: Vector2 = color_button.global_position
 		_color_palette.global_position = Vector2(
-			btn_global.x + color_button.size.x + 4.0,
-			btn_global.y
+			btn_global.x + color_button.size.x + 4.0, btn_global.y
 		)
 		# Clamp to viewport.
 		var vp_size: Vector2 = _viewport.get_visible_rect().size

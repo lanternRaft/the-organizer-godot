@@ -84,6 +84,7 @@ func _process(_delta: float) -> void:
 
 # ----- Public API ------------------------------------------------------------
 
+
 ## Returns a list of all active arrows.
 func get_arrows() -> Array[Node]:
 	return _arrows
@@ -129,7 +130,9 @@ func end_arrow_drag() -> void:
 
 	# If snapped to a valid different element, create arrow.
 	if _drag_snapped_element != null and _drag_snapped_element != _drag_start_element:
-		_create_arrow(_drag_start_element, _drag_start_label, _drag_snapped_element, _drag_snapped_label)
+		_create_arrow(
+			_drag_start_element, _drag_start_label, _drag_snapped_element, _drag_snapped_label
+		)
 
 	_drag_start_element = null
 	_drag_start_label = ""
@@ -177,7 +180,9 @@ func delete_arrows_for_element(element: CanvasElement) -> void:
 		if not is_instance_valid(arrow_node):
 			to_remove.append(arrow_node)
 			continue
-		var start_shape: Variant = arrow_node.call("_resolve_shape", arrow_node.get("start_shape_path"))
+		var start_shape: Variant = arrow_node.call(
+			"_resolve_shape", arrow_node.get("start_shape_path")
+		)
 		var end_shape: Variant = arrow_node.call("_resolve_shape", arrow_node.get("end_shape_path"))
 		if start_shape == element or end_shape == element:
 			to_remove.append(arrow_node)
@@ -200,13 +205,16 @@ func update_arrows_for_element(element: CanvasElement) -> void:
 	for arrow_node: Node in _arrows:
 		if not is_instance_valid(arrow_node):
 			continue
-		var start_shape: Variant = arrow_node.call("_resolve_shape", arrow_node.get("start_shape_path"))
+		var start_shape: Variant = arrow_node.call(
+			"_resolve_shape", arrow_node.get("start_shape_path")
+		)
 		var end_shape: Variant = arrow_node.call("_resolve_shape", arrow_node.get("end_shape_path"))
 		if start_shape == element or end_shape == element:
 			arrow_node.call("rebuild_path")
 
 
 # ----- Anchor Position Helpers (uses CanvasElement interface) ----------------
+
 
 ## Returns the global edge position for a given element and anchor label.
 ## Reads offsets from the element's get_anchor_positions() virtual method.
@@ -260,14 +268,19 @@ static func _get_anchor_outward_normal(element: CanvasElement, label: String) ->
 				return offset.normalized()
 	# Fallback for cardinal directions (works for most elements).
 	match label:
-		"top": return Vector2(0, -1)
-		"bottom": return Vector2(0, 1)
-		"left": return Vector2(-1, 0)
-		"right": return Vector2(1, 0)
+		"top":
+			return Vector2(0, -1)
+		"bottom":
+			return Vector2(0, 1)
+		"left":
+			return Vector2(-1, 0)
+		"right":
+			return Vector2(1, 0)
 	return Vector2.ZERO
 
 
 # ----- Private helpers: element tracking -------------------------------------
+
 
 func _refresh_element_list() -> void:
 	_elements.clear()
@@ -298,6 +311,7 @@ func _on_element_tree_exiting(element: CanvasElement) -> void:
 
 
 # ----- Private helpers: anchor dots ------------------------------------------
+
 
 func _update_anchor_dots(mouse_pos: Vector2) -> void:
 	var nearest_dist: float = INF
@@ -419,7 +433,12 @@ func _highlight_dot(element: CanvasElement, label: String, dist: float) -> void:
 				continue
 
 			var is_highlighted: bool = false
-			if should_snap and element != null and eid == element.get_instance_id() and lbl == label:
+			if (
+				should_snap
+				and element != null
+				and eid == element.get_instance_id()
+				and lbl == label
+			):
 				is_highlighted = true
 
 			var prev: Variant = dot_n.get_meta("is_highlighted", false)
@@ -450,6 +469,7 @@ func _get_dot_position(element: CanvasElement, label: String) -> Vector2:
 
 
 # ----- Private helpers: drag preview -----------------------------------------
+
 
 func _update_drag_preview(mouse_pos: Vector2) -> void:
 	if _preview_line == null:
@@ -493,7 +513,10 @@ func _update_drag_preview(mouse_pos: Vector2) -> void:
 
 # ----- Private helpers: arrow creation ---------------------------------------
 
-func _create_arrow(start_element: CanvasElement, start_label: String, end_element: CanvasElement, end_label: String) -> void:
+
+func _create_arrow(
+	start_element: CanvasElement, start_label: String, end_element: CanvasElement, end_label: String
+) -> void:
 	var raw_arrow: Variant = ARROW_SCENE.instantiate()
 	@warning_ignore("unsafe_cast")
 	var arrow: Node = raw_arrow as Node
@@ -536,6 +559,7 @@ func _on_element_layer_click(mouse_pos: Vector2) -> bool:
 
 # ----- Private helpers: geometry ---------------------------------------------
 
+
 static func _closest_point_on_segment(p: Vector2, a: Vector2, b: Vector2) -> Vector2:
 	var ab: Vector2 = b - a
 	var len_sq: float = ab.length_squared()
@@ -552,6 +576,7 @@ static func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t:
 
 
 # ----- Called by Main when clicking empty canvas ----------------------------
+
 
 ## Handles mousedown on the anchor dot layer. Returns true if consumed.
 func handle_dot_mousedown(mouse_pos: Vector2) -> bool:

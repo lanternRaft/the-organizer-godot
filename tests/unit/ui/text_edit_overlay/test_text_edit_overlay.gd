@@ -1,13 +1,14 @@
 # GdUnit generated TestSuite
 class_name TextEditOverlayTest
 extends GdUnitTestSuite
-@warning_ignore('unused_parameter')
-@warning_ignore('return_value_discarded')
+@warning_ignore("unused_parameter")
+@warning_ignore("return_value_discarded")
 
 # TestSuite generated from
-const __source: String = 'res://scenes/ui/text_edit_overlay/text_edit_overlay.gd'
+const __source: String = "res://scenes/ui/text_edit_overlay/text_edit_overlay.gd"
 const __scene: PackedScene = preload("res://scenes/ui/text_edit_overlay/text_edit_overlay.tscn")
 const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
+
 
 ## Helper: creates a TextEditOverlay, adds it to the tree, and returns it.
 func _create_overlay() -> Control:
@@ -45,13 +46,12 @@ func test_focus_exited_commits_text() -> void:
 	await _open_overlay(overlay, shape, "Hello")
 
 	# Watch for the signal using a dictionary so lambda mutation works.
-	var signal_result: Dictionary = {
-		"fired": false,
-		"text": ""
-	}
-	overlay.connect("text_committed", func(_s: Node, text: String) -> void:
-		signal_result["fired"] = true
-		signal_result["text"] = text
+	var signal_result: Dictionary = {"fired": false, "text": ""}
+	overlay.connect(
+		"text_committed",
+		func(_s: Node, text: String) -> void:
+			signal_result["fired"] = true
+			signal_result["text"] = text
 	)
 
 	# Release focus on the TextEdit after setting text (open() clears it).
@@ -76,13 +76,12 @@ func test_focus_exited_commits_empty_text() -> void:
 	await _open_overlay(overlay, shape, "")
 
 	# Watch for the signal using a dictionary so lambda mutation works.
-	var signal_result: Dictionary = {
-		"fired": false,
-		"text": "not_fired"
-	}
-	overlay.connect("text_committed", func(_s: Node, text: String) -> void:
-		signal_result["fired"] = true
-		signal_result["text"] = text
+	var signal_result: Dictionary = {"fired": false, "text": "not_fired"}
+	overlay.connect(
+		"text_committed",
+		func(_s: Node, text: String) -> void:
+			signal_result["fired"] = true
+			signal_result["text"] = text
 	)
 
 	# Release focus on the TextEdit after setting text (open() clears it).
@@ -107,16 +106,11 @@ func test_escape_still_cancels_on_focus_exited() -> void:
 	var shape: Node = await _create_shape()
 	await _open_overlay(overlay, shape, "Hello")
 
-	var signal_result: Dictionary = {
-		"committed": false,
-		"cancelled": false
-	}
-	overlay.connect("text_committed", func(_s: Node, _text: String) -> void:
-		signal_result["committed"] = true
+	var signal_result: Dictionary = {"committed": false, "cancelled": false}
+	overlay.connect(
+		"text_committed", func(_s: Node, _text: String) -> void: signal_result["committed"] = true
 	)
-	overlay.connect("text_cancelled", func(_s: Node) -> void:
-		signal_result["cancelled"] = true
-	)
+	overlay.connect("text_cancelled", func(_s: Node) -> void: signal_result["cancelled"] = true)
 
 	# Focus the TextEdit, then press Escape.
 	var text_edit: TextEdit = _get_text_edit(overlay)

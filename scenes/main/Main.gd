@@ -5,7 +5,9 @@ extends Node
 ## Preload LabelShape and CanvasNode scenes for instantiation.
 const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
 const CANVAS_NODE_SCENE: PackedScene = preload("res://scenes/tools/canvas_node/canvas_node.tscn")
-const TEXT_OVERLAY_SCENE: PackedScene = preload("res://scenes/ui/text_edit_overlay/text_edit_overlay.tscn")
+const TEXT_OVERLAY_SCENE: PackedScene = preload(
+	"res://scenes/ui/text_edit_overlay/text_edit_overlay.tscn"
+)
 const LEGEND_PANEL_SCENE: PackedScene = preload("res://scenes/ui/legend_panel/legend_panel.tscn")
 
 ## Path where the canvas state is persisted.
@@ -159,9 +161,17 @@ func _unhandled_input(event: InputEvent) -> void:
 
 		# Enter key opens text editor on selected shape.
 		# (must come after the Delete check since both dispatch on the same event type)
-		if not key_event.ctrl_pressed and not key_event.shift_pressed and not key_event.meta_pressed:
+		if (
+			not key_event.ctrl_pressed
+			and not key_event.shift_pressed
+			and not key_event.meta_pressed
+		):
 			if key_event.keycode == KEY_ENTER:
-				if select_mode_active and primary_selection != null and not _text_overlay.get("is_open"):
+				if (
+					select_mode_active
+					and primary_selection != null
+					and not _text_overlay.get("is_open")
+				):
 					if primary_selection is LabelShape:
 						open_text_editor(primary_selection as LabelShape)
 						get_viewport().set_input_as_handled()
@@ -481,6 +491,7 @@ func toggle_grid() -> void:
 
 # ----- Text Editing ----------------------------------------------------------
 
+
 ## Opens the text edit overlay centered over the given shape.
 func open_text_editor(shape: LabelShape) -> void:
 	# Guard: shape must still be in the tree.
@@ -533,6 +544,7 @@ func _on_text_cancelled(_shape: Node) -> void:
 
 # ----- Persistence -----------------------------------------------------------
 
+
 ## Serialises all canvas elements into a Dictionary for save.
 func serialize_canvas() -> Dictionary:
 	var elements: Array[Dictionary] = []
@@ -543,32 +555,42 @@ func serialize_canvas() -> Dictionary:
 			if child is LabelShape:
 				var shape: LabelShape = child as LabelShape
 				var color: Color = shape.fill_color
-				elements.append({
-					"type": "LabelShape",
-					"position_x": pos.x,
-					"position_y": pos.y,
-					"rx": shape.rx,
-					"ry": shape.ry,
-					"fill_r": color.r,
-					"fill_g": color.g,
-					"fill_b": color.b,
-					"fill_a": color.a,
-					"text": shape.text_content,
-					"shape_mode": shape.shape_mode,
-				})
+				(
+					elements
+					. append(
+						{
+							"type": "LabelShape",
+							"position_x": pos.x,
+							"position_y": pos.y,
+							"rx": shape.rx,
+							"ry": shape.ry,
+							"fill_r": color.r,
+							"fill_g": color.g,
+							"fill_b": color.b,
+							"fill_a": color.a,
+							"text": shape.text_content,
+							"shape_mode": shape.shape_mode,
+						}
+					)
+				)
 			elif child is CanvasNode:
 				var node: CanvasNode = child as CanvasNode
 				var color: Color = node.fill_color
-				elements.append({
-					"type": "CanvasNode",
-					"position_x": pos.x,
-					"position_y": pos.y,
-					"fill_r": color.r,
-					"fill_g": color.g,
-					"fill_b": color.b,
-					"fill_a": color.a,
-					"sub_mode": node.sub_mode,
-				})
+				(
+					elements
+					. append(
+						{
+							"type": "CanvasNode",
+							"position_x": pos.x,
+							"position_y": pos.y,
+							"fill_r": color.r,
+							"fill_g": color.g,
+							"fill_b": color.b,
+							"fill_a": color.a,
+							"sub_mode": node.sub_mode,
+						}
+					)
+				)
 	var result: Dictionary = {"elements": elements}
 	result["legend"] = legend_panel.call("get_legend_data")
 	return result
@@ -612,13 +634,20 @@ func load_canvas() -> void:
 func _load_label_shape(data: Dictionary) -> void:
 	var shape: LabelShape = LABEL_SHAPE_SCENE.instantiate()
 	@warning_ignore("unsafe_cast")
-	shape.position = Vector2(data.get("position_x", 0.0) as float, data.get("position_y", 0.0) as float)
+	shape.position = Vector2(
+		data.get("position_x", 0.0) as float, data.get("position_y", 0.0) as float
+	)
 	@warning_ignore("unsafe_cast")
 	shape.rx = data.get("rx", 80.0) as float
 	@warning_ignore("unsafe_cast")
 	shape.ry = data.get("ry", 50.0) as float
 	@warning_ignore("unsafe_cast")
-	shape.fill_color = Color(data.get("fill_r", 0.231) as float, data.get("fill_g", 0.51) as float, data.get("fill_b", 0.965) as float, data.get("fill_a", 1.0) as float)
+	shape.fill_color = Color(
+		data.get("fill_r", 0.231) as float,
+		data.get("fill_g", 0.51) as float,
+		data.get("fill_b", 0.965) as float,
+		data.get("fill_a", 1.0) as float
+	)
 	shape.shape_mode = str(data.get("shape_mode", "oval"))
 	shape.text_content = str(data.get("text", ""))
 
@@ -651,6 +680,7 @@ func _load_canvas_node(data: Dictionary) -> void:
 
 
 # ----- Multi-Drag Coordination ------------------------------------------------
+
 
 ## Called when a selected element moves during a drag. Broadcasts the same delta
 ## to every other element in selected_set so they all move in sync.
@@ -697,6 +727,7 @@ func _select_all_elements() -> void:
 
 # ----- Zoom Controls Relay ---------------------------------------------------
 
+
 ## Relays zoom-in button press to the camera controller.
 func _on_zoom_in_requested() -> void:
 	var vp_center: Vector2 = _viewport.get_visible_rect().size / 2.0
@@ -721,6 +752,7 @@ func _on_zoom_changed(level: float) -> void:
 
 
 # ----- Arrow System Interface ------------------------------------------------
+
 
 ## Called by ClickHandler as a secondary path when no Area2D shape was hit.
 ## Checks whether the click is on an arrow path. Returns true if consumed.
@@ -766,6 +798,7 @@ func _on_element_anchor_changed(element: CanvasElement) -> void:
 
 
 # ----- Selection Menu & Deletion ---------------------------------------------
+
 
 ## Shows/hides the selection menu based on current selection state.
 ## Menu is hidden entirely when more than one element is selected.
@@ -842,6 +875,7 @@ func _on_menu_color_selected(color: Color) -> void:
 
 
 ## Legend Panel ---------------------------------------------------------------
+
 
 ## Scans the canvas for unique fill colors from LabelShapes and updates the legend panel.
 ## CanvasNode colors are intentionally excluded — nodes are decorative markers, not categories.

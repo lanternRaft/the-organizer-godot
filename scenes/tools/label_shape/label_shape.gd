@@ -24,7 +24,6 @@ signal double_clicked(shape: Node)
 		elif value == "oval":
 			ry = 50.0
 
-
 @export var rx: float = 80.0:
 	set(value):
 		rx = value
@@ -117,6 +116,7 @@ func _set_handles_visible(val: bool) -> void:
 
 # ----- Clickable Interface (overrides) ---------------------------------------
 
+
 ## Called by ClickHandler when a pointer-down hits this shape's Area2D.
 ## Detects handle vs. body hit, emits clicked signal, and returns true.
 func handle_click(event: Dictionary) -> bool:
@@ -142,6 +142,7 @@ func handle_double_click(_event: Dictionary) -> bool:
 
 
 # ----- Drag Lifecycle (overrides for handle/resize) --------------------------
+
 
 ## Called by ClickHandler after handle_click, or when an already-selected
 ## element is clicked again (multi-drag on an already-selected element).
@@ -235,6 +236,7 @@ func handle_drag_end(_event: Dictionary) -> void:
 
 # ----- Text Display ---------------------------------------------------------
 
+
 ## Updates the Label text and rescales the font to fit the shape bounds.
 func _update_text_display() -> void:
 	if not is_node_ready() or _text_label == null:
@@ -291,7 +293,9 @@ func _estimate_line_count(text: String, max_width: float, font: Font, font_size:
 	var is_first_word: bool = true
 
 	for word: String in words:
-		var word_width: float = font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+		var word_width: float = (
+			font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+		)
 
 		if is_first_word:
 			if word_width > max_width:
@@ -302,7 +306,9 @@ func _estimate_line_count(text: String, max_width: float, font: Font, font_size:
 			is_first_word = false
 		else:
 			# Space between words
-			var space_width: float = font.get_string_size(" ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+			var space_width: float = (
+				font.get_string_size(" ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+			)
 			if current_line_width + space_width + word_width > max_width:
 				count += 1
 				current_line_width = word_width
@@ -313,6 +319,7 @@ func _estimate_line_count(text: String, max_width: float, font: Font, font_size:
 
 
 # ----- Resize / Position Updates --------------------------------------------
+
 
 func _update_collision_shape() -> void:
 	if not is_node_ready():
@@ -360,6 +367,7 @@ func handle_at_pos(local_pos: Vector2) -> String:
 
 # ----- Anchor System (overrides) ---------------------------------------------
 
+
 ## Returns 4 cardinal anchor offsets based on current rx/ry dimensions.
 func get_anchor_positions() -> Array[Dictionary]:
 	return [
@@ -371,6 +379,7 @@ func get_anchor_positions() -> Array[Dictionary]:
 
 
 # ----- Virtual Properties (overrides) ----------------------------------------
+
 
 func supports_text_editing() -> bool:
 	return true

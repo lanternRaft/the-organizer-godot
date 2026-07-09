@@ -37,9 +37,9 @@ const CIRCLE_RADIUS: float = 8.0
 
 ## Triangle vertices (local, inscribed in a bounding circle of 8px radius).
 const TRIANGLE_VERTICES: PackedVector2Array = [
-	Vector2(0.0, -8.0),   # top
-	Vector2(-7.0, 4.0),   # bottom-left
-	Vector2(7.0, 4.0),    # bottom-right
+	Vector2(0.0, -8.0),  # top
+	Vector2(-7.0, 4.0),  # bottom-left
+	Vector2(7.0, 4.0),  # bottom-right
 ]
 
 ## Anchor labels for each sub-mode.
@@ -101,6 +101,7 @@ func _draw() -> void:
 
 # ----- Clickable Interface (overrides) --------------------------------------
 
+
 ## Called by ClickHandler when a pointer-down hits this node's Area2D.
 ## Sets drag mode to "body" (no resize handles) and emits clicked signal.
 func handle_click(event: Dictionary) -> bool:
@@ -115,6 +116,7 @@ func handle_double_click(_event: Dictionary) -> bool:
 
 
 # ----- Anchor System ---------------------------------------------------------
+
 
 ## Returns the list of anchor labels for this node's current sub-mode.
 func get_anchor_points() -> Array[String]:
@@ -138,14 +140,12 @@ func get_anchor_positions() -> Array[Dictionary]:
 	var labels: Array[String] = get_anchor_points()
 	var result: Array[Dictionary] = []
 	for label: String in labels:
-		result.append({
-			"label": label,
-			"offset": ANCHOR_POSITIONS.get(label, Vector2.ZERO)
-		})
+		result.append({"label": label, "offset": ANCHOR_POSITIONS.get(label, Vector2.ZERO)})
 	return result
 
 
 # ----- Virtual Properties ----------------------------------------------------
+
 
 ## CanvasNode does not support text editing.
 func supports_text_editing() -> bool:
@@ -158,6 +158,7 @@ func shows_in_legend() -> bool:
 
 
 # ----- Collision Shape -------------------------------------------------------
+
 
 func _update_collision_shape() -> void:
 	if not is_node_ready():

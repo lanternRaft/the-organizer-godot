@@ -1,11 +1,11 @@
 # GdUnit generated TestSuite
 class_name NodeToolTest
 extends GdUnitTestSuite
-@warning_ignore('unused_parameter')
-@warning_ignore('return_value_discarded')
+@warning_ignore("unused_parameter")
+@warning_ignore("return_value_discarded")
 
 # TestSuite generated from
-const __source: String = 'res://scenes/main/Main.gd'
+const __source: String = "res://scenes/main/Main.gd"
 const __scene: PackedScene = preload("res://scenes/main/main.tscn")
 
 const CANVAS_NODE_SCENE: PackedScene = preload("res://scenes/tools/canvas_node/canvas_node.tscn")
@@ -13,8 +13,8 @@ const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/l
 
 var _main: Node
 
-
 # ----- Lifecycle -------------------------------------------------------------
+
 
 func before_test() -> void:
 	# Delete the persisted save file first so _ready() → load_canvas() loads nothing.
@@ -33,6 +33,7 @@ func after_test() -> void:
 
 
 # ----- Helpers ---------------------------------------------------------------
+
 
 func _reset_state() -> void:
 	_main.set("node_tool_active", false)
@@ -86,6 +87,7 @@ func _create_label_shape(pos: Vector2) -> Node2D:
 
 # ===== C1-C3: Tool Activation ===============================================
 
+
 ## C1: Activate node tool sets correct state.
 func test_activate_node_tool() -> void:
 	_main.call("activate_node_mode", "circle_node")
@@ -118,6 +120,7 @@ func test_node_tool_deactivates_select_tool() -> void:
 
 # ===== C4-C5: Place Node ====================================================
 
+
 ## C4: Place circle node.
 func test_place_circle_node() -> void:
 	_main.call("activate_node_mode", "circle_node")
@@ -139,9 +142,30 @@ func test_place_circle_node() -> void:
 	assert_object(_main.get("last_placed")).is_same(node)
 
 	assert_bool(node.is_connected("clicked", Callable(_main, "_on_element_clicked"))).is_true()
-	assert_bool(node.is_connected("anchor_changed", Callable(_main, "_on_element_anchor_changed").bind(node))).is_true()
-	assert_bool(node.is_connected("multi_drag_moved", Callable(_main, "_on_multi_drag_moved").bind(node))).is_true()
-	assert_bool(node.is_connected("multi_drag_ended", Callable(_main, "_on_multi_drag_ended").bind(node))).is_true()
+	(
+		assert_bool(
+			node.is_connected(
+				"anchor_changed", Callable(_main, "_on_element_anchor_changed").bind(node)
+			)
+		)
+		. is_true()
+	)
+	(
+		assert_bool(
+			node.is_connected(
+				"multi_drag_moved", Callable(_main, "_on_multi_drag_moved").bind(node)
+			)
+		)
+		. is_true()
+	)
+	(
+		assert_bool(
+			node.is_connected(
+				"multi_drag_ended", Callable(_main, "_on_multi_drag_ended").bind(node)
+			)
+		)
+		. is_true()
+	)
 
 	var save_path: String = _main.get("SAVE_PATH")
 	assert_bool(FileAccess.file_exists(save_path)).is_true()
@@ -163,6 +187,7 @@ func test_place_triangle_node() -> void:
 
 # ===== C6: Empty Canvas Click Routes to place_node ==========================
 
+
 ## C6: Empty canvas click in node mode routes to place_node.
 func test_empty_canvas_click_in_node_mode() -> void:
 	_main.call("activate_node_mode", "circle_node")
@@ -176,6 +201,7 @@ func test_empty_canvas_click_in_node_mode() -> void:
 
 
 # ===== C7: Escape Exits Node Mode ===========================================
+
 
 ## C7: Escape key exits node mode without placing.
 func test_escape_exits_node_mode() -> void:
@@ -192,6 +218,7 @@ func test_escape_exits_node_mode() -> void:
 
 
 # ===== C8-C10: Node Click Selection =========================================
+
 
 ## C8: Node click selects.
 func test_node_click_selects() -> void:
@@ -282,6 +309,7 @@ func test_node_click_clears_shape_selection() -> void:
 
 # ===== C11: Node Color Change ===============================================
 
+
 ## C11: Node color change via selection menu.
 func test_node_color_change() -> void:
 	_main.call("activate_node_mode", "circle_node")
@@ -299,6 +327,7 @@ func test_node_color_change() -> void:
 
 
 # ===== C12-C13: Delete Node =================================================
+
 
 ## C12: Delete node.
 func test_delete_node() -> void:
@@ -353,6 +382,7 @@ func test_delete_node_with_arrows() -> void:
 
 # ===== C14: Select All Includes Nodes =======================================
 
+
 ## C14: Select all includes nodes.
 func test_select_all_includes_nodes() -> void:
 	var shape1: Node2D = _create_label_shape(Vector2(0, 0))
@@ -375,6 +405,7 @@ func test_select_all_includes_nodes() -> void:
 
 
 # ===== C15-C16: Serialization ===============================================
+
 
 ## C15: CanvasNode serialization.
 func test_canvas_node_serialization() -> void:
@@ -421,12 +452,34 @@ func test_canvas_node_deserialization() -> void:
 	assert_float(_fill.a).is_equal_approx(1.0, 0.01)
 
 	assert_bool(node.is_connected("clicked", Callable(_main, "_on_element_clicked"))).is_true()
-	assert_bool(node.is_connected("anchor_changed", Callable(_main, "_on_element_anchor_changed").bind(node))).is_true()
-	assert_bool(node.is_connected("multi_drag_moved", Callable(_main, "_on_multi_drag_moved").bind(node))).is_true()
-	assert_bool(node.is_connected("multi_drag_ended", Callable(_main, "_on_multi_drag_ended").bind(node))).is_true()
+	(
+		assert_bool(
+			node.is_connected(
+				"anchor_changed", Callable(_main, "_on_element_anchor_changed").bind(node)
+			)
+		)
+		. is_true()
+	)
+	(
+		assert_bool(
+			node.is_connected(
+				"multi_drag_moved", Callable(_main, "_on_multi_drag_moved").bind(node)
+			)
+		)
+		. is_true()
+	)
+	(
+		assert_bool(
+			node.is_connected(
+				"multi_drag_ended", Callable(_main, "_on_multi_drag_ended").bind(node)
+			)
+		)
+		. is_true()
+	)
 
 
 # ===== C17-C19: Info Bar ====================================================
+
 
 ## C17: Info bar shows node mode circle hint.
 func test_info_bar_node_mode_circle() -> void:
@@ -449,6 +502,7 @@ func test_info_bar_node_selected() -> void:
 
 # ===== C20: Legend Excludes Node Colors =====================================
 
+
 ## C20: Legend excludes node colors.
 func test_legend_excludes_node_colors() -> void:
 	var shape: Node2D = _create_label_shape(Vector2(0, 0))
@@ -470,6 +524,7 @@ func test_legend_excludes_node_colors() -> void:
 
 # ===== C21: Node Copy/Paste =================================================
 
+
 ## C21: Copy/paste is not implemented — verify absence of handlers.
 func test_node_copy_paste() -> void:
 	assert_bool(_main.has_method("_on_copy_requested")).is_false()
@@ -477,6 +532,7 @@ func test_node_copy_paste() -> void:
 
 
 # ===== C22: _on_node_sub_mode_changed Handler ===============================
+
 
 ## C22: _on_node_sub_mode_changed activates node tool.
 func test_on_node_sub_mode_changed() -> void:
@@ -490,6 +546,7 @@ func test_on_node_sub_mode_changed() -> void:
 
 
 # ===== C23: _on_element_clicked Routes Correctly ===============================
+
 
 ## C23: _on_element_clicked routes to _handle_element_clicked.
 func test_on_element_clicked_routes_correctly() -> void:
@@ -505,6 +562,7 @@ func test_on_element_clicked_routes_correctly() -> void:
 
 
 # ===== C24: Activate Node Tool Deactivates Shape Tool =======================
+
 
 ## C24: Place node while shape tool active auto-switches.
 func test_activate_node_tool_deactivates_shape_tool() -> void:

@@ -22,7 +22,11 @@ func _on_button_pressed() -> void:
 		popup_menu.hide()
 	else:
 		var button_rect: Rect2 = menu_button.get_global_rect()
-		popup_menu.popup(Rect2i(int(button_rect.position.x), int(button_rect.position.y + button_rect.size.y), 0, 0))
+		popup_menu.popup(
+			Rect2i(
+				int(button_rect.position.x), int(button_rect.position.y + button_rect.size.y), 0, 0
+			)
+		)
 
 
 ## Handles menu item selection.

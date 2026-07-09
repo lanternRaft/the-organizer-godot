@@ -1,18 +1,21 @@
 # GdUnit generated TestSuite
 class_name ClickHandlerDiscoveryTest
 extends GdUnitTestSuite
-@warning_ignore('unused_parameter')
-@warning_ignore('return_value_discarded')
-@warning_ignore('unsafe_method_access')
-@warning_ignore('unsafe_property_access')
+@warning_ignore("unused_parameter")
+@warning_ignore("return_value_discarded")
+@warning_ignore("unsafe_method_access")
+@warning_ignore("unsafe_property_access")
 
 # TestSuite generated from
-const __source: String = 'res://scenes/main/click_handler/click_handler.gd'
+const __source: String = "res://scenes/main/click_handler/click_handler.gd"
 
 const CLICK_HANDLER_SCRIPT: GDScript = preload("res://scenes/main/click_handler/click_handler.gd")
-const TRACKER_SCRIPT: GDScript = preload("res://tests/unit/main/click_handler/test_click_handler_tracker.gd")
+const TRACKER_SCRIPT: GDScript = preload(
+	"res://tests/unit/main/click_handler/test_click_handler_tracker.gd"
+)
 
 # ----- Typed helpers ---------------------------------------------------------
+
 
 ## Typed scene container so we never access Dictionary values as Variant.
 class TestScene:
@@ -57,9 +60,7 @@ func _create_test_scene() -> TestScene:
 ## Creates a dummy element node that belongs to a group.
 ## If add_handle_click is true, also defines a minimal handle_click method.
 func _create_grouped_element(
-	element_layer: Node2D,
-	group: String,
-	add_area: bool = true
+	element_layer: Node2D, group: String, add_area: bool = true
 ) -> ClickTracker:
 	var node: ClickTracker = ClickTracker.new()
 	node.name = "TestElement"
@@ -118,6 +119,7 @@ func _click_at(click_handler: Node, world_pos: Vector2) -> void:
 
 # ===== test_discovery_via_group ============================================
 
+
 ## ClickHandler discovers elements via clickable_element group.
 ## Creates an element in the "clickable_element" group with handle_click,
 ## clicks at its position, and verifies that the click handler dispatches
@@ -144,6 +146,7 @@ func test_discovery_via_group() -> void:
 
 
 # ===== test_discovery_ignores_unknown_nodes =================================
+
 
 ## Non-grouped nodes without handle_click are ignored.
 ## Creates a node NOT in clickable_element group and WITHOUT handle_click method,
@@ -174,9 +177,9 @@ func test_discovery_ignores_unknown_nodes() -> void:
 	# Use signal connection via string name to avoid type issues.
 	var empty_clicked: Array[bool] = [false]
 	if click_handler.has_signal("empty_canvas_clicked"):
-		click_handler.connect("empty_canvas_clicked", Callable(func(_pos: Vector2) -> void:
-			empty_clicked[0] = true
-		))
+		click_handler.connect(
+			"empty_canvas_clicked", Callable(func(_pos: Vector2) -> void: empty_clicked[0] = true)
+		)
 
 	# Click at the element's position.
 	var world_pos: Vector2 = element.global_position

@@ -1,17 +1,18 @@
 # GdUnit generated TestSuite
 class_name ClickHandlerAnchorPriorityTest
 extends GdUnitTestSuite
-@warning_ignore('unused_parameter')
-@warning_ignore('return_value_discarded')
-@warning_ignore('unsafe_method_access')
-@warning_ignore('unsafe_property_access')
+@warning_ignore("unused_parameter")
+@warning_ignore("return_value_discarded")
+@warning_ignore("unsafe_method_access")
+@warning_ignore("unsafe_property_access")
 
 # TestSuite generated from
-const __source: String = 'res://scenes/main/click_handler/click_handler.gd'
+const __source: String = "res://scenes/main/click_handler/click_handler.gd"
 
 const CLICK_HANDLER_SCRIPT: GDScript = preload("res://scenes/main/click_handler/click_handler.gd")
 
 # ----- Helpers ---------------------------------------------------------------
+
 
 ## Creates a minimal test scene with ElementLayer and ClickHandler.
 ## Returns { "element_layer": Node2D, "click_handler": Node, "root": Node }
@@ -45,7 +46,8 @@ func _create_test_scene() -> Dictionary:
 ## The mock is placed on the parent node of the click handler.
 func _create_mock_main(anchor_returns: bool, arrow_returns: bool) -> GDScript:
 	var script: GDScript = GDScript.new()
-	script.source_code = """extends Node
+	script.source_code = (
+		"""extends Node
 
 var anchor_called := false
 var arrow_called := false
@@ -57,7 +59,9 @@ func _on_anchor_dot_mousedown(_world_pos: Vector2) -> bool:
 func _on_arrow_clicked_at(_world_pos: Vector2) -> bool:
 	arrow_called = true
 	return %s
-""" % ["true" if anchor_returns else "false", "true" if arrow_returns else "false"]
+"""
+		% ["true" if anchor_returns else "false", "true" if arrow_returns else "false"]
+	)
 	script.reload()
 	return script
 
@@ -73,6 +77,7 @@ func _click_at(click_handler: Node, world_pos: Vector2) -> void:
 
 
 # ===== test_anchor_dot_priority_over_arrow ===================================
+
 
 ## Anchor dot takes priority over arrow endpoint at same position.
 ## Sets up a mock Main with both _on_anchor_dot_mousedown and _on_arrow_clicked_at.
@@ -102,6 +107,7 @@ func test_anchor_dot_priority_over_arrow() -> void:
 
 # ===== test_click_anchor_dot_starts_arrow_drag ===============================
 
+
 ## Click on anchor dot with connected arrow starts arrow drag.
 ## Verifies that _on_anchor_dot_mousedown is called when clicking on an
 ## anchor dot position, even if an arrow endpoint is also present.
@@ -128,6 +134,7 @@ func test_click_anchor_dot_starts_arrow_drag() -> void:
 
 
 # ===== test_arrow_body_selection_unaffected ==================================
+
 
 ## Click on arrow body (away from anchors) still selects arrow.
 ## When the anchor dot handler does NOT handle the click (returns false),
@@ -156,6 +163,7 @@ func test_arrow_body_selection_unaffected() -> void:
 
 # ===== test_empty_canvas_unchanged ===========================================
 
+
 ## Click on empty canvas still emits empty_canvas_clicked.
 ## When neither anchor dot nor arrow handler handle the click, the
 ## empty_canvas_clicked signal should still fire.
@@ -171,8 +179,8 @@ func test_empty_canvas_unchanged() -> void:
 	# Track whether empty_canvas_clicked was emitted (use array for ref capture).
 	var empty_clicked: Array[bool] = [false]
 	# Use string-based connect to avoid static analysis issues.
-	click_handler.connect("empty_canvas_clicked", func(_pos: Vector2) -> void:
-		empty_clicked[0] = true
+	click_handler.connect(
+		"empty_canvas_clicked", func(_pos: Vector2) -> void: empty_clicked[0] = true
 	)
 
 	# Click at some position where nothing is found.

@@ -1,11 +1,11 @@
 # GdUnit generated TestSuite
 class_name CanvasNodeTest
 extends GdUnitTestSuite
-@warning_ignore('unused_parameter')
-@warning_ignore('return_value_discarded')
+@warning_ignore("unused_parameter")
+@warning_ignore("return_value_discarded")
 
 # TestSuite generated from
-const __source: String = 'res://scenes/tools/canvas_node/canvas_node.gd'
+const __source: String = "res://scenes/tools/canvas_node/canvas_node.gd"
 const __scene: PackedScene = preload("res://scenes/tools/canvas_node/canvas_node.tscn")
 
 # Constants matching CanvasNode internals.
@@ -14,6 +14,7 @@ const DEFAULT_FILL: Color = Color(0.231, 0.51, 0.965)
 const GRID_SIZE: float = 20.0
 
 # ----- Helpers ---------------------------------------------------------------
+
 
 ## Instantiates a CanvasNode, adds to tree, and returns it.
 ## sub_mode defaults to "circle_node" if not specified.
@@ -26,7 +27,9 @@ func _create_node(sub_mode: String = "circle_node") -> Node2D:
 
 
 ## Simulates a pointer event dictionary for handle_click.
-func _make_pointer_event(world_pos: Vector2 = Vector2.ZERO, local_pos: Vector2 = Vector2.ZERO) -> Dictionary:
+func _make_pointer_event(
+	world_pos: Vector2 = Vector2.ZERO, local_pos: Vector2 = Vector2.ZERO
+) -> Dictionary:
 	return {
 		"world_pos": world_pos,
 		"local_pos": local_pos,
@@ -38,6 +41,7 @@ func _make_pointer_event(world_pos: Vector2 = Vector2.ZERO, local_pos: Vector2 =
 
 
 # ===== A1-A3: Creation & Sub-mode ===========================================
+
 
 ## A1: Circle node creation.
 func test_circle_node_creation() -> void:
@@ -66,7 +70,11 @@ func test_circle_node_creation() -> void:
 	# No resize handles (children named "Handle*" do not exist).
 	for child: Node in node.get_children():
 		if child.name.begins_with("Handle"):
-			assert_bool(false).override_failure_message("CanvasNode should not have handle children").is_true()
+			(
+				assert_bool(false)
+				. override_failure_message("CanvasNode should not have handle children")
+				. is_true()
+			)
 
 	# No text label child named "TextLabel".
 	assert_bool(node.has_node("TextLabel")).is_false()
@@ -111,6 +119,7 @@ func test_sub_mode_switch_updates_collision() -> void:
 
 
 # ===== A4-A5: Anchor Positions ==============================================
+
 
 ## A4: Circle node anchor positions.
 func test_circle_node_anchors() -> void:
@@ -167,13 +176,16 @@ func test_triangle_node_anchors() -> void:
 
 # ===== A6-A7: Click Signals =================================================
 
+
 ## A6: Click signal emitted.
 func test_click_signal_emitted() -> void:
 	var node: Node2D = await _create_node("circle_node")
 	var signal_fired: Dictionary = {"fired": false, "ref": null}
-	node.connect("clicked", func(_event: InputEvent, n: Node) -> void:
-		signal_fired["fired"] = true
-		signal_fired["ref"] = n
+	node.connect(
+		"clicked",
+		func(_event: InputEvent, n: Node) -> void:
+			signal_fired["fired"] = true
+			signal_fired["ref"] = n
 	)
 
 	var event: Dictionary = _make_pointer_event(Vector2.ZERO, Vector2.ZERO)
@@ -199,6 +211,7 @@ func test_double_click_noop() -> void:
 
 
 # ===== A8-A11: Drag Behavior ================================================
+
 
 ## A8: Drag begin when not selected returns false.
 func test_drag_begin_not_selected() -> void:
@@ -229,9 +242,11 @@ func test_drag_move_emits_multi_drag_moved() -> void:
 	node.position = Vector2(100, 100)
 
 	var signal_fired: Dictionary = {"fired": false, "delta": Vector2.ZERO}
-	node.connect("multi_drag_moved", func(d: Vector2) -> void:
-		signal_fired["fired"] = true
-		signal_fired["delta"] = d
+	node.connect(
+		"multi_drag_moved",
+		func(d: Vector2) -> void:
+			signal_fired["fired"] = true
+			signal_fired["delta"] = d
 	)
 
 	# Begin drag at world (100, 100).
@@ -261,17 +276,12 @@ func test_drag_end_snaps_to_grid() -> void:
 	node.call("handle_drag_move", _make_pointer_event(Vector2(137, 152)))
 
 	var context: Dictionary[String, bool] = {
-		"multi_drag_ended_fired": false,
-		"anchor_changed_fired": false
+		"multi_drag_ended_fired": false, "anchor_changed_fired": false
 	}
 
-	node.connect("multi_drag_ended", func() -> void:
-		context.multi_drag_ended_fired = true
-	)
+	node.connect("multi_drag_ended", func() -> void: context.multi_drag_ended_fired = true)
 
-	node.connect("anchor_changed", func() -> void:
-		context.anchor_changed_fired = true
-	)
+	node.connect("anchor_changed", func() -> void: context.anchor_changed_fired = true)
 
 	# End drag — should snap to grid.
 	node.call("handle_drag_end", _make_pointer_event())
@@ -286,6 +296,7 @@ func test_drag_end_snaps_to_grid() -> void:
 
 
 # ===== A12-A14: Selection Visuals ===========================================
+
 
 ## A12: Selected primary — stroke is lighter than non-selected.
 ## We verify via is_selected/is_primary flags and that queue_redraw is triggered.

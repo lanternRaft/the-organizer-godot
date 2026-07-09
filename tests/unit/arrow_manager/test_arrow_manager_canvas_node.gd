@@ -1,11 +1,11 @@
 # GdUnit generated TestSuite
 class_name ArrowManagerCanvasNodeTest
 extends GdUnitTestSuite
-@warning_ignore('unused_parameter')
-@warning_ignore('return_value_discarded')
+@warning_ignore("unused_parameter")
+@warning_ignore("return_value_discarded")
 
 # TestSuite generated from
-const __source: String = 'res://scenes/arrow_manager/arrow_manager.gd'
+const __source: String = "res://scenes/arrow_manager/arrow_manager.gd"
 
 const CANVAS_NODE_SCENE: PackedScene = preload("res://scenes/tools/canvas_node/canvas_node.tscn")
 const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
@@ -20,6 +20,7 @@ const CIRCLE_RADIUS: float = 8.0
 ## that ArrowManager and the test assertions rely on, without pulling in
 ## Main.gd's complex scene structure requirements.
 const _MAIN_STUB_SCRIPT: GDScript = preload("res://tests/unit/arrow_manager/main_stub.gd")
+
 
 ## Creates a minimal test scene with ElementLayer and AnchorLayer under a dummy Main node.
 ## ArrowManager is added as a child of Main.
@@ -102,12 +103,15 @@ func _create_label_shape(element_layer: Node2D, position: Vector2) -> Node2D:
 
 
 ## Calls ArrowManager's internal _create_arrow.
-func _create_arrow(mgr: Node, start_shape: Node, start_label: String, end_shape: Node, end_label: String) -> void:
+func _create_arrow(
+	mgr: Node, start_shape: Node, start_label: String, end_shape: Node, end_label: String
+) -> void:
 	# ArrowManager._create_arrow is a private method. We call it via call().
 	mgr.call("_create_arrow", start_shape, start_label, end_shape, end_label)
 
 
 # ===== B1-B3: Arrow Creation between Nodes and Shapes =======================
+
 
 ## B1: Arrow from LabelShape to CircleNode.
 func test_arrow_shape_to_circle_node() -> void:
@@ -205,6 +209,7 @@ func test_arrow_node_to_shape() -> void:
 
 # ===== B4: Self-Connection Prevention =======================================
 
+
 ## B4: Arrow from a node to itself is not created.
 func test_arrow_self_connection_node() -> void:
 	var scene: Dictionary = await _create_test_scene()
@@ -235,6 +240,7 @@ func test_arrow_self_connection_node() -> void:
 
 # ===== B5: Deleting Node Removes Connected Arrows ===========================
 
+
 ## B5: Deleting node deletes connected arrows.
 func test_delete_node_removes_arrows() -> void:
 	var scene: Dictionary = await _create_test_scene()
@@ -262,6 +268,7 @@ func test_delete_node_removes_arrows() -> void:
 
 
 # ===== B6-B7: Anchor Dots ===================================================
+
 
 ## Helper: Simulates mouse movement to trigger anchor dot visibility.
 func _simulate_process(mgr: Node, mouse_pos: Vector2) -> void:
@@ -337,6 +344,7 @@ func test_triangle_node_anchor_dots() -> void:
 
 # ===== B8-B9: Arrow Drag from Node Anchor ===================================
 
+
 ## B8: Arrow drag begins from node anchor.
 func test_arrow_drag_from_node() -> void:
 	var scene: Dictionary = await _create_test_scene()
@@ -387,7 +395,12 @@ func test_arrow_drag_no_snap_discards() -> void:
 
 	assert_bool(mgr.get("_arrow_drag_active")).is_false()
 	assert_int(mgr._arrows.size()).is_equal(0)
-	assert_bool(mgr.get("_preview_line") == null or not is_instance_valid(mgr.get("_preview_line"))).is_true()
+	(
+		assert_bool(
+			mgr.get("_preview_line") == null or not is_instance_valid(mgr.get("_preview_line"))
+		)
+		. is_true()
+	)
 
 	node.free()
 	var main: Node = scene["main"]
@@ -395,6 +408,7 @@ func test_arrow_drag_no_snap_discards() -> void:
 
 
 # ===== B10: Arrow Updates on Node Move ======================================
+
 
 ## B10: Arrow bezier points update when node moves.
 func test_arrow_updates_on_node_move() -> void:

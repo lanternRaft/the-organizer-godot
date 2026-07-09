@@ -1,8 +1,8 @@
 # GdUnit generated TestSuite
 class_name LabelShapeBaseTest
 extends GdUnitTestSuite
-@warning_ignore('unused_parameter')
-@warning_ignore('return_value_discarded')
+@warning_ignore("unused_parameter")
+@warning_ignore("return_value_discarded")
 
 # TestSuite generated from
 const __scene: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
@@ -15,6 +15,7 @@ const GRID_SIZE: float = 20.0
 
 # ----- Helpers ---------------------------------------------------------------
 
+
 ## Instantiates a LabelShape from scene, adds to tree, and returns it.
 func _create_shape() -> LabelShape:
 	var shape: LabelShape = __scene.instantiate()
@@ -24,7 +25,9 @@ func _create_shape() -> LabelShape:
 
 
 ## Simulates a pointer event dictionary.
-func _make_pointer_event(world_pos: Vector2 = Vector2.ZERO, local_pos: Vector2 = Vector2.ZERO) -> Dictionary:
+func _make_pointer_event(
+	world_pos: Vector2 = Vector2.ZERO, local_pos: Vector2 = Vector2.ZERO
+) -> Dictionary:
 	return {
 		"world_pos": world_pos,
 		"local_pos": local_pos,
@@ -37,6 +40,7 @@ func _make_pointer_event(world_pos: Vector2 = Vector2.ZERO, local_pos: Vector2 =
 
 # ===== LabelShape inherits from CanvasElement ================================
 
+
 ## LabelShape is an instance of CanvasElement.
 func test_label_shape_is_canvas_element() -> void:
 	var shape: LabelShape = __scene.instantiate()
@@ -46,6 +50,7 @@ func test_label_shape_is_canvas_element() -> void:
 
 
 # ===== LabelShape inherits set_selected from base ============================
+
 
 ## LabelShape inherits set_selected from base.
 func test_label_shape_inherits_set_selected() -> void:
@@ -72,6 +77,7 @@ func test_label_shape_inherits_set_selected() -> void:
 
 
 # ===== LabelShape anchor positions (cardinal) ================================
+
 
 ## LabelShape get_anchor_positions returns 4 cardinal offsets.
 func test_label_shape_anchor_positions_cardinal() -> void:
@@ -116,6 +122,7 @@ func test_label_shape_anchor_positions_follow_resize() -> void:
 
 # ===== LabelShape handle_click detection =====================================
 
+
 ## LabelShape handle_click detects handle hit vs body hit.
 func test_label_shape_handle_click_detects_handle() -> void:
 	var shape: LabelShape = await _create_shape()
@@ -149,6 +156,7 @@ func test_label_shape_handle_click_detects_handle() -> void:
 
 # ===== LabelShape virtual property overrides =================================
 
+
 ## LabelShape supports_text_editing returns true.
 func test_label_shape_supports_text_editing() -> void:
 	var shape: LabelShape = __scene.instantiate()
@@ -165,14 +173,16 @@ func test_label_shape_shows_in_legend() -> void:
 
 # ===== LabelShape double-click emission ======================================
 
+
 ## LabelShape handle_double_click emits double_clicked signal.
 func test_label_shape_double_click_emission() -> void:
 	var shape: LabelShape = await _create_shape()
 
 	var signal_fired: Dictionary = {"fired": false, "ref": null}
-	shape.double_clicked.connect(func(s: Node) -> void:
-		signal_fired["fired"] = true
-		signal_fired["ref"] = s
+	shape.double_clicked.connect(
+		func(s: Node) -> void:
+			signal_fired["fired"] = true
+			signal_fired["ref"] = s
 	)
 
 	var result: bool = shape.handle_double_click({})
@@ -184,6 +194,7 @@ func test_label_shape_double_click_emission() -> void:
 
 
 # ===== LabelShape drag uses inherited base methods ===========================
+
 
 ## LabelShape drag lifecycle uses inherited base methods.
 ## Body drag is inherited from CanvasElement; handle_drag_begin, move, end

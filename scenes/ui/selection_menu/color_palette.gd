@@ -58,7 +58,10 @@ func _build_swatches() -> void:
 
 	# Set the palette's own size to fit the grid.
 	var total_w: float = COLUMNS * (SWATCH_SIZE + SWATCH_PADDING) + SWATCH_PADDING
-	var total_h: float = ceil(float(COLORS.size()) / float(COLUMNS)) * (SWATCH_SIZE + SWATCH_PADDING) + SWATCH_PADDING
+	var total_h: float = (
+		ceil(float(COLORS.size()) / float(COLUMNS)) * (SWATCH_SIZE + SWATCH_PADDING)
+		+ SWATCH_PADDING
+	)
 	custom_minimum_size = Vector2(total_w, total_h)
 	size = custom_minimum_size
 
