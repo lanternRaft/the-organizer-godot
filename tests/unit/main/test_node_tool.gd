@@ -478,28 +478,6 @@ func test_canvas_node_deserialization() -> void:
 	)
 
 
-# ===== C17-C19: Info Bar ====================================================
-
-
-## C17: Info bar shows node mode circle hint.
-func test_info_bar_node_mode_circle() -> void:
-	_main.call("activate_node_mode", "circle_node")
-	assert_str(_info_bar().text).contains("Click the canvas to place a circle node")
-
-
-## C18: Info bar shows node mode triangle hint.
-func test_info_bar_node_mode_triangle() -> void:
-	_main.call("activate_node_mode", "triangle_node")
-	assert_str(_info_bar().text).contains("Click the canvas to place a triangle node")
-
-
-## C19: Info bar shows node selected hint.
-func test_info_bar_node_selected() -> void:
-	_main.call("activate_node_mode", "circle_node")
-	_main.call("place_node", Vector2(100, 100))
-	assert_str(_info_bar().text).contains("Click color to change")
-
-
 # ===== C20: Legend Excludes Node Colors =====================================
 
 

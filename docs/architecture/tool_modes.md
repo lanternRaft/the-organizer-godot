@@ -88,21 +88,6 @@ Main._unhandled_input — "ui_cancel" action
     → deactivate_shape_mode()
 ```
 
-## Info Bar Context
-
-The info bar shows contextual hints based on active tool:
-
-| State | Info Bar Text |
-|---|---|
-| Shape mode (oval) | "Click the canvas to place a oval" |
-| Shape mode (circle) | "Click the canvas to place a circle" |
-| Select mode, no selection | "Click to select an oval" |
-| Select mode, 1 selected | "Enter to edit text   Drag handles to resize" |
-| Select mode, multi selected | "Drag to move N selected elements" |
-| Text overlay open | "Type your text   Enter to confirm   Escape to cancel" |
-
-When zoom is not at 100%, all hint texts are suffixed with `"   |   Zoom: NNN%"`.
-
 ## How Tool Switching Feels
 
 - Buttons are toggle-style — when Select is active, the SelectButton looks pressed in
