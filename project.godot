@@ -15,6 +15,11 @@ run/main_scene="res://scenes/main/main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
+[autoload]
+
+GameState="*uid://bf7gghe01jxav"
+EventBus="*uid://kd2m46a0ymfn"
+
 [debug]
 
 gdscript/warnings/unassigned_variable=2

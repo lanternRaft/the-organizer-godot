@@ -68,9 +68,6 @@ func _create_test_scene() -> Dictionary:
 	arrow_mgr.set("_dot_nodes", {})
 	arrow_mgr.set("_elements", [])
 
-	# Set select_mode_active = true on Main so ArrowManager process shows dots.
-	main.set("select_mode_active", true)
-
 	await get_tree().process_frame
 
 	return {
