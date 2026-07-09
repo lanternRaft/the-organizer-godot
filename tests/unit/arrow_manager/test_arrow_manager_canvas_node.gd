@@ -66,11 +66,27 @@ func test_arrow_shape_to_circle_node() -> void:
 
 	arrow_manager._create_arrow(shape, "right", node, "left")
 
-	var arrows: Array = arrow_manager._arrows
-	assert_int(arrows.size()).is_equal(1)
+	assert_int(arrow_manager._arrows.size()).is_equal(1)
 
-	var arrow: Arrow = arrows[0]
+	var arrow: Arrow = arrow_manager._arrows[0]
 	assert_error(func() -> void: arrow.rebuild_path()).is_success()
 
 	assert_str(arrow.start_anchor_label).is_equal("right")
 	assert_str(arrow.end_anchor_label).is_equal("left")
+
+
+func test_arrow_circle_to_triangle() -> void:
+	var circle: CanvasNode = _create_circle_node(Vector2(0, 0))
+	var triangle: CanvasNode = CANVAS_NODE_SCENE.instantiate()
+	triangle.sub_mode = "triangle_node"
+	triangle.position = Vector2(200, 0)
+	element_layer.add_child(triangle)
+
+	arrow_manager._create_arrow(circle, "right", triangle, "bottom_left")
+
+	assert_int(arrow_manager._arrows.size()).is_equal(1)
+
+	var arrow: Arrow = arrow_manager._arrows[0]
+	assert_error(func() -> void: arrow.rebuild_path()).is_success()
+	assert_str(arrow.get("start_anchor_label")).is_equal("right")
+	assert_str(arrow.get("end_anchor_label")).is_equal("bottom_left")
