@@ -1,3 +1,4 @@
+class_name Main
 extends Node
 
 ## Root controller of the app. Owns the canvas, camera, UI, and input dispatch.

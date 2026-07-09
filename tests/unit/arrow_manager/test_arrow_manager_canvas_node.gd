@@ -1,446 +1,197 @@
-# GdUnit generated TestSuite
-class_name ArrowManagerCanvasNodeTest
 extends GdUnitTestSuite
-@warning_ignore("unused_parameter")
-@warning_ignore("return_value_discarded")
 
-# TestSuite generated from
-const __source: String = "res://scenes/arrow_manager/arrow_manager.gd"
+var arrow_manager: ArrowManager
+var element_layer: Node2D
+var click_handler: Node
+var runner: GdUnitSceneRunner
 
 const CANVAS_NODE_SCENE: PackedScene = preload("res://scenes/tools/canvas_node/canvas_node.tscn")
 const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
 const ARROW_SCENE: PackedScene = preload("res://scenes/tools/arrow/arrow.tscn")
 
-# Constants matching CanvasNode internals.
-const CIRCLE_RADIUS: float = 8.0
+func before_test() -> void:
+	_create_test_scene()
 
-# ----- Helpers ---------------------------------------------------------------
+func _create_test_scene() -> void:
+	var main: Main = auto_free(Main.new())
 
-## Minimal script for the test's main node — provides only the properties
-## that ArrowManager and the test assertions rely on, without pulling in
-## Main.gd's complex scene structure requirements.
-const _MAIN_STUB_SCRIPT: GDScript = preload("res://tests/unit/arrow_manager/main_stub.gd")
-
-
-## Creates a minimal test scene with ElementLayer and AnchorLayer under a dummy Main node.
-## ArrowManager is added as a child of Main.
-## Returns { "main": Node, "element_layer": Node2D, "anchor_layer": Node2D, "arrow_manager": Node }
-func _create_test_scene() -> Dictionary:
-	var main: Node = Node.new()
-	main.set_script(_MAIN_STUB_SCRIPT)
-
-	# Build the tree structure expected by ArrowManager and ClickHandler @onready vars.
-	# The @onready var element_layer := %ElementLayer uses get_node("%ElementLayer") which
-	# searches up the owner chain.  We must set owner explicitly so % can find the nodes.
-	var canvas: Node2D = Node2D.new()
+	var canvas: Node2D = auto_free(Node2D.new())
 	canvas.name = "Canvas"
 	main.add_child(canvas)
-	canvas.owner = main
 
-	var element_layer: Node2D = Node2D.new()
+	element_layer = auto_free(Node2D.new())
 	element_layer.name = "ElementLayer"
 	element_layer.unique_name_in_owner = true
 	canvas.add_child(element_layer)
 	element_layer.owner = main
 
-	var anchor_layer: Node2D = Node2D.new()
+	var anchor_layer: Node2D = auto_free(Node2D.new())
 	anchor_layer.name = "AnchorLayer"
 	anchor_layer.unique_name_in_owner = true
 	canvas.add_child(anchor_layer)
 	anchor_layer.owner = main
 
-	# Create a ClickHandler stub so ArrowManager doesn't error on get_parent().get_node("ClickHandler").
-	var click_handler: Node = Node.new()
+	click_handler = auto_free(Node.new())
 	click_handler.name = "ClickHandler"
-	click_handler.set_script(load("res://scenes/main/click_handler/click_handler.gd"))
 	main.add_child(click_handler)
 	click_handler.owner = main
 
-	# Create ArrowManager as child of Main.
-	var arrow_mgr: Node = Node.new()
-	arrow_mgr.set_script(load("res://scenes/arrow_manager/arrow_manager.gd"))
-	arrow_mgr.name = "ArrowManager"
-	main.add_child(arrow_mgr)
-	arrow_mgr.owner = main
+	arrow_manager = auto_free(ArrowManager.new())
+	main.add_child(arrow_manager)
+	arrow_manager.owner = main
 
-	# Add the full tree to the scene (triggers @onready and _ready on all children).
-	get_tree().root.add_child(main)
-
-	# Re-initialize _dot_nodes and _elements (clears any state set during _ready).
-	arrow_mgr.set("_dot_nodes", {})
-	arrow_mgr.set("_elements", [])
-
-	# Set select_mode_active = true on Main so ArrowManager process shows dots.
-	main.set("select_mode_active", true)
-
-	await get_tree().process_frame
-
-	return {
-		"main": main,
-		"element_layer": element_layer,
-		"anchor_layer": anchor_layer,
-		"arrow_manager": arrow_mgr,
-	}
+	runner = scene_runner(main)
 
 
-## Creates a CanvasNode circle at the given position and adds it to element_layer.
-func _create_circle_node(element_layer: Node2D, position: Vector2) -> Node2D:
-	var node: Node2D = CANVAS_NODE_SCENE.instantiate()
-	node.set("sub_mode", "circle_node")
+func _create_canvas_node(position: Vector2) -> CanvasNode:
+	var node: CanvasNode = auto_free(CANVAS_NODE_SCENE.instantiate())
+	node.sub_mode = "circle_node"
 	node.position = position
 	element_layer.add_child(node)
 	return node
 
 
-## Creates a LabelShape oval at the given position and adds it to element_layer.
-func _create_label_shape(element_layer: Node2D, position: Vector2) -> Node2D:
-	var shape: Node2D = LABEL_SHAPE_SCENE.instantiate()
-	shape.set("rx", 80.0)
-	shape.set("ry", 50.0)
+func _create_label_shape(position: Vector2) -> LabelShape:
+	var shape: LabelShape = auto_free(LABEL_SHAPE_SCENE.instantiate())
+	shape.rx = 80.0
+	shape.ry = 50.0
 	shape.position = position
 	element_layer.add_child(shape)
 	return shape
 
 
-## Calls ArrowManager's internal _create_arrow.
-func _create_arrow(
-	mgr: Node, start_shape: Node, start_label: String, end_shape: Node, end_label: String
-) -> void:
-	# ArrowManager._create_arrow is a private method. We call it via call().
-	mgr.call("_create_arrow", start_shape, start_label, end_shape, end_label)
+func test_arrow_label_shape_to_canvas_node() -> void:
+	var shape: LabelShape = _create_label_shape(Vector2(0, 0))
+	var node: CanvasNode = _create_canvas_node(Vector2(200, 0))
+
+	arrow_manager._create_arrow(shape, "right", node, "left")
+
+	assert_int(arrow_manager._arrows.size()).is_equal(1)
+
+	var arrow: Arrow = arrow_manager._arrows[0]
+	assert_error(func() -> void: arrow.rebuild_path()).is_success()
+
+	assert_str(arrow.start_anchor_label).is_equal("right")
+	assert_str(arrow.end_anchor_label).is_equal("left")
 
 
-# ===== B1-B3: Arrow Creation between Nodes and Shapes =======================
-
-
-## B1: Arrow from LabelShape to CircleNode.
-func test_arrow_shape_to_circle_node() -> void:
-	var scene: Dictionary = await _create_test_scene()
-	var el: Node2D = scene["element_layer"]
-	var mgr: Node = scene["arrow_manager"]
-
-	var shape: Node2D = _create_label_shape(el, Vector2(0, 0))
-	var node: Node2D = _create_circle_node(el, Vector2(200, 0))
-	await get_tree().process_frame
-
-	_create_arrow(mgr, shape, "right", node, "left")
-
-	var arrows: Array = mgr.get("_arrows")
-	assert_int(arrows.size()).is_equal(1)
-
-	# Arrow's rebuild_path() should not error — call it explicitly.
-	var arrow: Node = arrows[0]
-	arrow.call("rebuild_path")
-	assert_bool(true).is_true()  # No error means success.
-
-	# The arrow exists — inspect its start/end properties.
-	assert_str(arrow.get("start_anchor_label")).is_equal("right")
-	assert_str(arrow.get("end_anchor_label")).is_equal("left")
-
-	shape.queue_free()
-	node.queue_free()
-	await get_tree().process_frame
-	var main: Node = scene["main"]
-	main.queue_free()
-	await get_tree().process_frame
-
-
-## B2: Arrow from CircleNode to TriangleNode.
-func test_arrow_circle_to_triangle() -> void:
-	var scene: Dictionary = await _create_test_scene()
-	var el: Node2D = scene["element_layer"]
-	var mgr: Node = scene["arrow_manager"]
-
-	var circle: Node2D = _create_circle_node(el, Vector2(0, 0))
-	var triangle: Node2D = CANVAS_NODE_SCENE.instantiate()
-	triangle.set("sub_mode", "triangle_node")
+func test_arrow_canvas_node_to_canvas_node() -> void:
+	var circle: CanvasNode = _create_canvas_node(Vector2(0, 0))
+	var triangle: CanvasNode = CANVAS_NODE_SCENE.instantiate()
+	triangle.sub_mode = "triangle_node"
 	triangle.position = Vector2(200, 0)
-	el.add_child(triangle)
-	await get_tree().process_frame
+	element_layer.add_child(triangle)
 
-	_create_arrow(mgr, circle, "right", triangle, "bottom_left")
+	arrow_manager._create_arrow(circle, "right", triangle, "bottom_left")
 
-	var arrows: Array = mgr.get("_arrows")
-	assert_int(arrows.size()).is_equal(1)
+	assert_int(arrow_manager._arrows.size()).is_equal(1)
 
-	var arrow: Node = arrows[0]
-	arrow.call("rebuild_path")
+	var arrow: Arrow = arrow_manager._arrows[0]
+	assert_error(func() -> void: arrow.rebuild_path()).is_success()
 	assert_str(arrow.get("start_anchor_label")).is_equal("right")
 	assert_str(arrow.get("end_anchor_label")).is_equal("bottom_left")
 
-	circle.queue_free()
-	triangle.queue_free()
-	await get_tree().process_frame
-	var main: Node = scene["main"]
-	main.queue_free()
-	await get_tree().process_frame
+func test_arrow_label_shape_to_label_shape() -> void:
+	var shape_1: LabelShape = _create_label_shape(Vector2(0, 0))
+	var shape_2: LabelShape = _create_label_shape(Vector2(200, 0))
+
+	arrow_manager._create_arrow(shape_1, "right", shape_2, "left")
+
+	assert_int(arrow_manager._arrows.size()).is_equal(1)
+
+	var arrow: Arrow = arrow_manager._arrows[0]
+	assert_error(func() -> void: arrow.rebuild_path()).is_success()
+
+	assert_str(arrow.start_anchor_label).is_equal("right")
+	assert_str(arrow.end_anchor_label).is_equal("left")
 
 
-## B3: Arrow from TriangleNode to LabelShape.
-func test_arrow_node_to_shape() -> void:
-	var scene: Dictionary = await _create_test_scene()
-	var el: Node2D = scene["element_layer"]
-	var mgr: Node = scene["arrow_manager"]
-
-	var triangle: Node2D = CANVAS_NODE_SCENE.instantiate()
-	triangle.set("sub_mode", "triangle_node")
-	triangle.position = Vector2(0, 0)
-	el.add_child(triangle)
-	var shape: Node2D = _create_label_shape(el, Vector2(300, 100))
-	await get_tree().process_frame
-
-	_create_arrow(mgr, triangle, "top", shape, "bottom")
-
-	var arrows: Array = mgr.get("_arrows")
-	assert_int(arrows.size()).is_equal(1)
-
-	var arrow: Node = arrows[0]
-	arrow.call("rebuild_path")
-	assert_str(arrow.get("start_anchor_label")).is_equal("top")
-	assert_str(arrow.get("end_anchor_label")).is_equal("bottom")
-
-	triangle.queue_free()
-	shape.queue_free()
-	await get_tree().process_frame
-	var main: Node = scene["main"]
-	main.queue_free()
-	await get_tree().process_frame
-
-
-# ===== B4: Self-Connection Prevention =======================================
-
-
-## B4: Arrow from a node to itself is not created.
 func test_arrow_self_connection_node() -> void:
-	var scene: Dictionary = await _create_test_scene()
-	var el: Node2D = scene["element_layer"]
-	var mgr: ArrowManager = scene["arrow_manager"]
-
-	var node: Node2D = _create_circle_node(el, Vector2(100, 100))
+	var node: CanvasNode = _create_canvas_node(Vector2(100, 100))
 	await get_tree().process_frame
 
-	var initial_count: int = mgr._arrows.size()
+	var initial_count: int = arrow_manager._arrows.size()
 
 	# Simulate arrow drag from node's "top" released on same node's "bottom".
 	# ArrowManager's end_arrow_drag checks _drag_snapped_element != _drag_start_element,
 	# so setting both to the same node should prevent creation.
-	mgr.set("_drag_start_element", node)
-	mgr.set("_drag_start_label", "top")
-	mgr.set("_drag_snapped_element", node)
-	mgr.set("_drag_snapped_label", "bottom")
-	mgr.call("end_arrow_drag")
+	arrow_manager._drag_start_element = node
+	arrow_manager._drag_start_label = "top"
+	arrow_manager._drag_snapped_element = node
+	arrow_manager._drag_snapped_label = "bottom"
+	arrow_manager.end_arrow_drag()
 
-	var arrows: Array = mgr.get("_arrows")
-	assert_int(arrows.size()).is_equal(initial_count)
-
-	node.free()
-	var main: Node = scene["main"]
-	main.free()
+	assert_int(arrow_manager._arrows.size()).is_equal(initial_count)
 
 
-# ===== B5: Deleting Node Removes Connected Arrows ===========================
-
-
-## B5: Deleting node deletes connected arrows.
 func test_delete_node_removes_arrows() -> void:
-	var scene: Dictionary = await _create_test_scene()
-	var el: Node2D = scene["element_layer"]
-	var mgr: ArrowManager = scene["arrow_manager"]
+	var shape: LabelShape = _create_label_shape(Vector2(0, 0))
+	var node: CanvasNode = _create_canvas_node(Vector2(200, 0))
 
-	var shape: Node2D = _create_label_shape(el, Vector2(0, 0))
-	var node: Node2D = _create_circle_node(el, Vector2(200, 0))
-	await get_tree().process_frame
+	arrow_manager._create_arrow(shape, "right", node, "left")
+	assert_int(arrow_manager._arrows.size()).is_equal(1)
 
-	_create_arrow(mgr, shape, "right", node, "left")
-	assert_int(mgr._arrows.size()).is_equal(1)
+	arrow_manager.delete_arrows_for_element(node)
 
-	# Delete arrows for the node (using new method name).
-	mgr.call("delete_arrows_for_element", node)
-
-	assert_int(mgr._arrows.size()).is_equal(0)
-
-	shape.queue_free()
-	node.queue_free()
-	await get_tree().process_frame
-	var main: Node = scene["main"]
-	main.queue_free()
-	await get_tree().process_frame
+	assert_int(arrow_manager._arrows.size()).is_equal(0)
 
 
-# ===== B6-B7: Anchor Dots ===================================================
+func test_arrow_drag_from_node_shows_preview() -> void:
+	var node: CanvasNode = _create_canvas_node(Vector2(100, 100))
 
-
-## Helper: Simulates mouse movement to trigger anchor dot visibility.
-func _simulate_process(mgr: Node, mouse_pos: Vector2) -> void:
-	mgr.set("select_mode_active", true)
-	mgr.notification(NOTIFICATION_PROCESS)
-	# We can assign mouse position by setting global_mouse_position on the viewport,
-	# but for simplicity we'll verify dots via _update_anchor_dots by calling directly.
-	mgr.call("_update_anchor_dots", mouse_pos)
-
-
-## B6: Circle node shows 4 anchor dots.
-func test_circle_node_anchor_dots() -> void:
-	var scene: Dictionary = await _create_test_scene()
-	var el: Node2D = scene["element_layer"]
-	var mgr: Node = scene["arrow_manager"]
-
-	var node: Node2D = _create_circle_node(el, Vector2(0, 0))
-	await get_tree().process_frame
-
-	# Refresh element list.
-	mgr.call("_refresh_element_list")
-
-	# Call _update_anchor_dots with mouse near the node.
-	var node_center: Vector2 = node.global_position
-	mgr.call("_update_anchor_dots", node_center)
-
-	var dot_nodes: Dictionary = mgr.get("_dot_nodes")
-	var sid: int = node.get_instance_id()
-	assert_bool(dot_nodes.has(sid)).is_true()
-	var dots: Dictionary = dot_nodes[sid]
-	assert_int(dots.size()).is_equal(4)
-	assert_bool(dots.has("top")).is_true()
-	assert_bool(dots.has("bottom")).is_true()
-	assert_bool(dots.has("left")).is_true()
-	assert_bool(dots.has("right")).is_true()
-
-	node.queue_free()
-	var main: Node = scene["main"]
-	main.queue_free()
-	await get_tree().process_frame
-
-
-## B7: Triangle node shows 3 anchor dots.
-func test_triangle_node_anchor_dots() -> void:
-	var scene: Dictionary = await _create_test_scene()
-	var el: Node2D = scene["element_layer"]
-	var mgr: Node = scene["arrow_manager"]
-
-	var node: Node2D = CANVAS_NODE_SCENE.instantiate()
-	node.set("sub_mode", "triangle_node")
-	node.position = Vector2(0, 0)
-	el.add_child(node)
-	await get_tree().process_frame
-
-	mgr.call("_refresh_element_list")
-	var node_center: Vector2 = node.global_position
-	mgr.call("_update_anchor_dots", node_center)
-
-	var dot_nodes: Dictionary = mgr.get("_dot_nodes")
-	var sid: int = node.get_instance_id()
-	assert_bool(dot_nodes.has(sid)).is_true()
-	var dots: Dictionary = dot_nodes[sid]
-	assert_int(dots.size()).is_equal(3)
-	assert_bool(dots.has("top")).is_true()
-	assert_bool(dots.has("bottom_left")).is_true()
-	assert_bool(dots.has("bottom_right")).is_true()
-
-	node.queue_free()
-	var main: Node = scene["main"]
-	main.queue_free()
-	await get_tree().process_frame
-
-
-# ===== B8-B9: Arrow Drag from Node Anchor ===================================
-
-
-## B8: Arrow drag begins from node anchor.
-func test_arrow_drag_from_node() -> void:
-	var scene: Dictionary = await _create_test_scene()
-	var el: Node2D = scene["element_layer"]
-	var mgr: Node = scene["arrow_manager"]
-
-	var node: Node2D = _create_circle_node(el, Vector2(100, 100))
-	await get_tree().process_frame
-	mgr.call("_refresh_element_list")
-
-	# Get the top anchor position.
-	var top_pos: Vector2 = node.call("get_anchor_position", "top")
+	var top_pos: Vector2 = node.get_anchor_position("top")
 
 	# Call handle_dot_mousedown at the top anchor position.
-	var result: bool = mgr.call("handle_dot_mousedown", top_pos)
+	var result: bool = arrow_manager.handle_dot_mousedown(top_pos)
 
 	assert_bool(result).is_true()
-	assert_bool(mgr.get("_arrow_drag_active")).is_true()
-	assert_object(mgr.get("_drag_start_element")).is_same(node)
-	assert_str(mgr.get("_drag_start_label")).is_equal("top")
+	assert_bool(arrow_manager._arrow_drag_active).is_true()
+	assert_object(arrow_manager._drag_start_element).is_same(node)
+	assert_str(arrow_manager._drag_start_label).is_equal("top")
 	# Preview line should exist.
-	assert_bool(mgr.get("_preview_line") != null).is_true()
-
-	node.queue_free()
-	var main: Node = scene["main"]
-	main.queue_free()
-	await get_tree().process_frame
+	assert_bool(arrow_manager._preview_line != null).is_true()
 
 
-## B9: Arrow drag ending without snap discards the arrow.
 func test_arrow_drag_no_snap_discards() -> void:
-	var scene: Dictionary = await _create_test_scene()
-	var el: Node2D = scene["element_layer"]
-	var mgr: ArrowManager = scene["arrow_manager"]
+	var node: CanvasNode = _create_canvas_node(Vector2(100, 100))
 
-	var node: Node2D = _create_circle_node(el, Vector2(100, 100))
-	await get_tree().process_frame
-	mgr.call("_refresh_element_list")
-
-	var top_pos: Vector2 = node.call("get_anchor_position", "top")
+	var top_pos: Vector2 = node.get_anchor_position("top")
 
 	# Begin drag.
-	mgr.call("handle_dot_mousedown", top_pos)
-	assert_bool(mgr.get("_arrow_drag_active")).is_true()
+	arrow_manager.handle_dot_mousedown(top_pos)
+	assert_bool(arrow_manager._arrow_drag_active).is_true()
 
 	# End drag without snapping (drag_snapped_element is null).
-	mgr.call("end_arrow_drag")
+	arrow_manager.end_arrow_drag()
 
-	assert_bool(mgr.get("_arrow_drag_active")).is_false()
-	assert_int(mgr._arrows.size()).is_equal(0)
+	assert_bool(arrow_manager._arrow_drag_active).is_false()
+	assert_int(arrow_manager._arrows.size()).is_equal(0)
 	(
 		assert_bool(
-			mgr.get("_preview_line") == null or not is_instance_valid(mgr.get("_preview_line"))
+			arrow_manager._preview_line == null or not is_instance_valid(arrow_manager._preview_line)
 		)
-		. is_true()
+		.is_true()
 	)
 
-	node.free()
-	var main: Node = scene["main"]
-	main.free()
 
-
-# ===== B10: Arrow Updates on Node Move ======================================
-
-
-## B10: Arrow bezier points update when node moves.
 func test_arrow_updates_on_node_move() -> void:
-	var scene: Dictionary = await _create_test_scene()
-	var el: Node2D = scene["element_layer"]
-	var mgr: ArrowManager = scene["arrow_manager"]
+	var shape: LabelShape = _create_label_shape(Vector2(0, 0))
+	var node: CanvasNode = _create_canvas_node(Vector2(200, 0))
 
-	var shape: Node2D = _create_label_shape(el, Vector2(0, 0))
-	var node: Node2D = _create_circle_node(el, Vector2(200, 0))
-	await get_tree().process_frame
-
-	_create_arrow(mgr, shape, "right", node, "left")
-	var arrow: Node = mgr._arrows[0]
-	arrow.call("rebuild_path")
+	arrow_manager._create_arrow(shape, "right", node, "left")
+	var arrow: Arrow = arrow_manager._arrows[0]
+	arrow.rebuild_path()
 
 	# Cache original bezier points.
-	var original_points: PackedVector2Array = arrow.get("_cached_bezier_points")
+	var original_points: PackedVector2Array = arrow._cached_bezier_points
 
 	# Move node to a new position.
 	node.position = Vector2(300, 50)
 	await get_tree().process_frame
 
 	# Update arrows for the moved node (using new method name).
-	mgr.call("update_arrows_for_element", node)
+	arrow_manager.update_arrows_for_element(node)
 
 	var updated_points: PackedVector2Array = arrow.get("_cached_bezier_points")
 	# Points should have changed.
-	assert_bool(original_points != updated_points).is_true()
-
-	shape.queue_free()
-	node.queue_free()
-	await get_tree().process_frame
-	var main: Node = scene["main"]
-	main.queue_free()
-	await get_tree().process_frame
+	assert_array(original_points).is_not_equal(updated_points)

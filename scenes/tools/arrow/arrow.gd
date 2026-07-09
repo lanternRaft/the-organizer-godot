@@ -168,8 +168,8 @@ func get_end_shape() -> Node:
 
 ## Iterates arrows managed by ArrowManager that are connected to the given shape
 ## and calls rebuild_path on them.
-static func rebuild_arrows_for_shape(shape: Node, all_arrows: Array) -> void:
-	for arrow: Node in all_arrows:
+static func rebuild_arrows_for_shape(shape: Node, all_arrows: Array[Arrow]) -> void:
+	for arrow: Arrow in all_arrows:
 		if not is_instance_valid(arrow):
 			continue
 		var a: Arrow = arrow as Arrow

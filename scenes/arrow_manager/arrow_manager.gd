@@ -142,14 +142,14 @@ func end_arrow_drag() -> void:
 
 
 ## Returns the nearest arrow hit within the given world-space distance, or null.
-func get_arrow_near(pos: Vector2, radius: float = ARROW_CLICK_DISTANCE) -> Variant:
+func get_arrow_near(pos: Vector2, radius: float = ARROW_CLICK_DISTANCE) -> Arrow:
 	# Iterate in reverse (topmost first) for proper z-ordering.
 	for i: int in range(_arrows.size() - 1, -1, -1):
-		var arrow_node: Node = _arrows[i]
+		var arrow_node: Arrow = _arrows[i]
 		if not is_instance_valid(arrow_node):
 			_arrows.remove_at(i)
 			continue
-		var arrow: Node = arrow_node
+		var arrow: Arrow = arrow_node
 		if arrow == null:
 			continue
 		var points: Variant = arrow.get("_cached_bezier_points")
@@ -472,7 +472,7 @@ func _get_dot_position(element: CanvasElement, label: String) -> Vector2:
 
 
 func _update_drag_preview(mouse_pos: Vector2) -> void:
-	if _preview_line == null:
+	if _preview_line == null || _arrow_drag_active == false || _drag_start_element == null:
 		return
 
 	var p0: Vector2 = _drag_start_pos
@@ -517,42 +517,29 @@ func _update_drag_preview(mouse_pos: Vector2) -> void:
 func _create_arrow(
 	start_element: CanvasElement, start_label: String, end_element: CanvasElement, end_label: String
 ) -> void:
-	var raw_arrow: Variant = ARROW_SCENE.instantiate()
-	@warning_ignore("unsafe_cast")
-	var arrow: Node = raw_arrow as Node
-	if arrow == null:
-		return
+	var arrow: Arrow = ARROW_SCENE.instantiate()
 
-	# Add to ElementLayer (will be below elements in z-order).
 	element_layer.add_child(arrow)
 	element_layer.move_child(arrow, 0)  # Keep arrows at bottom of element layer
 
 	# Set paths relative to the arrow itself so it can resolve them later.
-	arrow.set("start_shape_path", arrow.get_path_to(start_element))
-	arrow.set("end_shape_path", arrow.get_path_to(end_element))
-	arrow.set("start_anchor_label", start_label)
-	arrow.set("end_anchor_label", end_label)
+	arrow.start_shape_path = arrow.get_path_to(start_element)
+	arrow.end_shape_path = arrow.get_path_to(end_element)
+	arrow.start_anchor_label = start_label
+	arrow.end_anchor_label = end_label
 
-	arrow.call("rebuild_path")
+	arrow.rebuild_path()
 
 	_arrows.append(arrow)
-
-	# Connect signal for multi-drag coordination so Main can move all selected
-	# elements when this arrow is dragged.
-	if arrow.has_signal(&"multi_drag_moved"):
-		var main: Node = get_parent()
-		if main.has_method(&"_on_multi_drag_moved"):
-			arrow.connect("multi_drag_moved", Callable(main, "_on_multi_drag_moved").bind(arrow))
 
 
 func _on_element_layer_click(mouse_pos: Vector2) -> bool:
 	## Called from Main when no element was hit — allows arrow click detection.
 	var arrow: Variant = get_arrow_near(mouse_pos)
 	if arrow != null:
-		@warning_ignore("unsafe_cast")
-		var arrow_n: Node = arrow as Node
+		var arrow_n: Arrow = arrow
 		if arrow_n != null:
-			arrow_n.call("emit", "selected", arrow_n)
+			arrow_n.selected.emit()
 		return true
 	return false
 
