@@ -61,6 +61,7 @@ var _click_handler: Node = null
 func _ready() -> void:
 	_click_handler = get_parent().get_node("ClickHandler")
 
+	_click_handler.call("ok")
 	# Scan for existing elements.
 	_refresh_element_list()
 
