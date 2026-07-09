@@ -1,9 +1,10 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://b1erex6nkuep0"]
 
 [ext_resource type="Script" uid="uid://bnl4uti5cdwlo" path="res://scenes/tools/toolbar.gd" id="1_i1fuw"]
 
-[node name="Toolbar" type="Control"]
-anchors_preset = 8
+[node name="Toolbar" type="Control" unique_id=1613292230]
+layout_mode = 3
+anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
@@ -16,7 +17,7 @@ grow_horizontal = 2
 grow_vertical = 0
 script = ExtResource("1_i1fuw")
 
-[node name="HBox" type="HBoxContainer" parent="."]
+[node name="HBox" type="HBoxContainer" parent="." unique_id=251104923]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -24,18 +25,18 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="SelectButton" type="Button" parent="HBox"]
+[node name="SelectButton" type="Button" parent="HBox" unique_id=521429799]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Select"
 toggle_mode = true
+text = "Select"
 
-[node name="ShapeMenuButton" type="MenuButton" parent="HBox"]
+[node name="ShapeMenuButton" type="MenuButton" parent="HBox" unique_id=650451714]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Oval ▾"
 
-[node name="NodeMenuButton" type="MenuButton" parent="HBox"]
+[node name="NodeMenuButton" type="MenuButton" parent="HBox" unique_id=223702006]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Circle Node ▾"

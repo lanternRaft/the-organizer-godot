@@ -449,38 +449,6 @@ func clear_selection() -> void:
 	selected_set.clear()
 	primary_selection = null
 	selection_menu.call("dismiss")
-	update_info_bar()
-
-
-## Updates the info bar hint text based on current state.
-func update_info_bar() -> void:
-	var zoom_suffix: String = ""
-	if not is_equal_approx(current_zoom, 1.0):
-		var pct: int = roundi(current_zoom * 100.0)
-		zoom_suffix = "   |   Zoom: %d%%" % pct
-
-	if _text_overlay.get("is_open"):
-		info_bar.text = "Type your text   Enter to confirm   Escape to cancel" + zoom_suffix
-	elif shape_tool_active:
-		var hint: String = "oval" if shape_sub_mode == "oval" else "circle"
-		info_bar.text = "Click the canvas to place a %s" % hint + zoom_suffix
-	elif node_tool_active:
-		var hint: String = "circle" if node_sub_mode == "circle_node" else "triangle"
-		info_bar.text = "Click the canvas to place a %s node" % hint + zoom_suffix
-	elif select_mode_active and not selected_set.is_empty():
-		if selected_set.size() > 1:
-			info_bar.text = "Drag to move %d selected elements" % selected_set.size() + zoom_suffix
-		else:
-			if primary_selection is CanvasElement:
-				info_bar.text = "Drag to move   Click color to change" + zoom_suffix
-			else:
-				info_bar.text = "Enter to edit text   Drag handles to resize" + zoom_suffix
-	elif select_mode_active:
-		info_bar.text = "Click to select an oval" + zoom_suffix
-	else:
-		info_bar.text = zoom_suffix.trim_prefix("   |   ")
-		if info_bar.text.is_empty():
-			info_bar.text = ""
 
 
 ## Toggles the grid on/off. Accessible for UI button connections.
