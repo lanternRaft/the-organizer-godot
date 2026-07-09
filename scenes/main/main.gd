@@ -11,8 +11,6 @@ const TEXT_OVERLAY_SCENE: PackedScene = preload(
 )
 const LEGEND_PANEL_SCENE: PackedScene = preload("res://scenes/ui/legend_panel/legend_panel.tscn")
 
-## Path where the canvas state is persisted.
-const SAVE_PATH: String = "user://canvas.save"
 
 ## Whether shape-placement mode is currently active.
 var shape_tool_active: bool = false
@@ -51,6 +49,7 @@ var primary_selection: Node = null
 @onready var camera_controller: Camera2D = %MainCamera
 @onready var zoom_controls: Control = $UI/ZoomControls
 @onready var arrow_manager: ArrowManager = $ArrowManager
+@onready var save_load_manager: SaveLoadManager = %SaveLoadManager
 @onready var _viewport: Viewport = get_viewport()
 @onready var ui_layer: CanvasLayer = $UI
 @onready var _text_overlay: TextEditOverlay = TEXT_OVERLAY_SCENE.instantiate()
@@ -102,7 +101,12 @@ func _ready() -> void:
 	legend_panel.connect("name_changed", _on_legend_name_changed)
 
 	## Load persisted canvas state.
-	load_canvas()
+	var load_result: Dictionary = save_load_manager.load_canvas()
+	var legend_data: Array = load_result.get("legend", [])
+	if not legend_data.is_empty():
+		legend_panel.call("load_legend_data", legend_data)
+	for element: Node in load_result.get("elements", []):
+		_wire_element_signals(element)
 	_refresh_legend()
 
 
@@ -212,7 +216,7 @@ func _on_hamburger_clear_requested() -> void:
 ## Called when the Clear button in the confirmation dialog is pressed.
 func _on_confirm_dialog_confirmed() -> void:
 	clear_all_elements()
-	save_canvas()
+	_save_state()
 
 
 ## Creates a new shape at the given world position and parents it to ElementLayer.
@@ -239,7 +243,7 @@ func place_shape(world_pos: Vector2) -> void:
 	select_element(shape, false)
 	set_primary_selection(shape)
 	# Save after placement.
-	save_canvas()
+	_save_state()
 	_refresh_legend()
 
 
@@ -301,7 +305,7 @@ func place_node(world_pos: Vector2) -> void:
 	select_element(node, false)
 	set_primary_selection(node)
 	# Save after placement.
-	save_canvas()
+	_save_state()
 
 
 ## Activates Select mode. Deactivates Shape mode if active.
@@ -483,7 +487,7 @@ func _on_text_committed(shape: Node, text: String) -> void:
 		var label_shape: LabelShape = shape as LabelShape
 		if label_shape != null:
 			label_shape.text_content = text
-	save_canvas()
+	_save_state()
 	_update_selection_menu()
 
 
@@ -491,145 +495,27 @@ func _on_text_committed(shape: Node, text: String) -> void:
 func _on_text_cancelled(_shape: Node) -> void:
 	_update_selection_menu()
 
-
-# ----- Persistence -----------------------------------------------------------
-
-
-## Serialises all canvas elements into a Dictionary for save.
-func serialize_canvas() -> Dictionary:
-	var elements: Array[Dictionary] = []
-	for child: Node in element_layer.get_children():
-		if child is CanvasElement:
-			var elem: CanvasElement = child as CanvasElement
-			var pos: Vector2 = elem.position
-			if child is LabelShape:
-				var shape: LabelShape = child as LabelShape
-				var color: Color = shape.fill_color
-				(
-					elements
-					. append(
-						{
-							"type": "LabelShape",
-							"position_x": pos.x,
-							"position_y": pos.y,
-							"rx": shape.rx,
-							"ry": shape.ry,
-							"fill_r": color.r,
-							"fill_g": color.g,
-							"fill_b": color.b,
-							"fill_a": color.a,
-							"text": shape.text_content,
-							"shape_mode": shape.shape_mode,
-						}
-					)
-				)
-			elif child is CanvasNode:
-				var node: CanvasNode = child as CanvasNode
-				var color: Color = node.fill_color
-				(
-					elements
-					. append(
-						{
-							"type": "CanvasNode",
-							"position_x": pos.x,
-							"position_y": pos.y,
-							"fill_r": color.r,
-							"fill_g": color.g,
-							"fill_b": color.b,
-							"fill_a": color.a,
-							"sub_mode": node.sub_mode,
-						}
-					)
-				)
-	var result: Dictionary = {"elements": elements}
-	result["legend"] = legend_panel.call("get_legend_data")
-	return result
+func _save_state() -> void:
+	var legend_data: Array = legend_panel.call("get_legend_data")
+	save_load_manager.save_canvas(legend_data)
 
 
-## Saves the current canvas state to disk.
-func save_canvas() -> void:
-	var file: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	if file == null:
-		push_error("Failed to open save file for writing: ", SAVE_PATH)
-		return
-	file.store_var(serialize_canvas())
-
-
-## Loads the canvas state from disk (called during _ready).
-func load_canvas() -> void:
-	if not FileAccess.file_exists(SAVE_PATH):
-		return
-	var file: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.READ)
-	if file == null:
-		push_error("Failed to open save file for reading: ", SAVE_PATH)
-		return
-	var data: Dictionary = file.get_var()
-
-	# Restore legend data first (before loading elements).
-	if data.has("legend"):
-		var legend_data: Variant = data["legend"]
-		if typeof(legend_data) == TYPE_ARRAY:
-			legend_panel.call("load_legend_data", legend_data)
-
-	for element_data: Variant in data.get("elements", []):
-		if typeof(element_data) == TYPE_DICTIONARY:
-			var elem: Dictionary = element_data
-			if elem.get("type") == "LabelShape":
-				_load_label_shape(elem)
-			elif elem.get("type") == "CanvasNode":
-				_load_canvas_node(elem)
-
-
-## Instantiates a LabelShape from serialised data and adds it to the canvas.
-func _load_label_shape(data: Dictionary) -> void:
-	var shape: LabelShape = LABEL_SHAPE_SCENE.instantiate()
-	@warning_ignore("unsafe_cast")
-	shape.position = Vector2(
-		data.get("position_x", 0.0) as float, data.get("position_y", 0.0) as float
-	)
-	@warning_ignore("unsafe_cast")
-	shape.rx = data.get("rx", 80.0) as float
-	@warning_ignore("unsafe_cast")
-	shape.ry = data.get("ry", 50.0) as float
-	@warning_ignore("unsafe_cast")
-	shape.fill_color = Color(
-		data.get("fill_r", 0.231) as float,
-		data.get("fill_g", 0.51) as float,
-		data.get("fill_b", 0.965) as float,
-		data.get("fill_a", 1.0) as float
-	)
-	shape.shape_mode = str(data.get("shape_mode", "oval"))
-	shape.text_content = str(data.get("text", ""))
-
-	element_layer.add_child(shape)
-	shape.clicked.connect(_on_element_clicked)
-	shape.double_clicked.connect(_on_shape_double_clicked)
-	shape.anchor_changed.connect(_on_element_anchor_changed.bind(shape))
-	shape.multi_drag_moved.connect(_on_multi_drag_moved.bind(shape))
-	shape.multi_drag_ended.connect(_on_multi_drag_ended.bind(shape))
-
-
-## Instantiates a CanvasNode from serialised data and adds it to the canvas.
-func _load_canvas_node(data: Dictionary) -> void:
-	var node: CanvasNode = CANVAS_NODE_SCENE.instantiate()
-	var px: float = data.get("position_x", 0.0)
-	var py: float = data.get("position_y", 0.0)
-	node.position = Vector2(px, py)
-	var fr: float = data.get("fill_r", 0.231)
-	var fg: float = data.get("fill_g", 0.51)
-	var fb: float = data.get("fill_b", 0.965)
-	var fa: float = data.get("fill_a", 1.0)
-	node.fill_color = Color(fr, fg, fb, fa)
-	node.sub_mode = str(data.get("sub_mode", "circle_node"))
-
-	element_layer.add_child(node)
-	node.connect("clicked", _on_element_clicked)
-	node.connect("anchor_changed", _on_element_anchor_changed.bind(node))
-	node.connect("multi_drag_moved", _on_multi_drag_moved.bind(node))
-	node.connect("multi_drag_ended", _on_multi_drag_ended.bind(node))
-
-
-# ----- Multi-Drag Coordination ------------------------------------------------
+## Wires element signals after a loaded element is instantiated and parented.
+## LabelShapes get double_clicked connected; CanvasNodes do not.
+func _wire_element_signals(element: Node) -> void:
+	if element is LabelShape:
+		var shape: LabelShape = element as LabelShape
+		shape.clicked.connect(_on_element_clicked)
+		shape.double_clicked.connect(_on_shape_double_clicked)
+		shape.anchor_changed.connect(_on_element_anchor_changed.bind(shape))
+		shape.multi_drag_moved.connect(_on_multi_drag_moved.bind(shape))
+		shape.multi_drag_ended.connect(_on_multi_drag_ended.bind(shape))
+	elif element is CanvasNode:
+		var node: CanvasNode = element as CanvasNode
+		node.clicked.connect(_on_element_clicked)
+		node.anchor_changed.connect(_on_element_anchor_changed.bind(node))
+		node.multi_drag_moved.connect(_on_multi_drag_moved.bind(node))
+		node.multi_drag_ended.connect(_on_multi_drag_ended.bind(node))
 
 
 ## Called when a selected element moves during a drag. Broadcasts the same delta
@@ -790,7 +676,7 @@ func _delete_selected_elements() -> void:
 				primary_selection = null
 			arrow_manager.call("delete_arrow", element)
 	clear_selection()
-	save_canvas()
+	_save_state()
 	# Legend refresh uses only LabelShape colors, so deletion of nodes doesn't affect it.
 	# But we still call it in case a shape was deleted.
 	_refresh_legend()
@@ -814,12 +700,12 @@ func _on_menu_color_selected(color: Color) -> void:
 		if primary_selection is LabelShape:
 			var shape: LabelShape = primary_selection as LabelShape
 			shape.fill_color = color
-			save_canvas()
+			_save_state()
 			_refresh_legend()
 		elif primary_selection is CanvasNode:
 			var node: CanvasNode = primary_selection as CanvasNode
 			node.fill_color = color
-			save_canvas()
+			_save_state()
 
 
 ## Legend Panel ---------------------------------------------------------------
@@ -839,7 +725,7 @@ func _refresh_legend() -> void:
 
 ## Called when the user edits a legend label. Saves the canvas to persist the name.
 func _on_legend_name_changed(_color: Color, _new_name: String) -> void:
-	save_canvas()
+	_save_state()
 
 
 ## Repositions the selection menu when the camera zooms.
