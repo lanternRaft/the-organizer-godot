@@ -3,6 +3,7 @@
 ## Manages the MainCamera node, handling scroll-wheel zoom, trackpad
 ## pinch/pan, middle-click drag pan, keyboard shortcuts, and programmatic
 ## zoom/pan dispatched from the zoom_controls UI buttons.
+class_name CameraController
 extends Camera2D
 
 ## Minimum zoom level (10%).
