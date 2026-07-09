@@ -1,3 +1,4 @@
+class_name Toolbar
 extends Control
 
 ## Bottom-center toolbar with tool buttons.
@@ -25,8 +26,12 @@ var current_shape_sub_mode: String = "oval"
 ## Currently selected node sub-mode ("circle_node" or "triangle_node").
 var current_node_sub_mode: String = "circle_node"
 
+## Whether select mode is currently active.
+var select_mode_active: bool = true
+
 
 func _ready() -> void:
+	GameState.toolbar = self
 	_setup_shape_menu()
 	_setup_node_menu()
 	_update_shape_button_label()

@@ -26,9 +26,6 @@ var node_tool_active: bool = false
 ## Current node sub-mode: "circle_node" or "triangle_node".
 var node_sub_mode: String = "circle_node"
 
-## Whether select mode is currently active.
-var select_mode_active: bool = false
-
 ## Reference to the last placed element (useful for future undo / selection).
 var last_placed: Node2D = null
 
@@ -53,7 +50,7 @@ var primary_selection: Node = null
 @onready var grid_background: ColorRect = %GridBackground
 @onready var camera_controller: Camera2D = %MainCamera
 @onready var zoom_controls: Control = $UI/ZoomControls
-@onready var arrow_manager: Node = $ArrowManager
+@onready var arrow_manager: ArrowManager = $ArrowManager
 @onready var _viewport: Viewport = get_viewport()
 @onready var ui_layer: CanvasLayer = $UI
 @onready var _text_overlay: TextEditOverlay = TEXT_OVERLAY_SCENE.instantiate()
@@ -126,7 +123,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			deactivate_node_mode()
 			get_viewport().set_input_as_handled()
 			return
-		if select_mode_active and not selected_set.is_empty():
+		if GameState.toolbar.select_mode_active and not selected_set.is_empty():
 			clear_selection()
 			get_viewport().set_input_as_handled()
 			return
@@ -167,7 +164,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		):
 			if key_event.keycode == KEY_ENTER:
 				if (
-					select_mode_active
+					GameState.toolbar.select_mode_active
 					and primary_selection != null
 					and not _text_overlay.get("is_open")
 				):
@@ -198,7 +195,7 @@ func clear_all_elements() -> void:
 	# Close text overlay if open (the shape being edited may be deleted).
 	if _text_overlay.get("is_open"):
 		_text_overlay.call("cancel")
-	arrow_manager.call("delete_all_arrows")
+	arrow_manager.delete_all_arrows()
 	for child: Node in element_layer.get_children():
 		if child.is_in_group("arrows"):
 			continue  # Already removed above.
@@ -248,7 +245,7 @@ func place_shape(world_pos: Vector2) -> void:
 
 ## Activates shape-placement mode with the given sub-mode. Deactivates Select mode if active.
 func activate_shape_mode(sub_mode: String) -> void:
-	if select_mode_active:
+	if GameState.toolbar.select_mode_active:
 		deactivate_select_mode()
 
 	shape_tool_active = true
@@ -266,7 +263,7 @@ func deactivate_shape_mode() -> void:
 ## Activates node-placement mode with the given sub-mode.
 ## Deactivates Select mode and Shape mode if active.
 func activate_node_mode(sub_mode: String) -> void:
-	if select_mode_active:
+	if GameState.toolbar.select_mode_active:
 		deactivate_select_mode()
 	if shape_tool_active:
 		deactivate_shape_mode()
@@ -312,14 +309,14 @@ func activate_select_mode() -> void:
 	if shape_tool_active:
 		deactivate_shape_mode()
 
-	select_mode_active = true
+	GameState.toolbar.select_mode_active = true
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 	select_button.button_pressed = true
 
 
 ## Deactivates Select mode and clears selection.
 func deactivate_select_mode() -> void:
-	select_mode_active = false
+	GameState.toolbar.select_mode_active = false
 	clear_selection()
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 	select_button.button_pressed = false
@@ -350,7 +347,7 @@ func _on_empty_canvas_clicked(world_pos: Vector2) -> void:
 		place_shape(world_pos)
 	elif node_tool_active:
 		place_node(world_pos)
-	elif select_mode_active and not Input.is_key_pressed(KEY_SHIFT):
+	elif GameState.toolbar.select_mode_active and not Input.is_key_pressed(KEY_SHIFT):
 		clear_selection()
 
 
@@ -358,7 +355,7 @@ func _on_empty_canvas_clicked(world_pos: Vector2) -> void:
 ## Connected to clicked signal on both element types.
 ## Shift-click toggles additive; single click re-selects.
 func _on_element_clicked(_event: InputEvent, element: Node) -> void:
-	if not select_mode_active:
+	if not GameState.toolbar.select_mode_active:
 		return
 	_handle_element_clicked(element)
 
@@ -366,7 +363,7 @@ func _on_element_clicked(_event: InputEvent, element: Node) -> void:
 ## Unified click handler for both CanvasElements and arrows.
 ## Shift-click toggles additive; no-Shift clears and selects just this element.
 func _handle_element_clicked(element: Node) -> void:
-	if not select_mode_active:
+	if not GameState.toolbar.select_mode_active:
 		return
 
 	var shift: bool = Input.is_key_pressed(KEY_SHIFT)
@@ -472,7 +469,7 @@ func open_text_editor(shape: LabelShape) -> void:
 
 ## Called when a shape is double-clicked. Opens the text editor.
 func _on_shape_double_clicked(shape: Node) -> void:
-	if not select_mode_active:
+	if not GameState.toolbar.select_mode_active:
 		return
 	var label_shape: LabelShape = shape as LabelShape
 	if label_shape == null:
@@ -668,7 +665,7 @@ func _on_multi_drag_ended(_emitter: Node) -> void:
 
 ## Selects all CanvasElements and Arrows currently on the canvas.
 func _select_all_elements() -> void:
-	if not select_mode_active:
+	if not GameState.toolbar.select_mode_active:
 		return
 	clear_selection()
 	for child: Node in element_layer.get_children():
@@ -710,11 +707,11 @@ func _on_zoom_changed(level: float) -> void:
 ## Checks whether the click is on an arrow path. Returns true if consumed.
 ## Uses unified selection logic (Shift+click additive, no-Shift replace).
 func _on_arrow_clicked_at(world_pos: Vector2) -> bool:
-	if not select_mode_active:
+	if not GameState.toolbar.select_mode_active:
 		return false
 	if arrow_manager == null:
 		return false
-	var arrow: Variant = arrow_manager.call("get_arrow_near", world_pos)
+	var arrow: Arrow = arrow_manager.get_arrow_near(world_pos)
 	if arrow != null:
 		@warning_ignore("unsafe_cast")
 		var arrow_node: Node = arrow as Node
@@ -727,7 +724,7 @@ func _on_arrow_clicked_at(world_pos: Vector2) -> bool:
 ## Called by ClickHandler as a secondary path after arrow check fails.
 ## Checks whether the click is on an anchor dot (to begin arrow drag).
 func _on_anchor_dot_mousedown(world_pos: Vector2) -> bool:
-	if not select_mode_active:
+	if not GameState.toolbar.select_mode_active:
 		return false
 	if arrow_manager == null:
 		return false
@@ -755,7 +752,7 @@ func _on_element_anchor_changed(element: CanvasElement) -> void:
 ## Shows/hides the selection menu based on current selection state.
 ## Menu is hidden entirely when more than one element is selected.
 func _update_selection_menu() -> void:
-	if not select_mode_active:
+	if not GameState.toolbar.select_mode_active:
 		selection_menu.call("dismiss")
 		return
 	if _text_overlay.get("is_open"):

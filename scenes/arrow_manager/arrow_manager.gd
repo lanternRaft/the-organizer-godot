@@ -70,8 +70,7 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	var main: Node = get_parent()
-	if not main.get("select_mode_active"):
+	if not GameState.toolbar.select_mode_active:
 		_hide_all_dots()
 		return
 
@@ -92,10 +91,6 @@ func get_arrows() -> Array[Node]:
 
 ## Begins an arrow drag from the given element's anchor.
 func begin_arrow_drag(element: CanvasElement, anchor_label: String) -> void:
-	var main: Node = get_parent()
-	if not main.get("select_mode_active"):
-		return
-
 	_arrow_drag_active = true
 	_drag_start_element = element
 	_drag_start_label = anchor_label
@@ -567,8 +562,7 @@ static func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t:
 
 ## Handles mousedown on the anchor dot layer. Returns true if consumed.
 func handle_dot_mousedown(mouse_pos: Vector2) -> bool:
-	var main: Node = get_parent()
-	if not main.get("select_mode_active"):
+	if not GameState.toolbar.select_mode_active:
 		return false
 
 	# Check if mouse is over any highlighted anchor dot.
