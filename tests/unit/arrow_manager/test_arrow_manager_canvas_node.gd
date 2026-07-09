@@ -14,7 +14,7 @@ func before_test() -> void:
 
 func _create_test_scene() -> void:
 	var main: Main = auto_free(Main.new())
-	
+
 	var canvas: Node2D = auto_free(Node2D.new())
 	canvas.name = "Canvas"
 	main.add_child(canvas)
