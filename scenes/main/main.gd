@@ -46,7 +46,6 @@ var selected_set: Array[Node] = []
 var primary_selection: Node = null
 
 @onready var element_layer: Node2D = %ElementLayer
-@onready var info_bar: Label = %InfoBar
 @onready var canvas: Node2D = %Canvas
 @onready var select_button: Button = $UI/Toolbar/HBox/SelectButton
 @onready var click_handler: Node = $ClickHandler
@@ -192,7 +191,6 @@ func _unhandled_input(event: InputEvent) -> void:
 ## Toggles the grid background on/off.
 func _on_grid_toggled(enabled: bool) -> void:
 	grid_enabled = enabled
-	update_info_bar()
 
 
 ## Removes all children from ElementLayer and clears selection.
@@ -207,7 +205,6 @@ func clear_all_elements() -> void:
 		child.queue_free()
 	clear_selection()
 	legend_panel.call("clear_all")
-	update_info_bar()
 
 
 ## Opens the confirmation dialog when the hamburger Clear item is selected.
@@ -258,14 +255,12 @@ func activate_shape_mode(sub_mode: String) -> void:
 	shape_sub_mode = sub_mode
 	Input.set_default_cursor_shape(Input.CURSOR_CROSS)
 	select_button.button_pressed = false
-	update_info_bar()
 
 
 ## Deactivates shape-placement mode and returns to neutral state.
 func deactivate_shape_mode() -> void:
 	shape_tool_active = false
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
-	update_info_bar()
 
 
 ## Activates node-placement mode with the given sub-mode.
@@ -279,14 +274,12 @@ func activate_node_mode(sub_mode: String) -> void:
 	node_tool_active = true
 	node_sub_mode = sub_mode
 	Input.set_default_cursor_shape(Input.CURSOR_CROSS)
-	update_info_bar()
 
 
 ## Deactivates node-placement mode and returns to neutral state.
 func deactivate_node_mode() -> void:
 	node_tool_active = false
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
-	update_info_bar()
 
 
 ## Creates a new CanvasNode at the given world position and parents it to ElementLayer.
@@ -322,7 +315,6 @@ func activate_select_mode() -> void:
 	select_mode_active = true
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 	select_button.button_pressed = true
-	update_info_bar()
 
 
 ## Deactivates Select mode and clears selection.
@@ -331,7 +323,6 @@ func deactivate_select_mode() -> void:
 	clear_selection()
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 	select_button.button_pressed = false
-	update_info_bar()
 
 
 ## Toggles Shape mode on/off with the given sub-mode. Connected to Toolbar's signal.
@@ -405,7 +396,6 @@ func select_element(element: Node, additive: bool = false) -> void:
 		element.call("set_selected", true)
 	_refresh_primary_visuals()
 	_update_selection_menu()
-	update_info_bar()
 
 
 ## Removes the element from the selection set.
@@ -420,7 +410,6 @@ func _deselect_element(element: Node) -> void:
 			primary_selection = selected_set[-1]
 	_refresh_primary_visuals()
 	_update_selection_menu()
-	update_info_bar()
 
 
 ## Sets the primary (last-clicked) selection and refreshes visual priority indicators.
@@ -428,7 +417,6 @@ func set_primary_selection(element: Node) -> void:
 	primary_selection = element
 	_refresh_primary_visuals()
 	_update_selection_menu()
-	update_info_bar()
 
 
 ## Refreshes is_primary on every element in selected_set so the primary element
@@ -480,7 +468,6 @@ func open_text_editor(shape: LabelShape) -> void:
 
 	_text_overlay.call("open", shape, screen_rect)
 	_update_selection_menu()
-	update_info_bar()
 
 
 ## Called when a shape is double-clicked. Opens the text editor.
@@ -501,13 +488,11 @@ func _on_text_committed(shape: Node, text: String) -> void:
 			label_shape.text_content = text
 	save_canvas()
 	_update_selection_menu()
-	update_info_bar()
 
 
 ## Called when text editing is cancelled. No changes are saved.
 func _on_text_cancelled(_shape: Node) -> void:
 	_update_selection_menu()
-	update_info_bar()
 
 
 # ----- Persistence -----------------------------------------------------------
@@ -716,7 +701,6 @@ func _on_zoom_reset_requested() -> void:
 ## Updates the cached zoom level and refreshes the info bar.
 func _on_zoom_changed(level: float) -> void:
 	current_zoom = level
-	update_info_bar()
 
 
 # ----- Arrow System Interface ------------------------------------------------
@@ -825,7 +809,6 @@ func _delete_element(element: CanvasElement) -> void:
 		primary_selection = null
 	element.queue_free()
 	_update_selection_menu()
-	update_info_bar()
 
 
 ## Applies the selected color from the palette to the currently selected element.
