@@ -3,8 +3,7 @@
 ## Manages the MainCamera node, handling scroll-wheel zoom, trackpad
 ## pinch/pan, middle-click drag pan, keyboard shortcuts, and programmatic
 ## zoom/pan dispatched from the zoom_controls UI buttons.
-class_name CameraController
-extends Node
+extends Camera2D
 
 ## Minimum zoom level (10%).
 const MIN_ZOOM: float = 0.1
@@ -25,14 +24,11 @@ signal zoom_changed(level: float)
 ## UI elements that track world positions in screen-space (selection menu, text overlay) connect to this.
 signal camera_moved
 
-## Reference to the main camera.
-@onready var camera: Camera2D = %MainCamera
-
 ## Current zoom level (1.0 = 100%).
 var zoom_level: float = 1.0:
 	set(value):
 		zoom_level = clampf(value, MIN_ZOOM, MAX_ZOOM)
-		camera.zoom = Vector2(zoom_level, zoom_level)
+		zoom = Vector2(zoom_level, zoom_level)
 		zoom_changed.emit(zoom_level)
 
 ## Reference to the viewport, cached for size lookups.
@@ -65,7 +61,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventPanGesture:
 		_last_gesture_time = Time.get_ticks_msec()
 		var pg: InputEventPanGesture = event as InputEventPanGesture
-		pan_by(pg.delta * camera.zoom * PAN_SPEED)
+		pan_by(pg.delta * zoom * PAN_SPEED)
 		get_viewport().set_input_as_handled()
 		return
 
@@ -132,7 +128,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					elif mb.button_index == MOUSE_BUTTON_WHEEL_RIGHT:
 						pan_amount.x = pan_step
 
-				pan_by(pan_amount * camera.zoom)
+				pan_by(pan_amount * zoom)
 				get_viewport().set_input_as_handled()
 				return
 
@@ -140,7 +136,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
 		var mm: InputEventMouseMotion = event as InputEventMouseMotion
 		if _pan_active and mm.button_mask == MOUSE_BUTTON_MASK_MIDDLE:
-			pan_by(-mm.relative * camera.zoom)
+			pan_by(-mm.relative * zoom)
 			get_viewport().set_input_as_handled()
 			return
 
@@ -180,8 +176,8 @@ func zoom_by_factor(factor: float, focus_pos: Vector2 = Vector2.INF) -> void:
 	# Adjust camera position to keep focus_pos stationary on screen.
 	if focus_pos != Vector2.INF:
 		var vp_center: Vector2 = _viewport.get_visible_rect().size / 2.0
-		var offset: Vector2 = focus_pos - vp_center
-		camera.position += offset * (1.0 - 1.0 / applied)
+		var new_offset: Vector2 = focus_pos - vp_center
+		position += new_offset * (1.0 - 1.0 / applied)
 
 	camera_moved.emit()
 
@@ -189,11 +185,11 @@ func zoom_by_factor(factor: float, focus_pos: Vector2 = Vector2.INF) -> void:
 ## Resets zoom to 1.0× and camera position to the world origin.
 func reset_zoom() -> void:
 	zoom_level = 1.0
-	camera.position = Vector2.ZERO
+	position = Vector2.ZERO
 	camera_moved.emit()
 
 
 ## Pans the camera by the given delta vector (in world coordinates).
 func pan_by(delta: Vector2) -> void:
-	camera.position += delta
+	position += delta
 	camera_moved.emit()

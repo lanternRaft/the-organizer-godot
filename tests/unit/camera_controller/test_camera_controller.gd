@@ -4,32 +4,22 @@ extends GdUnitTestSuite
 # TestSuite generated from
 const __source: String = "res://scenes/main/camera_controller/camera_controller.gd"
 
-var _controller: Node
-var _camera: Camera2D
+var _controller: Camera2D
 
 
 # ----- Lifecycle ---------------------------------------------------------------
 
 
 func before_test() -> void:
-	var script: GDScript = load(__source)
-	_controller = auto_free(Node.new())
-	_controller.set_script(script)
-
-	_camera = auto_free(Camera2D.new())
-	_camera.name = "MainCamera"
-	_controller.add_child(_camera)
+	_controller = auto_free(Camera2D.new())
+	_controller.set_script(load(__source))
 
 	get_tree().root.add_child(_controller)
 	await get_tree().process_frame
 
-	# %MainCamera may not resolve in test tree; set camera reference directly.
-	_controller.set("camera", _camera)
-
 
 func after_test() -> void:
 	_controller = null
-	_camera = null
 
 
 # ===== Tests ==================================================================
@@ -42,7 +32,7 @@ func test_camera_moved_emitted_on_pan() -> void:
 	_controller.call("pan_by", Vector2(100.0, 50.0))
 
 	assert_signal(monitor).is_emitted("camera_moved")
-	assert_that(_camera.position).is_equal(Vector2(100.0, 50.0))
+	assert_that(_controller.position).is_equal(Vector2(100.0, 50.0))
 
 
 ## Test 2: camera_moved and zoom_changed emitted on zoom_by_factor().
@@ -65,7 +55,7 @@ func test_camera_moved_emitted_on_reset() -> void:
 	_controller.call("reset_zoom")
 
 	assert_signal(monitor).is_emitted("camera_moved")
-	assert_that(_camera.position).is_equal(Vector2.ZERO)
+	assert_that(_controller.position).is_equal(Vector2.ZERO)
 
 
 ## Test 4: camera_moved NOT emitted when zoom_by_factor is clamped at MIN_ZOOM.
