@@ -60,7 +60,7 @@ func _create_label_shape(position: Vector2) -> LabelShape:
 	return shape
 
 
-func test_arrow_shape_to_circle_node() -> void:
+func test_arrow_label_shape_to_canvas_node() -> void:
 	var shape: LabelShape = _create_label_shape(Vector2(0, 0))
 	var node: CanvasNode = _create_circle_node(Vector2(200, 0))
 
@@ -75,7 +75,7 @@ func test_arrow_shape_to_circle_node() -> void:
 	assert_str(arrow.end_anchor_label).is_equal("left")
 
 
-func test_arrow_circle_to_triangle() -> void:
+func test_arrow_canvas_node_to_canvas_node() -> void:
 	var circle: CanvasNode = _create_circle_node(Vector2(0, 0))
 	var triangle: CanvasNode = CANVAS_NODE_SCENE.instantiate()
 	triangle.sub_mode = "triangle_node"
@@ -90,3 +90,17 @@ func test_arrow_circle_to_triangle() -> void:
 	assert_error(func() -> void: arrow.rebuild_path()).is_success()
 	assert_str(arrow.get("start_anchor_label")).is_equal("right")
 	assert_str(arrow.get("end_anchor_label")).is_equal("bottom_left")
+
+func test_arrow_label_shape_to_label_shape() -> void:
+	var shape_1: LabelShape = _create_label_shape(Vector2(0, 0))
+	var shape_2: LabelShape = _create_label_shape(Vector2(200, 0))
+
+	arrow_manager._create_arrow(shape_1, "right", shape_2, "left")
+
+	assert_int(arrow_manager._arrows.size()).is_equal(1)
+
+	var arrow: Arrow = arrow_manager._arrows[0]
+	assert_error(func() -> void: arrow.rebuild_path()).is_success()
+
+	assert_str(arrow.start_anchor_label).is_equal("right")
+	assert_str(arrow.end_anchor_label).is_equal("left")
