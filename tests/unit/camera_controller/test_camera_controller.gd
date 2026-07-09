@@ -1,6 +1,5 @@
 # GdUnit generated TestSuite
 extends GdUnitTestSuite
-@warning_ignore("return_value_discarded")
 
 # TestSuite generated from
 const __source: String = "res://scenes/main/camera_controller/camera_controller.gd"
