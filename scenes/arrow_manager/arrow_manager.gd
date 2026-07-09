@@ -472,7 +472,7 @@ func _get_dot_position(element: CanvasElement, label: String) -> Vector2:
 
 
 func _update_drag_preview(mouse_pos: Vector2) -> void:
-	if _preview_line == null:
+	if _preview_line == null || _arrow_drag_active == false || _drag_start_element == null:
 		return
 
 	var p0: Vector2 = _drag_start_pos

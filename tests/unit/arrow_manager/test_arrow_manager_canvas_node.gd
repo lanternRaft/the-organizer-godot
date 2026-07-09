@@ -3,7 +3,7 @@ extends GdUnitTestSuite
 var arrow_manager: ArrowManager
 var element_layer: Node2D
 var click_handler: Node
-var runner: GdUnitSceneRunner # 1. Keep the runner alive at class level!
+var runner: GdUnitSceneRunner
 
 const CANVAS_NODE_SCENE: PackedScene = preload("res://scenes/tools/canvas_node/canvas_node.tscn")
 const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
@@ -43,7 +43,7 @@ func _create_test_scene() -> void:
 	runner = scene_runner(main)
 
 
-func _create_circle_node(position: Vector2) -> CanvasNode:
+func _create_canvas_node(position: Vector2) -> CanvasNode:
 	var node: CanvasNode = auto_free(CANVAS_NODE_SCENE.instantiate())
 	node.sub_mode = "circle_node"
 	node.position = position
@@ -62,7 +62,7 @@ func _create_label_shape(position: Vector2) -> LabelShape:
 
 func test_arrow_label_shape_to_canvas_node() -> void:
 	var shape: LabelShape = _create_label_shape(Vector2(0, 0))
-	var node: CanvasNode = _create_circle_node(Vector2(200, 0))
+	var node: CanvasNode = _create_canvas_node(Vector2(200, 0))
 
 	arrow_manager._create_arrow(shape, "right", node, "left")
 
@@ -76,7 +76,7 @@ func test_arrow_label_shape_to_canvas_node() -> void:
 
 
 func test_arrow_canvas_node_to_canvas_node() -> void:
-	var circle: CanvasNode = _create_circle_node(Vector2(0, 0))
+	var circle: CanvasNode = _create_canvas_node(Vector2(0, 0))
 	var triangle: CanvasNode = CANVAS_NODE_SCENE.instantiate()
 	triangle.sub_mode = "triangle_node"
 	triangle.position = Vector2(200, 0)
@@ -104,3 +104,94 @@ func test_arrow_label_shape_to_label_shape() -> void:
 
 	assert_str(arrow.start_anchor_label).is_equal("right")
 	assert_str(arrow.end_anchor_label).is_equal("left")
+
+
+func test_arrow_self_connection_node() -> void:
+	var node: CanvasNode = _create_canvas_node(Vector2(100, 100))
+	await get_tree().process_frame
+
+	var initial_count: int = arrow_manager._arrows.size()
+
+	# Simulate arrow drag from node's "top" released on same node's "bottom".
+	# ArrowManager's end_arrow_drag checks _drag_snapped_element != _drag_start_element,
+	# so setting both to the same node should prevent creation.
+	arrow_manager._drag_start_element = node
+	arrow_manager._drag_start_label = "top"
+	arrow_manager._drag_snapped_element = node
+	arrow_manager._drag_snapped_label = "bottom"
+	arrow_manager.end_arrow_drag()
+
+	assert_int(arrow_manager._arrows.size()).is_equal(initial_count)
+
+
+func test_delete_node_removes_arrows() -> void:
+	var shape: LabelShape = _create_label_shape(Vector2(0, 0))
+	var node: CanvasNode = _create_canvas_node(Vector2(200, 0))
+
+	arrow_manager._create_arrow(shape, "right", node, "left")
+	assert_int(arrow_manager._arrows.size()).is_equal(1)
+
+	arrow_manager.delete_arrows_for_element(node)
+
+	assert_int(arrow_manager._arrows.size()).is_equal(0)
+
+
+func test_arrow_drag_from_node_shows_preview() -> void:
+	var node: CanvasNode = _create_canvas_node(Vector2(100, 100))
+
+	var top_pos: Vector2 = node.get_anchor_position("top")
+
+	# Call handle_dot_mousedown at the top anchor position.
+	var result: bool = arrow_manager.handle_dot_mousedown(top_pos)
+
+	assert_bool(result).is_true()
+	assert_bool(arrow_manager._arrow_drag_active).is_true()
+	assert_object(arrow_manager._drag_start_element).is_same(node)
+	assert_str(arrow_manager._drag_start_label).is_equal("top")
+	# Preview line should exist.
+	assert_bool(arrow_manager._preview_line != null).is_true()
+
+
+func test_arrow_drag_no_snap_discards() -> void:
+	var node: CanvasNode = _create_canvas_node(Vector2(100, 100))
+
+	var top_pos: Vector2 = node.get_anchor_position("top")
+
+	# Begin drag.
+	arrow_manager.handle_dot_mousedown(top_pos)
+	assert_bool(arrow_manager._arrow_drag_active).is_true()
+
+	# End drag without snapping (drag_snapped_element is null).
+	arrow_manager.end_arrow_drag()
+
+	assert_bool(arrow_manager._arrow_drag_active).is_false()
+	assert_int(arrow_manager._arrows.size()).is_equal(0)
+	(
+		assert_bool(
+			arrow_manager._preview_line == null or not is_instance_valid(arrow_manager._preview_line)
+		)
+		.is_true()
+	)
+
+
+func test_arrow_updates_on_node_move() -> void:
+	var shape: LabelShape = _create_label_shape(Vector2(0, 0))
+	var node: CanvasNode = _create_canvas_node(Vector2(200, 0))
+
+	arrow_manager._create_arrow(shape, "right", node, "left")
+	var arrow: Arrow = arrow_manager._arrows[0]
+	arrow.rebuild_path()
+
+	# Cache original bezier points.
+	var original_points: PackedVector2Array = arrow._cached_bezier_points
+
+	# Move node to a new position.
+	node.position = Vector2(300, 50)
+	await get_tree().process_frame
+
+	# Update arrows for the moved node (using new method name).
+	arrow_manager.update_arrows_for_element(node)
+
+	var updated_points: PackedVector2Array = arrow.get("_cached_bezier_points")
+	# Points should have changed.
+	assert_array(original_points).is_not_equal(updated_points)
