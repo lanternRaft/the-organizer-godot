@@ -89,11 +89,9 @@ visible = false
 offset_right = 120.0
 offset_bottom = 40.0
 
-[node name="CameraController" type="Node" parent="." unique_id=586209481]
-script = ExtResource("7_mpbl4")
-
 [node name="MainCamera" type="Camera2D" parent="." unique_id=314705835]
 unique_name_in_owner = true
+script = ExtResource("7_mpbl4")
 
 [node name="ArrowManager" parent="." unique_id=1093847064 instance=ExtResource("9_53fq2")]
 

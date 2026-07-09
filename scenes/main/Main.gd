@@ -51,12 +51,11 @@ var primary_selection: Node = null
 @onready var click_handler: Node = $ClickHandler
 @onready var confirm_dialog: AcceptDialog = $UI/ConfirmDialog
 @onready var grid_background: ColorRect = %GridBackground
-@onready var camera_controller: Node = $CameraController
+@onready var camera_controller: Camera2D = %MainCamera
 @onready var zoom_controls: Control = $UI/ZoomControls
 @onready var arrow_manager: Node = $ArrowManager
 @onready var _viewport: Viewport = get_viewport()
 @onready var ui_layer: CanvasLayer = $UI
-@onready var _main_camera: Camera2D = %MainCamera
 @onready var _text_overlay: TextEditOverlay = TEXT_OVERLAY_SCENE.instantiate()
 @onready var selection_menu: Node = $UI/SelectionMenu
 @onready var grid_toggle: Control = $UI/GridToggle
@@ -499,7 +498,7 @@ func open_text_editor(shape: LabelShape) -> void:
 		return
 
 	var shape_center: Vector2 = shape.global_position
-	var screen_pos: Vector2 = (_main_camera as Camera2D).get_canvas_transform() * shape_center
+	var screen_pos: Vector2 = camera_controller.get_canvas_transform() * shape_center
 
 	# Calculate overlay size to match shape visual bounds × zoom, with a minimum.
 	var overlay_width: float = max(160.0, shape.rx * 2.0 * current_zoom)
@@ -904,4 +903,4 @@ func _on_menu_zoom_changed(_level: float) -> void:
 func _on_camera_moved() -> void:
 	selection_menu.call("refresh_position")
 	if _text_overlay.get("is_open"):
-		_text_overlay.call("reposition", _main_camera, current_zoom)
+		_text_overlay.call("reposition", camera_controller, current_zoom)
