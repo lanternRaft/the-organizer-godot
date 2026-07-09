@@ -1,12 +1,10 @@
-class_name SaveLoadManager
-extends Node
-
 ## Manages canvas state persistence. Instantiated as a child of Main.
 ## Owns file I/O, serialization, and element instantiation on load.
 ## Returns instantiated (but unwired) elements — the caller connects signals.
+class_name SaveLoadManager
+extends Node
 
 const SAVE_PATH: String = "user://canvas.save"
-
 const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
 const CANVAS_NODE_SCENE: PackedScene = preload("res://scenes/tools/canvas_node/canvas_node.tscn")
 
@@ -14,13 +12,7 @@ const CANVAS_NODE_SCENE: PackedScene = preload("res://scenes/tools/canvas_node/c
 ## Set in the scene inspector.
 @export var element_layer_path: NodePath
 
-var _element_layer: Node2D
-
-
-func _ready() -> void:
-	_element_layer = get_node(element_layer_path) as Node2D
-	if _element_layer == null:
-		push_error("SaveLoadManager: ElementLayer not found at path: ", element_layer_path)
+@onready var _element_layer: Node2D = %ElementLayer
 
 
 ## Serialises all canvas elements into a Dictionary for save.
@@ -29,10 +21,10 @@ func serialize_canvas(legend_data: Array) -> Dictionary:
 	var elements: Array[Dictionary] = []
 	for child: Node in _element_layer.get_children():
 		if child is CanvasElement:
-			var elem: CanvasElement = child as CanvasElement
+			var elem: CanvasElement = child
 			var pos: Vector2 = elem.position
 			if child is LabelShape:
-				var shape: LabelShape = child as LabelShape
+				var shape: LabelShape = child
 				var color: Color = shape.fill_color
 				elements.append(
 					{

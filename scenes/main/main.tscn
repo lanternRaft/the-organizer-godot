@@ -77,6 +77,7 @@ unique_name_in_owner = true
 script = ExtResource("7_mpbl4")
 
 [node name="SaveLoadManager" type="Node" parent="." unique_id=1643481449]
+unique_name_in_owner = true
 script = ExtResource("11_blune")
 element_layer_path = NodePath("../Canvas/ElementLayer")
 
