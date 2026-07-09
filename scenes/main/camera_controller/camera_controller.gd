@@ -4,6 +4,7 @@
 ## pinch/pan, middle-click drag pan, keyboard shortcuts, and programmatic
 ## zoom/pan dispatched from the zoom_controls UI buttons.
 extends Node
+class_name CameraController
 
 ## Minimum zoom level (10%).
 const MIN_ZOOM: float = 0.1
