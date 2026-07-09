@@ -7,6 +7,7 @@
 ## Normalises InputEventMouseButton/Motion and InputEventScreenTouch/Drag
 ## into a common PointerEvent dictionary with keys:
 ##   world_pos, local_pos, pressed, dragged, button_index, original_event
+class_name ClickHandler
 extends Node
 
 ## Minimum pointer-move distance (in pixels) before a drag actually begins.

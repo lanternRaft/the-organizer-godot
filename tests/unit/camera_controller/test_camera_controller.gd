@@ -1,4 +1,3 @@
-# GdUnit generated TestSuite
 extends GdUnitTestSuite
 
 var _controller: CameraController
