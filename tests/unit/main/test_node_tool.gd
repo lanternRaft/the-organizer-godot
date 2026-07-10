@@ -9,6 +9,7 @@ const __source: String = "res://scenes/main/Main.gd"
 const __scene: PackedScene = preload("res://scenes/main/main.tscn")
 
 const CANVAS_NODE_SCENE: PackedScene = preload("res://scenes/tools/canvas_node/canvas_node.tscn")
+const CIRCLE_NODE_SCENE: PackedScene = preload("res://scenes/canvas_elements/circle_node.tscn")
 const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
 
 var _main: Node
@@ -61,7 +62,7 @@ func _legend_panel() -> Control:
 
 
 func _create_circle_node(pos: Vector2) -> Node2D:
-	var node: Node2D = CANVAS_NODE_SCENE.instantiate()
+	var node: Node2D = CIRCLE_NODE_SCENE.instantiate()
 	node.set("sub_mode", "circle_node")
 	node.position = pos
 	_el().add_child(node)

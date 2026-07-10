@@ -6,6 +6,7 @@ extends Node
 ## Preload LabelShape and CanvasNode scenes for instantiation.
 const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
 const CANVAS_NODE_SCENE: PackedScene = preload("res://scenes/tools/canvas_node/canvas_node.tscn")
+const CIRCLE_NODE_SCENE: PackedScene = preload("res://scenes/canvas_elements/circle_node.tscn")
 const TEXT_OVERLAY_SCENE: PackedScene = preload(
 	"res://scenes/ui/text_edit_overlay/text_edit_overlay.tscn"
 )
@@ -285,9 +286,15 @@ func deactivate_node_mode() -> void:
 
 ## Creates a new CanvasNode at the given world position and parents it to ElementLayer.
 ## The node's sub-mode is determined by the current node_sub_mode.
+## Uses the dedicated circle_node.tscn scene for circle nodes and the generic
+## canvas_node.tscn for triangle nodes.
 ## After placement, auto-switches to Select mode and selects the new node.
 func place_node(world_pos: Vector2) -> void:
-	var node: Node2D = CANVAS_NODE_SCENE.instantiate() as Node2D
+	var node: Node2D
+	if node_sub_mode == "circle_node":
+		node = CIRCLE_NODE_SCENE.instantiate() as Node2D
+	else:
+		node = CANVAS_NODE_SCENE.instantiate() as Node2D
 	node.set("sub_mode", node_sub_mode)
 	node.position = world_pos
 	element_layer.add_child(node)

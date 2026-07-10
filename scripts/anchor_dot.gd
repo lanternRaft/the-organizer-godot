@@ -1,3 +1,4 @@
+@tool
 extends Node2D
 
 ## Simple circular dot node used for anchor markers on shapes.

@@ -7,6 +7,7 @@ extends Node
 const SAVE_PATH: String = "user://canvas.save"
 const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
 const CANVAS_NODE_SCENE: PackedScene = preload("res://scenes/tools/canvas_node/canvas_node.tscn")
+const CIRCLE_NODE_SCENE: PackedScene = preload("res://scenes/canvas_elements/circle_node.tscn")
 
 ## Path to the ElementLayer node (under Main/Canvas).
 ## Set in the scene inspector.
@@ -139,8 +140,15 @@ func _instantiate_label_shape(data: Dictionary) -> LabelShape:
 
 ## Instantiates a CanvasNode from serialised data, adds it to ElementLayer,
 ## and returns the node for the caller to wire signals.
+## Uses the dedicated circle_node.tscn scene for circle nodes and the generic
+## canvas_node.tscn for triangle nodes.
 func _instantiate_canvas_node(data: Dictionary) -> CanvasNode:
-	var node: CanvasNode = CANVAS_NODE_SCENE.instantiate()
+	var sub_mode: String = str(data.get("sub_mode", "circle_node"))
+	var node: CanvasNode
+	if sub_mode == "circle_node":
+		node = CIRCLE_NODE_SCENE.instantiate()
+	else:
+		node = CANVAS_NODE_SCENE.instantiate()
 	var px: float = data.get("position_x", 0.0)
 	var py: float = data.get("position_y", 0.0)
 	node.position = Vector2(px, py)

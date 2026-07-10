@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://b4hn1afvgxgsd"]
+
+[ext_resource type="Script" uid="uid://csvwgguogpngx" path="res://scripts/anchor_dot.gd" id="1_yxetp"]
+
+[node name="LineAnchor" type="Node2D" unique_id=2133260072]
+
+[node name="AnchorDot" type="Node2D" parent="." unique_id=1864920851]
+script = ExtResource("1_yxetp")
+
+[node name="AnchorHighlightDot" type="Node2D" parent="." unique_id=1997313029]
+
+[node name="ConnectionMarker2D" type="Marker2D" parent="." unique_id=1635418055]
+position = Vector2(0, 7)
