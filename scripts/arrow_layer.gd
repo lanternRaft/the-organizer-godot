@@ -338,6 +338,10 @@ func _update_anchor_dots(mouse_pos: Vector2) -> void:
 
 
 func _show_dots_for_element(element: CanvasElement) -> void:
+	if element is CanvasNode:
+		var canvas_node: CanvasNode = element
+		canvas_node.show_anchors()
+		return
 	var eid: int = element.get_instance_id()
 	if not _dot_nodes.has(eid):
 		_dot_nodes[eid] = {}
@@ -358,6 +362,10 @@ func _show_dots_for_element(element: CanvasElement) -> void:
 
 
 func _hide_dots_for_element(element: CanvasElement) -> void:
+	if element is CanvasNode:
+		var canvas_node: CanvasNode = element
+		canvas_node.hide_anchors()
+		return
 	var eid: int = element.get_instance_id()
 	if not _dot_nodes.has(eid):
 		return

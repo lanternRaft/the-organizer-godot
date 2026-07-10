@@ -58,6 +58,7 @@ const ANCHOR_POSITIONS: Dictionary = {
 }
 
 @onready var _collision_shape: CollisionShape2D = $Area2D/CollisionShape2D
+@onready var anchors: Node2D = $Anchors
 
 
 func _ready() -> void:
@@ -173,3 +174,11 @@ func _update_collision_shape() -> void:
 			var poly_shape: ConvexPolygonShape2D = ConvexPolygonShape2D.new()
 			poly_shape.points = TRIANGLE_VERTICES
 			_collision_shape.shape = poly_shape
+
+# Show the line anchors
+func show_anchors() -> void:
+	anchors.show()
+
+# Show the line anchors
+func hide_anchors() -> void:
+	anchors.hide()
