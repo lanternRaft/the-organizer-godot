@@ -11,7 +11,6 @@ const TEXT_OVERLAY_SCENE: PackedScene = preload(
 )
 const LEGEND_PANEL_SCENE: PackedScene = preload("res://scenes/ui/legend_panel/legend_panel.tscn")
 
-
 ## Whether shape-placement mode is currently active.
 var shape_tool_active: bool = false
 
@@ -495,6 +494,7 @@ func _on_text_committed(shape: Node, text: String) -> void:
 ## Called when text editing is cancelled. No changes are saved.
 func _on_text_cancelled(_shape: Node) -> void:
 	_update_selection_menu()
+
 
 func _save_state() -> void:
 	var legend_data: Array = legend_panel.call("get_legend_data")

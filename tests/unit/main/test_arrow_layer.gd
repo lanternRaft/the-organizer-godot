@@ -1,17 +1,19 @@
 extends GdUnitTestSuite
 
+const CANVAS_NODE_SCENE: PackedScene = preload("res://scenes/tools/canvas_node/canvas_node.tscn")
+const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
+const ARROW_SCENE: PackedScene = preload("res://scenes/tools/arrow/arrow.tscn")
+
 var arrow_layer: ArrowLayer
 var element_layer: Node2D
 var click_handler: Node
 var toolbar: Toolbar
 var runner: GdUnitSceneRunner
 
-const CANVAS_NODE_SCENE: PackedScene = preload("res://scenes/tools/canvas_node/canvas_node.tscn")
-const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
-const ARROW_SCENE: PackedScene = preload("res://scenes/tools/arrow/arrow.tscn")
 
 func before_test() -> void:
 	_create_test_scene()
+
 
 func _create_test_scene() -> void:
 	var main: Main = auto_free(Main.new())
@@ -36,7 +38,7 @@ func _create_test_scene() -> void:
 	click_handler.name = "ClickHandler"
 	main.add_child(click_handler)
 	click_handler.owner = main
-	
+
 	toolbar = auto_free(Toolbar.new())
 	toolbar.name = "Toolbar"
 	toolbar.unique_name_in_owner = true
@@ -97,6 +99,7 @@ func test_arrow_canvas_node_to_canvas_node() -> void:
 	assert_error(func() -> void: arrow.rebuild_path()).is_success()
 	assert_str(arrow.get("start_anchor_label")).is_equal("right")
 	assert_str(arrow.get("end_anchor_label")).is_equal("bottom_left")
+
 
 func test_arrow_label_shape_to_label_shape() -> void:
 	var shape_1: LabelShape = _create_label_shape(Vector2(0, 0))
@@ -177,7 +180,7 @@ func test_arrow_drag_no_snap_discards() -> void:
 		assert_bool(
 			arrow_layer._preview_line == null or not is_instance_valid(arrow_layer._preview_line)
 		)
-		.is_true()
+		. is_true()
 	)
 
 

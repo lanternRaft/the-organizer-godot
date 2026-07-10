@@ -199,7 +199,7 @@ func update_arrows_for_element(element: CanvasElement) -> void:
 	for arrow_node: Arrow in _arrows:
 		if not is_instance_valid(arrow_node):
 			continue
-		
+
 		arrow_node.rebuild_if_connected(element)
 
 
@@ -471,12 +471,12 @@ func _update_drag_preview(mouse_pos: Vector2) -> void:
 	# Determine end position: snapped or free.
 	var p3: Vector2
 	var outward_end: Vector2
-	var _snapped: bool = false
+	var drag_snapped: bool = false
 
 	if _drag_snapped_element != null and _drag_snapped_element != _drag_start_element:
 		p3 = _drag_snapped_pos
 		outward_end = _get_anchor_outward_normal(_drag_snapped_element, _drag_snapped_label)
-		_snapped = true
+		drag_snapped = true
 	else:
 		p3 = mouse_pos
 		outward_end = Vector2.ZERO
@@ -498,7 +498,7 @@ func _update_drag_preview(mouse_pos: Vector2) -> void:
 		points[i] = _cubic_bezier(p0, p1, p2, p3, t)
 
 	_preview_line.points = points
-	_preview_line.default_color = Color(0.6, 0.8, 1.0, 0.8 if not _snapped else 1.0)
+	_preview_line.default_color = Color(0.6, 0.8, 1.0, 0.8 if not drag_snapped else 1.0)
 
 
 # ----- Private helpers: arrow creation ---------------------------------------

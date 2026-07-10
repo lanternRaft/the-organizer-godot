@@ -26,35 +26,41 @@ func serialize_canvas(legend_data: Array) -> Dictionary:
 			if child is LabelShape:
 				var shape: LabelShape = child
 				var color: Color = shape.fill_color
-				elements.append(
-					{
-						"type": "LabelShape",
-						"position_x": pos.x,
-						"position_y": pos.y,
-						"rx": shape.rx,
-						"ry": shape.ry,
-						"fill_r": color.r,
-						"fill_g": color.g,
-						"fill_b": color.b,
-						"fill_a": color.a,
-						"text": shape.text_content,
-						"shape_mode": shape.shape_mode,
-					}
+				(
+					elements
+					. append(
+						{
+							"type": "LabelShape",
+							"position_x": pos.x,
+							"position_y": pos.y,
+							"rx": shape.rx,
+							"ry": shape.ry,
+							"fill_r": color.r,
+							"fill_g": color.g,
+							"fill_b": color.b,
+							"fill_a": color.a,
+							"text": shape.text_content,
+							"shape_mode": shape.shape_mode,
+						}
+					)
 				)
 			elif child is CanvasNode:
 				var node: CanvasNode = child as CanvasNode
 				var color: Color = node.fill_color
-				elements.append(
-					{
-						"type": "CanvasNode",
-						"position_x": pos.x,
-						"position_y": pos.y,
-						"fill_r": color.r,
-						"fill_g": color.g,
-						"fill_b": color.b,
-						"fill_a": color.a,
-						"sub_mode": node.sub_mode,
-					}
+				(
+					elements
+					. append(
+						{
+							"type": "CanvasNode",
+							"position_x": pos.x,
+							"position_y": pos.y,
+							"fill_r": color.r,
+							"fill_g": color.g,
+							"fill_b": color.b,
+							"fill_a": color.a,
+							"sub_mode": node.sub_mode,
+						}
+					)
 				)
 	var result: Dictionary = {"elements": elements}
 	if not legend_data.is_empty():
