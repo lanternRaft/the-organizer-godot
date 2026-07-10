@@ -147,7 +147,7 @@ func get_arrow_near(pos: Vector2, radius: float = ARROW_CLICK_DISTANCE) -> Arrow
 		var arrow: Arrow = arrow_node
 		if arrow == null:
 			continue
-		var points: Variant = arrow._cached_bezier_points
+		var points: PackedVector2Array = arrow._cached_bezier_points
 		if not (points is PackedVector2Array):
 			continue
 		var pts: PackedVector2Array = points
@@ -171,13 +171,11 @@ func delete_arrow(arrow: Node) -> void:
 ## Called by Main when an element is being deleted; removes connected arrows first.
 func delete_arrows_for_element(element: CanvasElement) -> void:
 	var to_remove: Array[Node] = []
-	for arrow_node: Node in _arrows:
+	for arrow_node: Arrow in _arrows:
 		if not is_instance_valid(arrow_node):
 			to_remove.append(arrow_node)
 			continue
-		var start_shape: Variant = arrow_node.call(
-			"_resolve_shape", arrow_node.get("start_shape_path")
-		)
+		var start_shape: Variant = arrow_node._resolve_shape(arrow_node.start_shape_path)
 		var end_shape: Variant = arrow_node.call("_resolve_shape", arrow_node.get("end_shape_path"))
 		if start_shape == element or end_shape == element:
 			to_remove.append(arrow_node)
@@ -197,7 +195,7 @@ func delete_all_arrows() -> void:
 
 ## Rebuilds paths for all arrows connected to the given CanvasElement.
 func update_arrows_for_element(element: CanvasElement) -> void:
-	for arrow_node: Node in _arrows:
+	for arrow_node: Arrow in _arrows:
 		if not is_instance_valid(arrow_node):
 			continue
 		var start_shape: Variant = arrow_node.call(
