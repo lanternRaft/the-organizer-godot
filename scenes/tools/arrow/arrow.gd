@@ -177,28 +177,6 @@ static func get_canvas_element_anchor_edge(element: CanvasElement, label: String
 	return element.global_position
 
 
-## Returns the outward normal for a CanvasElement anchor by reading the offset
-## from get_anchor_positions().
-static func get_canvas_element_anchor_outward(element: CanvasElement, label: String) -> Vector2:
-	var anchors: Array[Dictionary] = element.get_anchor_positions()
-	for entry: Dictionary in anchors:
-		if entry.get("label", "") == label:
-			var offset: Vector2 = entry.get("offset", Vector2.ZERO)
-			if offset.length_squared() > 0.001:
-				return offset.normalized()
-	# Fallback for cardinal directions.
-	match label:
-		"top":
-			return Vector2(0, -1)
-		"bottom":
-			return Vector2(0, 1)
-		"left":
-			return Vector2(-1, 0)
-		"right":
-			return Vector2(1, 0)
-	return Vector2.ZERO
-
-
 # ----- private helpers -------------------------------------------------------
 
 
@@ -233,49 +211,6 @@ func handle_drag_move(event: Dictionary) -> void:
 ## Snaps position to 20px grid.
 func handle_drag_end(_event: Dictionary) -> void:
 	position = position.snapped(Vector2(20.0, 20.0))
-
-
-## Static utility: returns the edge position (on the ellipse boundary) for an anchor label.
-## Uses duck-typing: if the element has get_anchor_position(label), uses that.
-## Falls back to ellipse-based calculation for LabelShape.
-static func get_anchor_edge_position_static(shape: Node, label: String) -> Vector2:
-	# CanvasNode and similar elements provide their own anchor positions.
-	if shape.has_method(&"get_anchor_position"):
-		var pos: Vector2 = shape.call(&"get_anchor_position", label)
-		return pos
-	# Default LabelShape ellipse-based calculation.
-	var rx: float = shape.get("rx")
-	var ry: float = shape.get("ry")
-	var local_pos: Vector2
-	match label:
-		"top":
-			local_pos = Vector2(0, -ry)
-		"bottom":
-			local_pos = Vector2(0, ry)
-		"left":
-			local_pos = Vector2(-rx, 0)
-		"right":
-			local_pos = Vector2(rx, 0)
-		_:
-			local_pos = Vector2.ZERO
-	var shape_2d: Node2D = shape as Node2D
-	if shape_2d != null:
-		return shape_2d.to_global(local_pos)
-	return local_pos
-
-
-## Static utility: returns the outward normal for an anchor label.
-static func get_anchor_outward_normal_static(label: String) -> Vector2:
-	match label:
-		"top":
-			return Vector2(0, -1)
-		"bottom":
-			return Vector2(0, 1)
-		"left":
-			return Vector2(-1, 0)
-		"right":
-			return Vector2(1, 0)
-	return Vector2.ZERO
 
 
 func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float) -> Vector2:
