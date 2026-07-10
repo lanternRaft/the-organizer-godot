@@ -18,6 +18,8 @@ var start_shape_path: NodePath
 var end_shape_path: NodePath
 var start_anchor_label: String  # "top", "bottom", "left", "right", etc.
 var end_anchor_label: String
+var start_anchor: LineAnchor
+var end_anchor: LineAnchor
 
 var is_selected: bool = false:
 	set(value):
@@ -102,10 +104,11 @@ func _draw() -> void:
 ## Uses the CanvasElement.get_anchor_positions() interface to find anchor offsets.
 ## Must be called after either element moves or resizes.
 func rebuild_path() -> void:
-	var start_shape: Node = _resolve_shape(start_shape_path)
+	#var start_shape: Node = _resolve_shape(start_shape_path)
 	var end_shape: Node = _resolve_shape(end_shape_path)
 
-	if start_shape == null or end_shape == null:
+	#if start_shape == null or end_shape == null:
+	if end_shape == null:
 		# One of the connected elements was deleted; queue free.
 		queue_free()
 		return
@@ -116,13 +119,13 @@ func rebuild_path() -> void:
 	var outward_start: Vector2
 	var outward_end: Vector2
 
-	var start_canvas: CanvasElement = start_shape as CanvasElement
-	if start_canvas != null:
-		p0 = get_canvas_element_anchor_edge(start_canvas, start_anchor_label)
-		outward_start = get_canvas_element_anchor_outward(start_canvas, start_anchor_label)
-	else:
-		p0 = get_anchor_edge_position_static(start_shape, start_anchor_label)
-		outward_start = get_anchor_outward_normal_static(start_anchor_label)
+	#var start_canvas: CanvasElement = start_shape as CanvasElement
+	#if start_canvas != null:
+		#p0 = get_canvas_element_anchor_edge(start_canvas, start_anchor_label)
+		#outward_start = get_canvas_element_anchor_outward(start_canvas, start_anchor_label)
+	#else:
+	p0 = start_anchor.get_line_global_position() # get_anchor_edge_position_static(start_shape, start_anchor_label)
+	outward_start = start_anchor.get_normal() #get_anchor_outward_normal_static(start_anchor_label)
 
 	var end_canvas: CanvasElement = end_shape as CanvasElement
 	if end_canvas != null:

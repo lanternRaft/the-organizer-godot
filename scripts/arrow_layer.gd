@@ -39,6 +39,7 @@ var _dot_nodes: Dictionary = {}  # element_instance_id -> {label: Node2D}
 ## Arrow drag state.
 var _arrow_drag_active: bool = false
 var _drag_start_element: CanvasElement = null
+var _drag_start_anchor: LineAnchor
 var _drag_start_label: String = ""
 var _drag_start_pos: Vector2 = Vector2.ZERO  # edge position, world-space
 var _drag_snapped_element: CanvasElement = null
@@ -81,7 +82,7 @@ func _line_drag_stop(_line_anchor: LineAnchor) -> void:
 	# If snapped to a valid different element, create arrow.
 	if _drag_snapped_element != null and _drag_snapped_element != _drag_start_element:
 		_create_arrow(
-			_drag_start_element, _drag_start_label, _drag_snapped_element, _drag_snapped_label
+			_drag_start_anchor, _drag_start_label, _drag_snapped_element, _drag_snapped_label
 		)
 
 	_drag_start_element = null
@@ -93,6 +94,7 @@ func _line_drag_stop(_line_anchor: LineAnchor) -> void:
 func _line_drag_start(line_anchor: LineAnchor) -> void:
 	_arrow_drag_active = true
 	var element: CanvasElement = line_anchor.get_parent().get_parent()
+	_drag_start_anchor = line_anchor
 	_drag_start_element = element
 	_drag_start_label = "top"
 	_drag_start_pos = line_anchor.global_position
@@ -167,10 +169,11 @@ func end_arrow_drag() -> void:
 	# If snapped to a valid different element, create arrow.
 	if _drag_snapped_element != null and _drag_snapped_element != _drag_start_element:
 		_create_arrow(
-			_drag_start_element, _drag_start_label, _drag_snapped_element, _drag_snapped_label
+			_drag_start_anchor, _drag_start_label, _drag_snapped_element, _drag_snapped_label
 		)
 
 	_drag_start_element = null
+	_drag_start_anchor = null
 	_drag_start_label = ""
 	_drag_snapped_element = null
 	_drag_snapped_label = ""
@@ -507,11 +510,11 @@ func _get_dot_position(element: CanvasElement, label: String) -> Vector2:
 
 
 func _update_drag_preview(mouse_pos: Vector2) -> void:
-	if _preview_line == null || _arrow_drag_active == false || _drag_start_element == null:
+	if _preview_line == null || _arrow_drag_active == false || _drag_start_anchor == null:
 		return
 
-	var p0: Vector2 = _drag_start_pos
-	var outward_start: Vector2 = _get_anchor_outward_normal(_drag_start_element, _drag_start_label)
+	var p0: Vector2 = _drag_start_anchor.global_position
+	var outward_start: Vector2 = _drag_start_anchor.get_normal()# _get_anchor_outward_normal(_drag_start_element, _drag_start_label)
 
 	# Determine end position: snapped or free.
 	var p3: Vector2
@@ -550,14 +553,15 @@ func _update_drag_preview(mouse_pos: Vector2) -> void:
 
 
 func _create_arrow(
-	start_element: CanvasElement, start_label: String, end_element: CanvasElement, end_label: String
+	start_anchor: LineAnchor, start_label: String, end_element: CanvasElement, end_label: String
 ) -> void:
 	var arrow: Arrow = ARROW_SCENE.instantiate()
 
 	add_child(arrow)
 
 	# Set paths relative to the arrow itself so it can resolve them later.
-	arrow.start_shape_path = arrow.get_path_to(start_element)
+	arrow.start_anchor = start_anchor
+	#arrow.start_shape_path = arrow.get_path_to(start_element)
 	arrow.end_shape_path = arrow.get_path_to(end_element)
 	arrow.start_anchor_label = start_label
 	arrow.end_anchor_label = end_label
