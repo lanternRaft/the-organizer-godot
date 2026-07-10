@@ -57,8 +57,10 @@ const ANCHOR_POSITIONS: Dictionary = {
 	"bottom_right": Vector2(7.0, 4.0),
 }
 
+
 @onready var _collision_shape: CollisionShape2D = $SelectArea2D/CollisionShape2D
 @onready var anchors: Node2D = $Anchors
+@onready var select_area_2d: Area2D = $SelectArea2D
 
 
 func _ready() -> void:
@@ -103,18 +105,18 @@ func _draw() -> void:
 
 # ----- Clickable Interface (overrides) --------------------------------------
 
-
-## Called by ClickHandler when a pointer-down hits this node's Area2D.
-## Sets drag mode to "body" (no resize handles) and emits clicked signal.
-func handle_click(event: Dictionary) -> bool:
-	_drag_mode = "body"
-	clicked.emit(event.get("original_event", InputEventMouseButton.new()), self)
-	return true
-
-
-## Double-click is a deliberate no-op (nodes have no text editing).
-func handle_double_click(_event: Dictionary) -> bool:
-	return true
+#
+### Called by ClickHandler when a pointer-down hits this node's Area2D.
+### Sets drag mode to "body" (no resize handles) and emits clicked signal.
+#func handle_click(event: Dictionary) -> bool:
+	#dragging = true
+	#clicked.emit(event.get("original_event", InputEventMouseButton.new()), self)
+	#return true
+#
+#
+### Double-click is a deliberate no-op (nodes have no text editing).
+#func handle_double_click(_event: Dictionary) -> bool:
+	#return true
 
 
 # ----- Anchor System ---------------------------------------------------------

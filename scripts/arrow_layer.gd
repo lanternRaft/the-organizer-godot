@@ -54,6 +54,8 @@ func _anchor_highlight(line_anchor: LineAnchor) -> void:
 
 ## Ends an arrow drag. Creates arrow if valid, otherwise discards.
 func _line_drag_stop(_line_anchor: LineAnchor) -> void:
+	if not _drag_start_anchor:
+		return
 	_arrow_drag_active = false
 
 	# Remove preview line.

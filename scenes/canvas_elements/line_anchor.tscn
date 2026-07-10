@@ -16,7 +16,6 @@ script = ExtResource("1_yxetp")
 [node name="AnchorHighlightDot" type="Node2D" parent="." unique_id=1997313029]
 visible = false
 script = ExtResource("1_yxetp")
-draw_outline = null
 radius = 6.0
 fill = Color(0.23137255, 0.50980395, 0.9647059, 1)
 
