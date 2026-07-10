@@ -1,13 +1,28 @@
 [gd_scene format=3 uid="uid://b4hn1afvgxgsd"]
 
+[ext_resource type="Script" uid="uid://biqd5n1u2hdch" path="res://scripts/line_anchor.gd" id="1_0m76a"]
 [ext_resource type="Script" uid="uid://csvwgguogpngx" path="res://scripts/anchor_dot.gd" id="1_yxetp"]
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_0m76a"]
+radius = 6.0
+
 [node name="LineAnchor" type="Node2D" unique_id=2133260072]
+script = ExtResource("1_0m76a")
 
 [node name="AnchorDot" type="Node2D" parent="." unique_id=1864920851]
 script = ExtResource("1_yxetp")
 
 [node name="AnchorHighlightDot" type="Node2D" parent="." unique_id=1997313029]
+visible = false
+script = ExtResource("1_yxetp")
+draw_outline = null
+radius = 6.0
+fill = Color(0.23137255, 0.50980395, 0.9647059, 1)
 
 [node name="ConnectionMarker2D" type="Marker2D" parent="." unique_id=1635418055]
 position = Vector2(0, 7)
+
+[node name="Area2D" type="Area2D" parent="." unique_id=2145851457]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=1979194347]
+shape = SubResource("CircleShape2D_0m76a")
