@@ -48,7 +48,7 @@ var primary_selection: Node = null
 @onready var grid_background: ColorRect = %GridBackground
 @onready var camera_controller: Camera2D = %MainCamera
 @onready var zoom_controls: Control = $UI/ZoomControls
-@onready var arrow_manager: ArrowManager = $ArrowManager
+@onready var arrow_layer: ArrowLayer = $ArrowManager
 @onready var save_load_manager: SaveLoadManager = %SaveLoadManager
 @onready var _viewport: Viewport = get_viewport()
 @onready var ui_layer: CanvasLayer = $UI
@@ -199,7 +199,7 @@ func clear_all_elements() -> void:
 	# Close text overlay if open (the shape being edited may be deleted).
 	if _text_overlay.get("is_open"):
 		_text_overlay.call("cancel")
-	arrow_manager.delete_all_arrows()
+	arrow_layer.delete_all_arrows()
 	for child: Node in element_layer.get_children():
 		if child.is_in_group("arrows"):
 			continue  # Already removed above.
@@ -595,9 +595,9 @@ func _on_zoom_changed(level: float) -> void:
 func _on_arrow_clicked_at(world_pos: Vector2) -> bool:
 	if not GameState.toolbar.select_mode_active:
 		return false
-	if arrow_manager == null:
+	if arrow_layer == null:
 		return false
-	var arrow: Arrow = arrow_manager.get_arrow_near(world_pos)
+	var arrow: Arrow = arrow_layer.get_arrow_near(world_pos)
 	if arrow != null:
 		@warning_ignore("unsafe_cast")
 		var arrow_node: Arrow = arrow as Node
@@ -612,24 +612,24 @@ func _on_arrow_clicked_at(world_pos: Vector2) -> bool:
 func _on_anchor_dot_mousedown(world_pos: Vector2) -> bool:
 	if not GameState.toolbar.select_mode_active:
 		return false
-	if arrow_manager == null:
+	if arrow_layer == null:
 		return false
-	return arrow_manager.call("handle_dot_mousedown", world_pos)
+	return arrow_layer.call("handle_dot_mousedown", world_pos)
 
 
 ## Called by ClickHandler's pointer_up signal to notify ArrowManager.
 func _on_pointer_up(_world_pos: Vector2) -> void:
-	if arrow_manager == null:
+	if arrow_layer == null:
 		return
-	arrow_manager.call("handle_dot_mouseup")
+	arrow_layer.call("handle_dot_mouseup")
 
 
 ## Called by Main when any CanvasElement emits anchor_changed (resized or moved).
 ## Routes to ArrowManager's unified update_arrows_for_element method.
 func _on_element_anchor_changed(element: CanvasElement) -> void:
-	if arrow_manager == null:
+	if arrow_layer == null:
 		return
-	arrow_manager.call("update_arrows_for_element", element)
+	arrow_layer.call("update_arrows_for_element", element)
 
 
 # ----- Selection Menu & Deletion ---------------------------------------------
@@ -674,7 +674,7 @@ func _delete_selected_elements() -> void:
 			selected_set.erase(element)
 			if primary_selection == element:
 				primary_selection = null
-			arrow_manager.call("delete_arrow", element)
+			arrow_layer.call("delete_arrow", element)
 	clear_selection()
 	_save_state()
 	# Legend refresh uses only LabelShape colors, so deletion of nodes doesn't affect it.
@@ -686,7 +686,7 @@ func _delete_selected_elements() -> void:
 func _delete_element(element: CanvasElement) -> void:
 	if not is_instance_valid(element):
 		return
-	arrow_manager.call("delete_arrows_for_element", element)
+	arrow_layer.call("delete_arrows_for_element", element)
 	selected_set.erase(element)
 	if primary_selection == element:
 		primary_selection = null

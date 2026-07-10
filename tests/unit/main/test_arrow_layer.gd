@@ -1,8 +1,9 @@
 extends GdUnitTestSuite
 
-var arrow_manager: ArrowManager
+var arrow_layer: ArrowLayer
 var element_layer: Node2D
 var click_handler: Node
+var toolbar: Toolbar
 var runner: GdUnitSceneRunner
 
 const CANVAS_NODE_SCENE: PackedScene = preload("res://scenes/tools/canvas_node/canvas_node.tscn")
@@ -35,10 +36,16 @@ func _create_test_scene() -> void:
 	click_handler.name = "ClickHandler"
 	main.add_child(click_handler)
 	click_handler.owner = main
+	
+	toolbar = auto_free(Toolbar.new())
+	toolbar.name = "Toolbar"
+	toolbar.unique_name_in_owner = true
+	canvas.add_child(toolbar)
+	toolbar.owner = main
 
-	arrow_manager = auto_free(ArrowManager.new())
-	main.add_child(arrow_manager)
-	arrow_manager.owner = main
+	arrow_layer = auto_free(ArrowLayer.new())
+	main.add_child(arrow_layer)
+	arrow_layer.owner = main
 
 	runner = scene_runner(main)
 
@@ -64,11 +71,11 @@ func test_arrow_label_shape_to_canvas_node() -> void:
 	var shape: LabelShape = _create_label_shape(Vector2(0, 0))
 	var node: CanvasNode = _create_canvas_node(Vector2(200, 0))
 
-	arrow_manager._create_arrow(shape, "right", node, "left")
+	arrow_layer._create_arrow(shape, "right", node, "left")
 
-	assert_int(arrow_manager._arrows.size()).is_equal(1)
+	assert_int(arrow_layer._arrows.size()).is_equal(1)
 
-	var arrow: Arrow = arrow_manager._arrows[0]
+	var arrow: Arrow = arrow_layer._arrows[0]
 	assert_error(func() -> void: arrow.rebuild_path()).is_success()
 
 	assert_str(arrow.start_anchor_label).is_equal("right")
@@ -82,11 +89,11 @@ func test_arrow_canvas_node_to_canvas_node() -> void:
 	triangle.position = Vector2(200, 0)
 	element_layer.add_child(triangle)
 
-	arrow_manager._create_arrow(circle, "right", triangle, "bottom_left")
+	arrow_layer._create_arrow(circle, "right", triangle, "bottom_left")
 
-	assert_int(arrow_manager._arrows.size()).is_equal(1)
+	assert_int(arrow_layer._arrows.size()).is_equal(1)
 
-	var arrow: Arrow = arrow_manager._arrows[0]
+	var arrow: Arrow = arrow_layer._arrows[0]
 	assert_error(func() -> void: arrow.rebuild_path()).is_success()
 	assert_str(arrow.get("start_anchor_label")).is_equal("right")
 	assert_str(arrow.get("end_anchor_label")).is_equal("bottom_left")
@@ -95,11 +102,11 @@ func test_arrow_label_shape_to_label_shape() -> void:
 	var shape_1: LabelShape = _create_label_shape(Vector2(0, 0))
 	var shape_2: LabelShape = _create_label_shape(Vector2(200, 0))
 
-	arrow_manager._create_arrow(shape_1, "right", shape_2, "left")
+	arrow_layer._create_arrow(shape_1, "right", shape_2, "left")
 
-	assert_int(arrow_manager._arrows.size()).is_equal(1)
+	assert_int(arrow_layer._arrows.size()).is_equal(1)
 
-	var arrow: Arrow = arrow_manager._arrows[0]
+	var arrow: Arrow = arrow_layer._arrows[0]
 	assert_error(func() -> void: arrow.rebuild_path()).is_success()
 
 	assert_str(arrow.start_anchor_label).is_equal("right")
@@ -110,30 +117,30 @@ func test_arrow_self_connection_node() -> void:
 	var node: CanvasNode = _create_canvas_node(Vector2(100, 100))
 	await get_tree().process_frame
 
-	var initial_count: int = arrow_manager._arrows.size()
+	var initial_count: int = arrow_layer._arrows.size()
 
 	# Simulate arrow drag from node's "top" released on same node's "bottom".
 	# ArrowManager's end_arrow_drag checks _drag_snapped_element != _drag_start_element,
 	# so setting both to the same node should prevent creation.
-	arrow_manager._drag_start_element = node
-	arrow_manager._drag_start_label = "top"
-	arrow_manager._drag_snapped_element = node
-	arrow_manager._drag_snapped_label = "bottom"
-	arrow_manager.end_arrow_drag()
+	arrow_layer._drag_start_element = node
+	arrow_layer._drag_start_label = "top"
+	arrow_layer._drag_snapped_element = node
+	arrow_layer._drag_snapped_label = "bottom"
+	arrow_layer.end_arrow_drag()
 
-	assert_int(arrow_manager._arrows.size()).is_equal(initial_count)
+	assert_int(arrow_layer._arrows.size()).is_equal(initial_count)
 
 
 func test_delete_node_removes_arrows() -> void:
 	var shape: LabelShape = _create_label_shape(Vector2(0, 0))
 	var node: CanvasNode = _create_canvas_node(Vector2(200, 0))
 
-	arrow_manager._create_arrow(shape, "right", node, "left")
-	assert_int(arrow_manager._arrows.size()).is_equal(1)
+	arrow_layer._create_arrow(shape, "right", node, "left")
+	assert_int(arrow_layer._arrows.size()).is_equal(1)
 
-	arrow_manager.delete_arrows_for_element(node)
+	arrow_layer.delete_arrows_for_element(node)
 
-	assert_int(arrow_manager._arrows.size()).is_equal(0)
+	assert_int(arrow_layer._arrows.size()).is_equal(0)
 
 
 func test_arrow_drag_from_node_shows_preview() -> void:
@@ -142,14 +149,14 @@ func test_arrow_drag_from_node_shows_preview() -> void:
 	var top_pos: Vector2 = node.get_anchor_position("top")
 
 	# Call handle_dot_mousedown at the top anchor position.
-	var result: bool = arrow_manager.handle_dot_mousedown(top_pos)
+	var result: bool = arrow_layer.handle_dot_mousedown(top_pos)
 
 	assert_bool(result).is_true()
-	assert_bool(arrow_manager._arrow_drag_active).is_true()
-	assert_object(arrow_manager._drag_start_element).is_same(node)
-	assert_str(arrow_manager._drag_start_label).is_equal("top")
+	assert_bool(arrow_layer._arrow_drag_active).is_true()
+	assert_object(arrow_layer._drag_start_element).is_same(node)
+	assert_str(arrow_layer._drag_start_label).is_equal("top")
 	# Preview line should exist.
-	assert_bool(arrow_manager._preview_line != null).is_true()
+	assert_bool(arrow_layer._preview_line != null).is_true()
 
 
 func test_arrow_drag_no_snap_discards() -> void:
@@ -158,17 +165,17 @@ func test_arrow_drag_no_snap_discards() -> void:
 	var top_pos: Vector2 = node.get_anchor_position("top")
 
 	# Begin drag.
-	arrow_manager.handle_dot_mousedown(top_pos)
-	assert_bool(arrow_manager._arrow_drag_active).is_true()
+	arrow_layer.handle_dot_mousedown(top_pos)
+	assert_bool(arrow_layer._arrow_drag_active).is_true()
 
 	# End drag without snapping (drag_snapped_element is null).
-	arrow_manager.end_arrow_drag()
+	arrow_layer.end_arrow_drag()
 
-	assert_bool(arrow_manager._arrow_drag_active).is_false()
-	assert_int(arrow_manager._arrows.size()).is_equal(0)
+	assert_bool(arrow_layer._arrow_drag_active).is_false()
+	assert_int(arrow_layer._arrows.size()).is_equal(0)
 	(
 		assert_bool(
-			arrow_manager._preview_line == null or not is_instance_valid(arrow_manager._preview_line)
+			arrow_layer._preview_line == null or not is_instance_valid(arrow_layer._preview_line)
 		)
 		.is_true()
 	)
@@ -178,8 +185,8 @@ func test_arrow_updates_on_node_move() -> void:
 	var shape: LabelShape = _create_label_shape(Vector2(0, 0))
 	var node: CanvasNode = _create_canvas_node(Vector2(200, 0))
 
-	arrow_manager._create_arrow(shape, "right", node, "left")
-	var arrow: Arrow = arrow_manager._arrows[0]
+	arrow_layer._create_arrow(shape, "right", node, "left")
+	var arrow: Arrow = arrow_layer._arrows[0]
 	arrow.rebuild_path()
 
 	# Cache original bezier points.
@@ -190,7 +197,7 @@ func test_arrow_updates_on_node_move() -> void:
 	await get_tree().process_frame
 
 	# Update arrows for the moved node (using new method name).
-	arrow_manager.update_arrows_for_element(node)
+	arrow_layer.update_arrows_for_element(node)
 
 	var updated_points: PackedVector2Array = arrow.get("_cached_bezier_points")
 	# Points should have changed.
