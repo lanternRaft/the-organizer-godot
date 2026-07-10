@@ -33,7 +33,8 @@ unique_name_in_owner = true
 [node name="AnchorLayer" type="Node2D" parent="Canvas" unique_id=684920315]
 unique_name_in_owner = true
 
-[node name="ArrayLayer" type="Node2D" parent="Canvas" unique_id=1858848265]
+[node name="ArrowLayer" type="Node2D" parent="Canvas" unique_id=1858848265]
+unique_name_in_owner = true
 script = ExtResource("3_blune")
 
 [node name="ClickHandler" type="Node" parent="." unique_id=1134584325]

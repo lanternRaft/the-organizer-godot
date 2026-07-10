@@ -48,7 +48,8 @@ var primary_selection: Node = null
 @onready var grid_background: ColorRect = %GridBackground
 @onready var camera_controller: Camera2D = %MainCamera
 @onready var zoom_controls: Control = $UI/ZoomControls
-@onready var arrow_layer: ArrowLayer = $ArrowManager
+@onready var arrow_layer: ArrowLayer = %ArrowLayer
+@onready var array_layer: ArrowLayer = %ArrayLayer
 @onready var save_load_manager: SaveLoadManager = %SaveLoadManager
 @onready var _viewport: Viewport = get_viewport()
 @onready var ui_layer: CanvasLayer = $UI
@@ -612,16 +613,15 @@ func _on_arrow_clicked_at(world_pos: Vector2) -> bool:
 func _on_anchor_dot_mousedown(world_pos: Vector2) -> bool:
 	if not GameState.toolbar.select_mode_active:
 		return false
-	if arrow_layer == null:
-		return false
-	return arrow_layer.call("handle_dot_mousedown", world_pos)
+
+	return arrow_layer.handle_dot_mousedown(world_pos)
 
 
 ## Called by ClickHandler's pointer_up signal to notify ArrowManager.
 func _on_pointer_up(_world_pos: Vector2) -> void:
 	if arrow_layer == null:
 		return
-	arrow_layer.call("handle_dot_mouseup")
+	arrow_layer.handle_dot_mouseup()
 
 
 ## Called by Main when any CanvasElement emits anchor_changed (resized or moved).
@@ -629,7 +629,7 @@ func _on_pointer_up(_world_pos: Vector2) -> void:
 func _on_element_anchor_changed(element: CanvasElement) -> void:
 	if arrow_layer == null:
 		return
-	arrow_layer.call("update_arrows_for_element", element)
+	arrow_layer.update_arrows_for_element(element)
 
 
 # ----- Selection Menu & Deletion ---------------------------------------------
