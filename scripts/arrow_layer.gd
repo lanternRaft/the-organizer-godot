@@ -42,7 +42,7 @@ var _drag_start_element: CanvasElement = null
 var _drag_start_anchor: LineAnchor
 var _drag_start_label: String = ""
 var _drag_start_pos: Vector2 = Vector2.ZERO  # edge position, world-space
-var _drag_snapped_element: CanvasElement = null
+var _drag_snapped_anchor: LineAnchor
 var _drag_snapped_label: String = ""
 var _drag_snapped_pos: Vector2 = Vector2.ZERO  # edge position, world-space
 
@@ -60,6 +60,7 @@ var _click_handler: Node = null
 func _ready() -> void:
 	EventBus.line_drag_start.connect(_line_drag_start)
 	EventBus.line_drag_stop.connect(_line_drag_stop)
+	EventBus.anchor_highlight.connect(_anchor_highlight)
 	_click_handler = get_parent().get_node("ClickHandler")
 
 	# Scan for existing elements.
@@ -68,6 +69,9 @@ func _ready() -> void:
 	# Listen for new elements being added.
 	element_layer.child_entered_tree.connect(_on_element_child_added)
 	element_layer.child_exiting_tree.connect(_on_element_child_removed)
+
+func _anchor_highlight(line_anchor: LineAnchor) -> void:
+	_drag_snapped_anchor = line_anchor
 
 ## Ends an arrow drag. Creates arrow if valid, otherwise discards.
 func _line_drag_stop(_line_anchor: LineAnchor) -> void:
@@ -80,14 +84,13 @@ func _line_drag_stop(_line_anchor: LineAnchor) -> void:
 	_preview_line = null
 
 	# If snapped to a valid different element, create arrow.
-	if _drag_snapped_element != null and _drag_snapped_element != _drag_start_element:
+	if _drag_snapped_anchor != null and _drag_snapped_anchor != _drag_start_anchor:
 		_create_arrow(
-			_drag_start_anchor, _drag_start_label, _drag_snapped_element, _drag_snapped_label
+			_drag_start_anchor, _drag_start_label, _drag_snapped_anchor, _drag_snapped_label
 		)
 
 	_drag_start_element = null
 	_drag_start_label = ""
-	_drag_snapped_element = null
 	_drag_snapped_label = ""
 	_drag_snapped_pos = Vector2.ZERO
 
@@ -98,7 +101,7 @@ func _line_drag_start(line_anchor: LineAnchor) -> void:
 	_drag_start_element = element
 	_drag_start_label = "top"
 	_drag_start_pos = line_anchor.global_position
-	_drag_snapped_element = null
+	_drag_snapped_anchor = null
 	_drag_snapped_label = ""
 
 	if _preview_line == null:
@@ -138,7 +141,7 @@ func begin_arrow_drag(element: CanvasElement, anchor_label: String) -> void:
 	_drag_start_element = element
 	_drag_start_label = anchor_label
 	_drag_start_pos = _get_anchor_edge_global_position(element, anchor_label)
-	_drag_snapped_element = null
+	_drag_snapped_anchor = null
 	_drag_snapped_label = ""
 
 	# Create preview line if needed.
@@ -167,15 +170,15 @@ func end_arrow_drag() -> void:
 	_preview_line = null
 
 	# If snapped to a valid different element, create arrow.
-	if _drag_snapped_element != null and _drag_snapped_element != _drag_start_element:
+	if _drag_snapped_anchor != null and _drag_snapped_anchor != _drag_start_element:
 		_create_arrow(
-			_drag_start_anchor, _drag_start_label, _drag_snapped_element, _drag_snapped_label
+			_drag_start_anchor, _drag_start_label, _drag_snapped_anchor, _drag_snapped_label
 		)
 
 	_drag_start_element = null
 	_drag_start_anchor = null
 	_drag_start_label = ""
-	_drag_snapped_element = null
+	_drag_snapped_anchor = null
 	_drag_snapped_label = ""
 	_drag_snapped_pos = Vector2.ZERO
 
@@ -343,38 +346,39 @@ func _on_element_tree_exiting(element: CanvasElement) -> void:
 # ----- Private helpers: anchor dots ------------------------------------------
 
 
-func _update_anchor_dots(mouse_pos: Vector2) -> void:
-	var nearest_dist: float = INF
-	var nearest_element: CanvasElement = null
-	var nearest_label: String = ""
-
-	for element: CanvasElement in _elements:
-		if not is_instance_valid(element):
-			continue
-
-		var labels: Array[String] = _get_anchor_labels_from_element(element)
-		var elem_shown: bool = false
-
-		for label: String in labels:
-			var dot_pos: Vector2 = _get_dot_position(element, label)
-			var dist: float = mouse_pos.distance_to(dot_pos)
-
-			if dist <= ANCHOR_HOVER_RADIUS:
-				elem_shown = true
-
-			if dist < nearest_dist:
-				nearest_dist = dist
-				nearest_element = element
-				nearest_label = label
-
-		# Show/hide dots for this element based on hover proximity.
-		if elem_shown or _arrow_drag_active:
-			_show_dots_for_element(element)
-		else:
-			_hide_dots_for_element(element)
-
-	# Highlight the nearest dot across all elements.
-	_highlight_dot(nearest_element, nearest_label, nearest_dist)
+func _update_anchor_dots(_mouse_pos: Vector2) -> void:
+	pass
+	#var nearest_dist: float = INF
+	#var nearest_element: CanvasElement = null
+	#var nearest_label: String = ""
+#
+	#for element: CanvasElement in _elements:
+		#if not is_instance_valid(element):
+			#continue
+#
+		#var labels: Array[String] = _get_anchor_labels_from_element(element)
+		#var elem_shown: bool = false
+#
+		#for label: String in labels:
+			#var dot_pos: Vector2 = _get_dot_position(element, label)
+			#var dist: float = mouse_pos.distance_to(dot_pos)
+#
+			#if dist <= ANCHOR_HOVER_RADIUS:
+				#elem_shown = true
+#
+			#if dist < nearest_dist:
+				#nearest_dist = dist
+				#nearest_element = element
+				#nearest_label = label
+#
+		## Show/hide dots for this element based on hover proximity.
+		#if elem_shown or _arrow_drag_active:
+			#_show_dots_for_element(element)
+		#else:
+			#_hide_dots_for_element(element)
+#
+	## Highlight the nearest dot across all elements.
+	#_highlight_dot(nearest_element, nearest_label, nearest_dist)
 
 
 func _show_dots_for_element(element: CanvasElement) -> void:
@@ -416,9 +420,10 @@ func _hide_dots_for_element(element: CanvasElement) -> void:
 
 
 func _show_all_anchors() -> void:
-	for element: CanvasElement in _elements:
-		if is_instance_valid(element):
-			_show_dots_for_element(element)
+	pass
+	#for element: CanvasElement in _elements:
+		#if is_instance_valid(element):
+			#_show_dots_for_element(element)
 
 
 func _hide_all_dots() -> void:
@@ -493,11 +498,11 @@ func _highlight_dot(element: CanvasElement, label: String, dist: float) -> void:
 	# If drag is active, update snap preview to this dot (or clear if not snapping).
 	if _arrow_drag_active:
 		if should_snap and element != null:
-			_drag_snapped_element = element
+			#_drag_snapped_anchor = element
 			_drag_snapped_label = label
 			_drag_snapped_pos = _get_anchor_edge_global_position(element, label)
 		else:
-			_drag_snapped_element = null
+			_drag_snapped_anchor = null
 			_drag_snapped_label = ""
 			_drag_snapped_pos = Vector2.ZERO
 
@@ -521,9 +526,9 @@ func _update_drag_preview(mouse_pos: Vector2) -> void:
 	var outward_end: Vector2
 	var drag_snapped: bool = false
 
-	if _drag_snapped_element != null and _drag_snapped_element != _drag_start_element:
-		p3 = _drag_snapped_pos
-		outward_end = _get_anchor_outward_normal(_drag_snapped_element, _drag_snapped_label)
+	if _drag_snapped_anchor != null and _drag_snapped_anchor != _drag_start_anchor:
+		p3 = _drag_snapped_anchor.get_line_global_position()
+		outward_end = _drag_snapped_anchor.get_normal() #_get_anchor_outward_normal(_drag_snapped_element, _drag_snapped_label)
 		drag_snapped = true
 	else:
 		p3 = mouse_pos
@@ -553,7 +558,7 @@ func _update_drag_preview(mouse_pos: Vector2) -> void:
 
 
 func _create_arrow(
-	start_anchor: LineAnchor, start_label: String, end_element: CanvasElement, end_label: String
+	start_anchor: LineAnchor, _start_label: String, end_anchor: LineAnchor, _end_label: String
 ) -> void:
 	var arrow: Arrow = ARROW_SCENE.instantiate()
 
@@ -561,10 +566,11 @@ func _create_arrow(
 
 	# Set paths relative to the arrow itself so it can resolve them later.
 	arrow.start_anchor = start_anchor
+	arrow.end_anchor = end_anchor
 	#arrow.start_shape_path = arrow.get_path_to(start_element)
-	arrow.end_shape_path = arrow.get_path_to(end_element)
-	arrow.start_anchor_label = start_label
-	arrow.end_anchor_label = end_label
+	#arrow.end_shape_path = arrow.get_path_to(end_element)
+	#arrow.start_anchor_label = start_label
+	#arrow.end_anchor_label = end_label
 
 	arrow.rebuild_path()
 

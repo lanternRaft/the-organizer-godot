@@ -16,6 +16,7 @@ func _ready() -> void:
 
 
 func show_highlight() -> void:
+	EventBus.anchor_highlight.emit(self)
 	anchor_highlight_dot.show()
 
 

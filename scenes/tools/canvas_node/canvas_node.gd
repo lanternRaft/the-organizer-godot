@@ -57,7 +57,7 @@ const ANCHOR_POSITIONS: Dictionary = {
 	"bottom_right": Vector2(7.0, 4.0),
 }
 
-@onready var _collision_shape: CollisionShape2D = $Area2D/CollisionShape2D
+@onready var _collision_shape: CollisionShape2D = $SelectArea2D/CollisionShape2D
 @onready var anchors: Node2D = $Anchors
 
 
