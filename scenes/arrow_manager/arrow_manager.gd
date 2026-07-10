@@ -170,17 +170,17 @@ func delete_arrow(arrow: Node) -> void:
 
 ## Called by Main when an element is being deleted; removes connected arrows first.
 func delete_arrows_for_element(element: CanvasElement) -> void:
-	var to_remove: Array[Node] = []
+	var to_remove: Array[Arrow] = []
 	for arrow_node: Arrow in _arrows:
 		if not is_instance_valid(arrow_node):
 			to_remove.append(arrow_node)
 			continue
-		var start_shape: Variant = arrow_node._resolve_shape(arrow_node.start_shape_path)
-		var end_shape: Variant = arrow_node.call("_resolve_shape", arrow_node.get("end_shape_path"))
+		var start_shape: CanvasElement = arrow_node.get_start_shape()
+		var end_shape: CanvasElement = arrow_node.get_end_shape()
 		if start_shape == element or end_shape == element:
 			to_remove.append(arrow_node)
 
-	for a: Node in to_remove:
+	for a: Arrow in to_remove:
 		delete_arrow(a)
 
 
@@ -198,12 +198,8 @@ func update_arrows_for_element(element: CanvasElement) -> void:
 	for arrow_node: Arrow in _arrows:
 		if not is_instance_valid(arrow_node):
 			continue
-		var start_shape: Variant = arrow_node.call(
-			"_resolve_shape", arrow_node.get("start_shape_path")
-		)
-		var end_shape: Variant = arrow_node.call("_resolve_shape", arrow_node.get("end_shape_path"))
-		if start_shape == element or end_shape == element:
-			arrow_node.call("rebuild_path")
+		
+		arrow_node.rebuild_if_connected(element)
 
 
 # ----- Anchor Position Helpers (uses CanvasElement interface) ----------------

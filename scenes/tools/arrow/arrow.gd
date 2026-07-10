@@ -302,10 +302,17 @@ func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float)
 	return u * u * u * p0 + 3.0 * u * ut * p1 + 3.0 * t * ut * p2 + t * t * t * p3
 
 
-func _resolve_shape(path: NodePath) -> Node:
+func _resolve_shape(path: NodePath) -> CanvasElement:
 	if path.is_empty():
 		return null
-	var shape: Node = get_node_or_null(path)
+	var shape: CanvasElement = get_node_or_null(path)
 	if not is_instance_valid(shape):
 		return null
 	return shape
+
+
+func rebuild_if_connected(element: CanvasElement) -> void:
+	var start_shape: CanvasElement = get_start_shape()
+	var end_shape: CanvasElement = get_end_shape()
+	if start_shape == element or end_shape == element:
+		rebuild_path()

@@ -600,7 +600,7 @@ func _on_arrow_clicked_at(world_pos: Vector2) -> bool:
 	var arrow: Arrow = arrow_manager.get_arrow_near(world_pos)
 	if arrow != null:
 		@warning_ignore("unsafe_cast")
-		var arrow_node: Node = arrow as Node
+		var arrow_node: Arrow = arrow as Node
 		if arrow_node != null:
 			_handle_element_clicked(arrow_node)
 		return true
