@@ -1,5 +1,5 @@
-class_name ArrowManager
-extends Node
+class_name ArrowLayer
+extends Node2D
 
 ## Manages anchor dots, arrow drag, creation, and deletion.
 ## Child of Main; populates AnchorLayer with visual dot nodes and owns the
@@ -56,6 +56,7 @@ var _click_handler: Node = null
 
 @onready var element_layer: Node2D = %ElementLayer
 @onready var anchor_layer: Node2D = %AnchorLayer
+@onready var toolbar: Toolbar = %Toolbar
 
 
 func _ready() -> void:
@@ -70,7 +71,7 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	if not GameState.toolbar.select_mode_active:
+	if not toolbar.select_mode_active:
 		_hide_all_dots()
 		return
 
@@ -198,7 +199,7 @@ func update_arrows_for_element(element: CanvasElement) -> void:
 	for arrow_node: Arrow in _arrows:
 		if not is_instance_valid(arrow_node):
 			continue
-		
+
 		arrow_node.rebuild_if_connected(element)
 
 
@@ -470,12 +471,12 @@ func _update_drag_preview(mouse_pos: Vector2) -> void:
 	# Determine end position: snapped or free.
 	var p3: Vector2
 	var outward_end: Vector2
-	var _snapped: bool = false
+	var drag_snapped: bool = false
 
 	if _drag_snapped_element != null and _drag_snapped_element != _drag_start_element:
 		p3 = _drag_snapped_pos
 		outward_end = _get_anchor_outward_normal(_drag_snapped_element, _drag_snapped_label)
-		_snapped = true
+		drag_snapped = true
 	else:
 		p3 = mouse_pos
 		outward_end = Vector2.ZERO
@@ -497,7 +498,7 @@ func _update_drag_preview(mouse_pos: Vector2) -> void:
 		points[i] = _cubic_bezier(p0, p1, p2, p3, t)
 
 	_preview_line.points = points
-	_preview_line.default_color = Color(0.6, 0.8, 1.0, 0.8 if not _snapped else 1.0)
+	_preview_line.default_color = Color(0.6, 0.8, 1.0, 0.8 if not drag_snapped else 1.0)
 
 
 # ----- Private helpers: arrow creation ---------------------------------------
@@ -508,8 +509,7 @@ func _create_arrow(
 ) -> void:
 	var arrow: Arrow = ARROW_SCENE.instantiate()
 
-	element_layer.add_child(arrow)
-	element_layer.move_child(arrow, 0)  # Keep arrows at bottom of element layer
+	add_child(arrow)
 
 	# Set paths relative to the arrow itself so it can resolve them later.
 	arrow.start_shape_path = arrow.get_path_to(start_element)
@@ -556,7 +556,7 @@ static func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t:
 
 ## Handles mousedown on the anchor dot layer. Returns true if consumed.
 func handle_dot_mousedown(mouse_pos: Vector2) -> bool:
-	if not GameState.toolbar.select_mode_active:
+	if not toolbar.select_mode_active:
 		return false
 
 	# Check if mouse is over any highlighted anchor dot.
