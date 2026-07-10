@@ -16,7 +16,6 @@ signal multi_drag_moved(delta: Vector2)
 ## shape deletion doesn't leave dangling pointers.
 var start_shape_path: NodePath
 var end_shape_path: NodePath
-var end_anchor_label: String
 var start_anchor: LineAnchor
 var end_anchor: LineAnchor
 
@@ -213,7 +212,7 @@ func handle_drag_end(_event: Dictionary) -> void:
 	position = position.snapped(Vector2(20.0, 20.0))
 
 
-func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float) -> Vector2:
+static func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float) -> Vector2:
 	var u: float = 1.0 - t
 	var ut: float = u * t
 	return u * u * u * p0 + 3.0 * u * ut * p1 + 3.0 * t * ut * p2 + t * t * t * p3

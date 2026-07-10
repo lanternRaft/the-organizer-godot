@@ -41,3 +41,6 @@ func get_normal() -> Vector2:
 func get_line_global_position() -> Vector2:
 	return connection_marker_2d.global_position
 	
+
+func get_element() -> CanvasElement:
+	return get_parent().get_parent()

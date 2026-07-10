@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://b4hn1afvgxgsd" path="res://scenes/canvas_elements/line_anchor.tscn" id="2_p2sbl"]
 [ext_resource type="Script" uid="uid://vdyib6u72p3w" path="res://scripts/canvas_element_anchors.gd" id="2_xeyld"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_p2sbl"]
+[sub_resource type="CircleShape2D" id="CircleShape2D_xeyld"]
 radius = 8.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_ty0p8"]
@@ -16,7 +16,7 @@ script = ExtResource("1_7c70g")
 [node name="SelectArea2D" type="Area2D" parent="." unique_id=1873259314]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="SelectArea2D" unique_id=1845053713]
-shape = SubResource("CircleShape2D_p2sbl")
+shape = SubResource("CircleShape2D_xeyld")
 
 [node name="Anchors" type="Node2D" parent="." unique_id=820419590]
 script = ExtResource("2_xeyld")

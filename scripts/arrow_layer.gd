@@ -12,39 +12,18 @@ extends Node2D
 
 const ARROW_SCENE: PackedScene = preload("res://scenes/tools/arrow/arrow.tscn")
 
-## Hover radius around an anchor dot position for triggering visibility (world-space).
-const ANCHOR_HOVER_RADIUS: float = 20.0
-
-## Snap radius for arrow endpoint attachment (world-space).
-const SNAP_RADIUS: float = 15.0
-
 ## Distance threshold for clicking an arrow path (world-space).
 const ARROW_CLICK_DISTANCE: float = 7.0
-
-## Dot visual constants.
-const DOT_RADIUS_NORMAL: float = 4.0
-const DOT_RADIUS_HOVER: float = 7.0
-const DOT_COLOR_FILL: Color = Color(1, 1, 1)
-const DOT_COLOR_STROKE: Color = Color(0.23, 0.51, 0.965)  # #3b82f6
-const DOT_COLOR_HOVER_FILL: Color = Color(0.23, 0.51, 0.965)  # #3b82f6
 
 ## ----- State ---------------------------------------------------------------
 
 ## List of all CanvasElement instances currently in ElementLayer.
 var _elements: Array[CanvasElement] = []
 
-## Anchor dot nodes currently visible in AnchorLayer.
-var _dot_nodes: Dictionary = {}  # element_instance_id -> {label: Node2D}
-
 ## Arrow drag state.
 var _arrow_drag_active: bool = false
-var _drag_start_element: CanvasElement = null
 var _drag_start_anchor: LineAnchor
-var _drag_start_label: String = ""
-var _drag_start_pos: Vector2 = Vector2.ZERO  # edge position, world-space
 var _drag_snapped_anchor: LineAnchor
-var _drag_snapped_label: String = ""
-var _drag_snapped_pos: Vector2 = Vector2.ZERO  # edge position, world-space
 
 ## Preview line shown during drag.
 var _preview_line: Line2D = null
@@ -84,25 +63,13 @@ func _line_drag_stop(_line_anchor: LineAnchor) -> void:
 	_preview_line = null
 
 	# If snapped to a valid different element, create arrow.
-	if _drag_snapped_anchor != null and _drag_snapped_anchor != _drag_start_anchor:
-		_create_arrow(
-			_drag_start_anchor, _drag_start_label, _drag_snapped_anchor, _drag_snapped_label
-		)
-
-	_drag_start_element = null
-	_drag_start_label = ""
-	_drag_snapped_label = ""
-	_drag_snapped_pos = Vector2.ZERO
+	if _drag_snapped_anchor != null and _drag_snapped_anchor.get_element() != _drag_start_anchor.get_element():
+		_create_arrow(_drag_start_anchor, _drag_snapped_anchor)
 
 func _line_drag_start(line_anchor: LineAnchor) -> void:
 	_arrow_drag_active = true
-	var element: CanvasElement = line_anchor.get_parent().get_parent()
 	_drag_start_anchor = line_anchor
-	_drag_start_element = element
-	_drag_start_label = "top"
-	_drag_start_pos = line_anchor.global_position
 	_drag_snapped_anchor = null
-	_drag_snapped_label = ""
 
 	if _preview_line == null:
 		_preview_line = Line2D.new()
@@ -115,12 +82,12 @@ func _line_drag_start(line_anchor: LineAnchor) -> void:
 	element_layer.add_child(_preview_line)
 
 func _process(_delta: float) -> void:
-	if not toolbar.select_mode_active:
-		_hide_all_dots()
-		return
+	#if not toolbar.select_mode_active:
+		##_hide_all_dots()
+		#return
 
 	var mouse_pos: Vector2 = element_layer.get_global_mouse_position()
-	_update_anchor_dots(mouse_pos)
+	#_update_anchor_dots(mouse_pos)
 
 	if _arrow_drag_active:
 		_update_drag_preview(mouse_pos)
@@ -134,53 +101,6 @@ func get_arrows() -> Array[Arrow]:
 	var _arrows: Array[Arrow] = get_children() as Array[Arrow]
 	return _arrows
 
-
-## Begins an arrow drag from the given element's anchor.
-func begin_arrow_drag(element: CanvasElement, anchor_label: String) -> void:
-	_arrow_drag_active = true
-	_drag_start_element = element
-	_drag_start_label = anchor_label
-	_drag_start_pos = _get_anchor_edge_global_position(element, anchor_label)
-	_drag_snapped_anchor = null
-	_drag_snapped_label = ""
-
-	# Create preview line if needed.
-	if _preview_line == null:
-		_preview_line = Line2D.new()
-		_preview_line.width = 2.0
-		_preview_line.default_color = Color(0.6, 0.8, 1.0)
-		_preview_line.antialiased = true
-		_preview_line.begin_cap_mode = Line2D.LINE_CAP_ROUND
-		_preview_line.end_cap_mode = Line2D.LINE_CAP_ROUND
-		_preview_line.show()
-	element_layer.add_child(_preview_line)
-
-	# Show all elements' anchors during drag.
-	_show_all_anchors()
-
-
-## Ends an arrow drag. Creates arrow if valid, otherwise discards.
-func end_arrow_drag() -> void:
-	_arrow_drag_active = false
-
-	# Remove preview line.
-	if _preview_line != null and _preview_line.get_parent() != null:
-		_preview_line.get_parent().remove_child(_preview_line)
-		_preview_line.queue_free()
-	_preview_line = null
-
-	# If snapped to a valid different element, create arrow.
-	if _drag_snapped_anchor != null and _drag_snapped_anchor != _drag_start_element:
-		_create_arrow(
-			_drag_start_anchor, _drag_start_label, _drag_snapped_anchor, _drag_snapped_label
-		)
-
-	_drag_start_element = null
-	_drag_start_anchor = null
-	_drag_start_label = ""
-	_drag_snapped_anchor = null
-	_drag_snapped_label = ""
-	_drag_snapped_pos = Vector2.ZERO
 
 
 ## Returns the nearest arrow hit within the given world-space distance, or null.
@@ -331,7 +251,7 @@ func _on_element_child_added(child: Node) -> void:
 func _on_element_child_removed(child: Node) -> void:
 	_elements.erase(child)
 	# Remove dot nodes for this element.
-	_remove_dot_nodes_for_element(child as CanvasElement)
+	#_remove_dot_nodes_for_element(child as CanvasElement)
 	# Remove connected arrows.
 	var canvas_elem: CanvasElement = child as CanvasElement
 	if canvas_elem != null:
@@ -340,171 +260,7 @@ func _on_element_child_removed(child: Node) -> void:
 
 func _on_element_tree_exiting(element: CanvasElement) -> void:
 	_elements.erase(element)
-	_remove_dot_nodes_for_element(element)
-
-
-# ----- Private helpers: anchor dots ------------------------------------------
-
-
-func _update_anchor_dots(_mouse_pos: Vector2) -> void:
-	pass
-	#var nearest_dist: float = INF
-	#var nearest_element: CanvasElement = null
-	#var nearest_label: String = ""
-#
-	#for element: CanvasElement in _elements:
-		#if not is_instance_valid(element):
-			#continue
-#
-		#var labels: Array[String] = _get_anchor_labels_from_element(element)
-		#var elem_shown: bool = false
-#
-		#for label: String in labels:
-			#var dot_pos: Vector2 = _get_dot_position(element, label)
-			#var dist: float = mouse_pos.distance_to(dot_pos)
-#
-			#if dist <= ANCHOR_HOVER_RADIUS:
-				#elem_shown = true
-#
-			#if dist < nearest_dist:
-				#nearest_dist = dist
-				#nearest_element = element
-				#nearest_label = label
-#
-		## Show/hide dots for this element based on hover proximity.
-		#if elem_shown or _arrow_drag_active:
-			#_show_dots_for_element(element)
-		#else:
-			#_hide_dots_for_element(element)
-#
-	## Highlight the nearest dot across all elements.
-	#_highlight_dot(nearest_element, nearest_label, nearest_dist)
-
-
-func _show_dots_for_element(element: CanvasElement) -> void:
-	if element is CanvasNode:
-		var canvas_node: CanvasNode = element
-		canvas_node.show_anchors()
-		return
-	var eid: int = element.get_instance_id()
-	if not _dot_nodes.has(eid):
-		_dot_nodes[eid] = {}
-
-	var labels: Array[String] = _get_anchor_labels_from_element(element)
-	for label: String in labels:
-		if not label in _dot_nodes[eid]:
-			var dot: Node2D = _create_dot(element, label)
-			anchor_layer.add_child(dot)
-			_dot_nodes[eid][label] = dot
-		else:
-			var dot: Variant = _dot_nodes[eid][label]
-			@warning_ignore("unsafe_cast")
-			var dot_n: Node2D = dot as Node2D
-			if dot_n != null:
-				dot_n.visible = true
-				dot_n.position = _get_dot_position(element, label)
-
-
-func _hide_dots_for_element(element: CanvasElement) -> void:
-	if element is CanvasNode:
-		var canvas_node: CanvasNode = element
-		canvas_node.hide_anchors()
-		return
-	var eid: int = element.get_instance_id()
-	if not _dot_nodes.has(eid):
-		return
-	for label: String in _dot_nodes[eid]:
-		var dot: Node2D = _dot_nodes[eid][label]
-		if is_instance_valid(dot):
-			dot.visible = false
-
-
-func _show_all_anchors() -> void:
-	pass
-	#for element: CanvasElement in _elements:
-		#if is_instance_valid(element):
-			#_show_dots_for_element(element)
-
-
-func _hide_all_dots() -> void:
-	for eid: Variant in _dot_nodes:
-		for label: String in _dot_nodes[eid]:
-			var dot: Node2D = _dot_nodes[eid][label]
-			if is_instance_valid(dot):
-				dot.visible = false
-
-
-func _remove_dot_nodes_for_element(element: CanvasElement) -> void:
-	if not is_instance_valid(element):
-		return
-	var eid: int = element.get_instance_id()
-	if not _dot_nodes.has(eid):
-		return
-	for label: String in _dot_nodes[eid]:
-		var dot: Node2D = _dot_nodes[eid][label]
-		if is_instance_valid(dot):
-			dot.queue_free()
-	_dot_nodes.erase(eid)
-
-
-func _create_dot(element: CanvasElement, label: String) -> Node2D:
-	var dot: Node2D = Node2D.new()
-	dot.set_script(preload("res://scripts/anchor_dot.gd"))
-	dot.position = _get_dot_position(element, label)
-	dot.set_meta("parent_element", element)
-	dot.set_meta("anchor_label", label)
-	dot.set_meta("dot_radius", DOT_RADIUS_NORMAL)
-	dot.set_meta("dot_fill", DOT_COLOR_FILL)
-	dot.set_meta("dot_stroke", DOT_COLOR_STROKE)
-	dot.set_meta("is_highlighted", false)
-	dot.queue_redraw()
-	return dot
-
-
-func _highlight_dot(element: CanvasElement, label: String, dist: float) -> void:
-	var should_snap: bool = false
-	if element != null and label != "" and dist <= DOT_RADIUS_HOVER:
-		should_snap = true
-
-	# Update all dots to ensure only the nearest (if within hover radius) is highlighted.
-	for eid: Variant in _dot_nodes:
-		for lbl: String in _dot_nodes[eid]:
-			var dot: Variant = _dot_nodes[eid][lbl]
-			@warning_ignore("unsafe_cast")
-			var dot_n: Node2D = dot as Node2D
-			if dot_n == null:
-				continue
-
-			var is_highlighted: bool = false
-			if (
-				should_snap
-				and element != null
-				and eid == element.get_instance_id()
-				and lbl == label
-			):
-				is_highlighted = true
-
-			var prev: Variant = dot_n.get_meta("is_highlighted", false)
-			if is_highlighted != prev:
-				if is_highlighted:
-					dot_n.set_meta("dot_radius", DOT_RADIUS_HOVER)
-					dot_n.set_meta("dot_fill", DOT_COLOR_HOVER_FILL)
-				else:
-					dot_n.set_meta("dot_radius", DOT_RADIUS_NORMAL)
-					dot_n.set_meta("dot_fill", DOT_COLOR_FILL)
-				dot_n.set_meta("is_highlighted", is_highlighted)
-				dot_n.queue_redraw()
-
-	# If drag is active, update snap preview to this dot (or clear if not snapping).
-	if _arrow_drag_active:
-		if should_snap and element != null:
-			#_drag_snapped_anchor = element
-			_drag_snapped_label = label
-			_drag_snapped_pos = _get_anchor_edge_global_position(element, label)
-		else:
-			_drag_snapped_anchor = null
-			_drag_snapped_label = ""
-			_drag_snapped_pos = Vector2.ZERO
+	#_remove_dot_nodes_for_element(element)
 
 
 func _get_dot_position(element: CanvasElement, label: String) -> Vector2:
@@ -519,7 +275,7 @@ func _update_drag_preview(mouse_pos: Vector2) -> void:
 		return
 
 	var p0: Vector2 = _drag_start_anchor.global_position
-	var outward_start: Vector2 = _drag_start_anchor.get_normal()# _get_anchor_outward_normal(_drag_start_element, _drag_start_label)
+	var outward_start: Vector2 = _drag_start_anchor.get_normal()
 
 	# Determine end position: snapped or free.
 	var p3: Vector2
@@ -527,8 +283,8 @@ func _update_drag_preview(mouse_pos: Vector2) -> void:
 	var drag_snapped: bool = false
 
 	if _drag_snapped_anchor != null and _drag_snapped_anchor != _drag_start_anchor:
-		p3 = _drag_snapped_anchor.get_line_global_position()
-		outward_end = _drag_snapped_anchor.get_normal() #_get_anchor_outward_normal(_drag_snapped_element, _drag_snapped_label)
+		p3 = _drag_snapped_anchor.global_position
+		outward_end = _drag_snapped_anchor.get_normal()
 		drag_snapped = true
 	else:
 		p3 = mouse_pos
@@ -548,7 +304,7 @@ func _update_drag_preview(mouse_pos: Vector2) -> void:
 	points.resize(samples)
 	for i: int in samples:
 		var t: float = float(i) / (samples - 1)
-		points[i] = _cubic_bezier(p0, p1, p2, p3, t)
+		points[i] = Arrow._cubic_bezier(p0, p1, p2, p3, t)
 
 	_preview_line.points = points
 	_preview_line.default_color = Color(0.6, 0.8, 1.0, 0.8 if not drag_snapped else 1.0)
@@ -557,21 +313,13 @@ func _update_drag_preview(mouse_pos: Vector2) -> void:
 # ----- Private helpers: arrow creation ---------------------------------------
 
 
-func _create_arrow(
-	start_anchor: LineAnchor, _start_label: String, end_anchor: LineAnchor, _end_label: String
-) -> void:
+func _create_arrow(start_anchor: LineAnchor, end_anchor: LineAnchor) -> void:
 	var arrow: Arrow = ARROW_SCENE.instantiate()
 
 	add_child(arrow)
 
-	# Set paths relative to the arrow itself so it can resolve them later.
 	arrow.start_anchor = start_anchor
 	arrow.end_anchor = end_anchor
-	#arrow.start_shape_path = arrow.get_path_to(start_element)
-	#arrow.end_shape_path = arrow.get_path_to(end_element)
-	#arrow.start_anchor_label = start_label
-	#arrow.end_anchor_label = end_label
-
 	arrow.rebuild_path()
 
 
@@ -596,37 +344,3 @@ static func _closest_point_on_segment(p: Vector2, a: Vector2, b: Vector2) -> Vec
 		return a
 	var t: float = clampf((p - a).dot(ab) / len_sq, 0.0, 1.0)
 	return a + ab * t
-
-
-static func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float) -> Vector2:
-	var u: float = 1.0 - t
-	var ut: float = u * t
-	return u * u * u * p0 + 3.0 * u * ut * p1 + 3.0 * t * ut * p2 + t * t * t * p3
-
-
-# ----- Called by Main when clicking empty canvas ----------------------------
-
-
-## Handles mousedown on the anchor dot layer. Returns true if consumed.
-func handle_dot_mousedown(mouse_pos: Vector2) -> bool:
-	if not toolbar.select_mode_active:
-		return false
-
-	# Check if mouse is over any highlighted anchor dot.
-	for element: CanvasElement in _elements:
-		if not is_instance_valid(element):
-			continue
-		var labels: Array[String] = _get_anchor_labels_from_element(element)
-		for label: String in labels:
-			var dot_pos: Vector2 = _get_dot_position(element, label)
-			if mouse_pos.distance_to(dot_pos) <= DOT_RADIUS_HOVER:
-				begin_arrow_drag(element, label)
-				return true
-
-	return false
-
-
-## Handles mouseup on canvas during arrow drag.
-func handle_dot_mouseup() -> void:
-	if _arrow_drag_active:
-		end_arrow_drag()

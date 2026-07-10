@@ -63,7 +63,7 @@ func _ready() -> void:
 	## Connect ClickHandler's empty-canvas signal for mode-specific actions.
 	click_handler.connect("empty_canvas_clicked", _on_empty_canvas_clicked)
 	## Connect ClickHandler's pointer-up signal (used by ArrowManager to end arrow drags).
-	click_handler.connect("pointer_up", _on_pointer_up)
+	#click_handler.connect("pointer_up", _on_pointer_up)
 	## Start in Select mode by default.
 	activate_select_mode()
 
@@ -617,18 +617,18 @@ func _on_arrow_clicked_at(world_pos: Vector2) -> bool:
 
 ## Called by ClickHandler as a secondary path after arrow check fails.
 ## Checks whether the click is on an anchor dot (to begin arrow drag).
-func _on_anchor_dot_mousedown(world_pos: Vector2) -> bool:
-	if not GameState.toolbar.select_mode_active:
-		return false
-
-	return arrow_layer.handle_dot_mousedown(world_pos)
+#func _on_anchor_dot_mousedown(world_pos: Vector2) -> bool:
+	#if not GameState.toolbar.select_mode_active:
+		#return false
+#
+	#return arrow_layer.handle_dot_mousedown(world_pos)
 
 
 ## Called by ClickHandler's pointer_up signal to notify ArrowManager.
-func _on_pointer_up(_world_pos: Vector2) -> void:
-	if arrow_layer == null:
-		return
-	arrow_layer.handle_dot_mouseup()
+#func _on_pointer_up(_world_pos: Vector2) -> void:
+	#if arrow_layer == null:
+		#return
+	#arrow_layer.handle_dot_mouseup()
 
 
 ## Called by Main when any CanvasElement emits anchor_changed (resized or moved).
