@@ -1,3 +1,4 @@
+class_name LineAnchor
 extends Node2D
 
 @onready var anchor_highlight_dot: Node2D = $AnchorHighlightDot

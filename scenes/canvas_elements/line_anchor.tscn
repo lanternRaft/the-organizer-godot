@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://biqd5n1u2hdch" path="res://scripts/line_anchor.gd" id="1_0m76a"]
 [ext_resource type="Script" uid="uid://csvwgguogpngx" path="res://scripts/anchor_dot.gd" id="1_yxetp"]
+[ext_resource type="Script" uid="uid://bpjsqp46qctwq" path="res://scripts/line_anchor_area_2d.gd" id="3_h71q5"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_0m76a"]
 radius = 6.0
@@ -23,6 +24,7 @@ fill = Color(0.23137255, 0.50980395, 0.9647059, 1)
 position = Vector2(0, 7)
 
 [node name="Area2D" type="Area2D" parent="." unique_id=2145851457]
+script = ExtResource("3_h71q5")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=1979194347]
 shape = SubResource("CircleShape2D_0m76a")

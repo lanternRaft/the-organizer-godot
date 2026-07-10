@@ -48,9 +48,6 @@ var _drag_snapped_pos: Vector2 = Vector2.ZERO  # edge position, world-space
 ## Preview line shown during drag.
 var _preview_line: Line2D = null
 
-## All active arrows (children of ElementLayer).
-var _arrows: Array[Arrow] = []
-
 ## Signals from ClickHandler (connected in _ready).
 var _click_handler: Node = null
 
@@ -60,6 +57,8 @@ var _click_handler: Node = null
 
 
 func _ready() -> void:
+	EventBus.line_drag_start.connect(_line_drag_start)
+	EventBus.line_drag_stop.connect(_line_drag_stop)
 	_click_handler = get_parent().get_node("ClickHandler")
 
 	# Scan for existing elements.
@@ -69,6 +68,46 @@ func _ready() -> void:
 	element_layer.child_entered_tree.connect(_on_element_child_added)
 	element_layer.child_exiting_tree.connect(_on_element_child_removed)
 
+## Ends an arrow drag. Creates arrow if valid, otherwise discards.
+func _line_drag_stop(_line_anchor: LineAnchor) -> void:
+	_arrow_drag_active = false
+
+	# Remove preview line.
+	if _preview_line != null and _preview_line.get_parent() != null:
+		_preview_line.get_parent().remove_child(_preview_line)
+		_preview_line.queue_free()
+	_preview_line = null
+
+	# If snapped to a valid different element, create arrow.
+	if _drag_snapped_element != null and _drag_snapped_element != _drag_start_element:
+		_create_arrow(
+			_drag_start_element, _drag_start_label, _drag_snapped_element, _drag_snapped_label
+		)
+
+	_drag_start_element = null
+	_drag_start_label = ""
+	_drag_snapped_element = null
+	_drag_snapped_label = ""
+	_drag_snapped_pos = Vector2.ZERO
+
+func _line_drag_start(line_anchor: LineAnchor) -> void:
+	_arrow_drag_active = true
+	var element: CanvasElement = line_anchor.get_parent().get_parent()
+	_drag_start_element = element
+	_drag_start_label = "top"
+	_drag_start_pos = line_anchor.global_position
+	_drag_snapped_element = null
+	_drag_snapped_label = ""
+
+	if _preview_line == null:
+		_preview_line = Line2D.new()
+		_preview_line.width = 2.0
+		_preview_line.default_color = Color(0.6, 0.8, 1.0)
+		_preview_line.antialiased = true
+		_preview_line.begin_cap_mode = Line2D.LINE_CAP_ROUND
+		_preview_line.end_cap_mode = Line2D.LINE_CAP_ROUND
+		_preview_line.show()
+	element_layer.add_child(_preview_line)
 
 func _process(_delta: float) -> void:
 	if not toolbar.select_mode_active:
@@ -87,6 +126,7 @@ func _process(_delta: float) -> void:
 
 ## Returns a list of all active arrows.
 func get_arrows() -> Array[Arrow]:
+	var _arrows: Array[Arrow] = get_children() as Array[Arrow]
 	return _arrows
 
 
@@ -140,10 +180,11 @@ func end_arrow_drag() -> void:
 ## Returns the nearest arrow hit within the given world-space distance, or null.
 func get_arrow_near(pos: Vector2, radius: float = ARROW_CLICK_DISTANCE) -> Arrow:
 	# Iterate in reverse (topmost first) for proper z-ordering.
-	for i: int in range(_arrows.size() - 1, -1, -1):
-		var arrow_node: Arrow = _arrows[i]
+	var arrows: Array[Arrow] = get_arrows()
+	for i: int in range(arrows.size() - 1, -1, -1):
+		var arrow_node: Arrow = arrows[i]
 		if not is_instance_valid(arrow_node):
-			_arrows.remove_at(i)
+			arrows.remove_at(i)
 			continue
 		var arrow: Arrow = arrow_node
 		if arrow == null:
@@ -163,7 +204,6 @@ func get_arrow_near(pos: Vector2, radius: float = ARROW_CLICK_DISTANCE) -> Arrow
 func delete_arrow(arrow: Node) -> void:
 	if not is_instance_valid(arrow):
 		return
-	_arrows.erase(arrow)
 	if arrow.get_parent() != null:
 		arrow.get_parent().remove_child(arrow)
 	arrow.queue_free()
@@ -172,7 +212,7 @@ func delete_arrow(arrow: Node) -> void:
 ## Called by Main when an element is being deleted; removes connected arrows first.
 func delete_arrows_for_element(element: CanvasElement) -> void:
 	var to_remove: Array[Arrow] = []
-	for arrow_node: Arrow in _arrows:
+	for arrow_node: Arrow in get_arrows():
 		if not is_instance_valid(arrow_node):
 			to_remove.append(arrow_node)
 			continue
@@ -187,16 +227,13 @@ func delete_arrows_for_element(element: CanvasElement) -> void:
 
 ## Deletes all arrows.
 func delete_all_arrows() -> void:
-	while _arrows.size() > 0:
-		var arrow: Arrow = _arrows[0]
-		if is_instance_valid(arrow):
-			arrow.queue_free()
-		_arrows.remove_at(0)
+	for arrow: Arrow in get_arrows():
+		arrow.queue_free()
 
 
 ## Rebuilds paths for all arrows connected to the given CanvasElement.
 func update_arrows_for_element(element: CanvasElement) -> void:
-	for arrow_node: Arrow in _arrows:
+	for arrow_node: Arrow in get_arrows():
 		if not is_instance_valid(arrow_node):
 			continue
 
@@ -526,8 +563,6 @@ func _create_arrow(
 	arrow.end_anchor_label = end_label
 
 	arrow.rebuild_path()
-
-	_arrows.append(arrow)
 
 
 func _on_element_layer_click(mouse_pos: Vector2) -> bool:
