@@ -49,7 +49,7 @@ var _drag_snapped_pos: Vector2 = Vector2.ZERO  # edge position, world-space
 var _preview_line: Line2D = null
 
 ## All active arrows (children of ElementLayer).
-var _arrows: Array[Node] = []
+var _arrows: Array[Arrow] = []
 
 ## Signals from ClickHandler (connected in _ready).
 var _click_handler: Node = null
@@ -85,7 +85,7 @@ func _process(_delta: float) -> void:
 
 
 ## Returns a list of all active arrows.
-func get_arrows() -> Array[Node]:
+func get_arrows() -> Array[Arrow]:
 	return _arrows
 
 
@@ -147,7 +147,7 @@ func get_arrow_near(pos: Vector2, radius: float = ARROW_CLICK_DISTANCE) -> Arrow
 		var arrow: Arrow = arrow_node
 		if arrow == null:
 			continue
-		var points: Variant = arrow.get("_cached_bezier_points")
+		var points: Variant = arrow._cached_bezier_points
 		if not (points is PackedVector2Array):
 			continue
 		var pts: PackedVector2Array = points
@@ -189,7 +189,7 @@ func delete_arrows_for_element(element: CanvasElement) -> void:
 ## Deletes all arrows.
 func delete_all_arrows() -> void:
 	while _arrows.size() > 0:
-		var arrow: Node = _arrows[0]
+		var arrow: Arrow = _arrows[0]
 		if is_instance_valid(arrow):
 			arrow.queue_free()
 		_arrows.remove_at(0)
@@ -530,7 +530,7 @@ func _create_arrow(
 
 func _on_element_layer_click(mouse_pos: Vector2) -> bool:
 	## Called from Main when no element was hit — allows arrow click detection.
-	var arrow: Variant = get_arrow_near(mouse_pos)
+	var arrow: Arrow = get_arrow_near(mouse_pos)
 	if arrow != null:
 		var arrow_n: Arrow = arrow
 		if arrow_n != null:
