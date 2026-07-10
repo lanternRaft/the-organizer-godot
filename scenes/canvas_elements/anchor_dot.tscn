@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b4hn1afvgxgsd"]
+
+[ext_resource type="Script" uid="uid://csvwgguogpngx" path="res://scripts/anchor_dot.gd" id="1_yxetp"]
+
+[node name="AnchorDot" type="Node2D" unique_id=2133260072]
+script = ExtResource("1_yxetp")

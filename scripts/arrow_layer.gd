@@ -396,7 +396,7 @@ func _remove_dot_nodes_for_element(element: CanvasElement) -> void:
 
 func _create_dot(element: CanvasElement, label: String) -> Node2D:
 	var dot: Node2D = Node2D.new()
-	dot.set_script(preload("res://scenes/arrow_manager/anchor_dot.gd"))
+	dot.set_script(preload("res://scripts/anchor_dot.gd"))
 	dot.position = _get_dot_position(element, label)
 	dot.set_meta("parent_element", element)
 	dot.set_meta("anchor_label", label)
