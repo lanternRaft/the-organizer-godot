@@ -49,7 +49,7 @@ var _drag_snapped_pos: Vector2 = Vector2.ZERO  # edge position, world-space
 var _preview_line: Line2D = null
 
 ## All active arrows (children of ElementLayer).
-var _arrows: Array[Node] = []
+var _arrows: Array[Arrow] = []
 
 ## Signals from ClickHandler (connected in _ready).
 var _click_handler: Node = null
@@ -85,7 +85,7 @@ func _process(_delta: float) -> void:
 
 
 ## Returns a list of all active arrows.
-func get_arrows() -> Array[Node]:
+func get_arrows() -> Array[Arrow]:
 	return _arrows
 
 
@@ -147,7 +147,7 @@ func get_arrow_near(pos: Vector2, radius: float = ARROW_CLICK_DISTANCE) -> Arrow
 		var arrow: Arrow = arrow_node
 		if arrow == null:
 			continue
-		var points: Variant = arrow.get("_cached_bezier_points")
+		var points: PackedVector2Array = arrow._cached_bezier_points
 		if not (points is PackedVector2Array):
 			continue
 		var pts: PackedVector2Array = points
@@ -170,26 +170,24 @@ func delete_arrow(arrow: Node) -> void:
 
 ## Called by Main when an element is being deleted; removes connected arrows first.
 func delete_arrows_for_element(element: CanvasElement) -> void:
-	var to_remove: Array[Node] = []
-	for arrow_node: Node in _arrows:
+	var to_remove: Array[Arrow] = []
+	for arrow_node: Arrow in _arrows:
 		if not is_instance_valid(arrow_node):
 			to_remove.append(arrow_node)
 			continue
-		var start_shape: Variant = arrow_node.call(
-			"_resolve_shape", arrow_node.get("start_shape_path")
-		)
-		var end_shape: Variant = arrow_node.call("_resolve_shape", arrow_node.get("end_shape_path"))
+		var start_shape: CanvasElement = arrow_node.get_start_shape()
+		var end_shape: CanvasElement = arrow_node.get_end_shape()
 		if start_shape == element or end_shape == element:
 			to_remove.append(arrow_node)
 
-	for a: Node in to_remove:
+	for a: Arrow in to_remove:
 		delete_arrow(a)
 
 
 ## Deletes all arrows.
 func delete_all_arrows() -> void:
 	while _arrows.size() > 0:
-		var arrow: Node = _arrows[0]
+		var arrow: Arrow = _arrows[0]
 		if is_instance_valid(arrow):
 			arrow.queue_free()
 		_arrows.remove_at(0)
@@ -197,15 +195,11 @@ func delete_all_arrows() -> void:
 
 ## Rebuilds paths for all arrows connected to the given CanvasElement.
 func update_arrows_for_element(element: CanvasElement) -> void:
-	for arrow_node: Node in _arrows:
+	for arrow_node: Arrow in _arrows:
 		if not is_instance_valid(arrow_node):
 			continue
-		var start_shape: Variant = arrow_node.call(
-			"_resolve_shape", arrow_node.get("start_shape_path")
-		)
-		var end_shape: Variant = arrow_node.call("_resolve_shape", arrow_node.get("end_shape_path"))
-		if start_shape == element or end_shape == element:
-			arrow_node.call("rebuild_path")
+		
+		arrow_node.rebuild_if_connected(element)
 
 
 # ----- Anchor Position Helpers (uses CanvasElement interface) ----------------
@@ -530,7 +524,7 @@ func _create_arrow(
 
 func _on_element_layer_click(mouse_pos: Vector2) -> bool:
 	## Called from Main when no element was hit — allows arrow click detection.
-	var arrow: Variant = get_arrow_near(mouse_pos)
+	var arrow: Arrow = get_arrow_near(mouse_pos)
 	if arrow != null:
 		var arrow_n: Arrow = arrow
 		if arrow_n != null:
