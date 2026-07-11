@@ -13,6 +13,7 @@ var connected_arrows: Array[Arrow] = []
 @onready var connection_marker_2d: Marker2D = $ConnectionMarker2D
 @onready var canvas_element: CanvasElement = get_parent().get_parent()
 
+
 func _ready() -> void:
 	canvas_element.line_anchors.push_back(self)
 	area_2d.mouse_entered.connect(show_highlight)
@@ -39,7 +40,7 @@ func get_normal() -> Vector2:
 		ANCHOR_POSITION.RIGHT:
 			return Vector2(1, 0)
 		_:
-			return Vector2.ZERO # Fallback safety case
+			return Vector2.ZERO  # Fallback safety case
 
 
 func get_line_global_position() -> Vector2:

@@ -22,7 +22,8 @@ func _ready() -> void:
 func _element_drag_start() -> void:
 	element_dragging = true
 	_refresh()
-	
+
+
 func _element_drag_stop() -> void:
 	element_dragging = false
 	_refresh()
@@ -31,7 +32,8 @@ func _element_drag_stop() -> void:
 func _mouse_entered() -> void:
 	mouse_in_anchor_show = true
 	_refresh()
-	
+
+
 func _mouse_exited() -> void:
 	mouse_in_anchor_show = false
 	_refresh()

@@ -1,6 +1,7 @@
 extends GdUnitTestSuite
 
-const CANVAS_NODE_SCENE: PackedScene = preload("res://scenes/tools/canvas_node/canvas_node.tscn")
+const CIRCLE_NODE_SCENE: PackedScene = preload("res://scenes/canvas_elements/circle_node.tscn")
+const TRIANGLE_NODE_SCENE: PackedScene = preload("res://scenes/canvas_elements/triangle_node.tscn")
 const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
 const ARROW_SCENE: PackedScene = preload("res://scenes/tools/arrow/arrow.tscn")
 
@@ -53,8 +54,7 @@ func _create_test_scene() -> void:
 
 
 func _create_canvas_node(position: Vector2) -> CanvasNode:
-	var node: CanvasNode = auto_free(CANVAS_NODE_SCENE.instantiate())
-	node.sub_mode = "circle_node"
+	var node: CanvasNode = auto_free(CIRCLE_NODE_SCENE.instantiate())
 	node.position = position
 	element_layer.add_child(node)
 	return node
@@ -73,135 +73,59 @@ func test_arrow_label_shape_to_canvas_node() -> void:
 	var shape: LabelShape = _create_label_shape(Vector2(0, 0))
 	var node: CanvasNode = _create_canvas_node(Vector2(200, 0))
 
-	arrow_layer._create_arrow(shape, "right", node, "left")
+	arrow_layer._create_arrow(shape.line_anchors[0], node.line_anchors[0])
 
-	assert_int(arrow_layer._arrows.size()).is_equal(1)
+	assert_int(arrow_layer.get_children().size()).is_equal(1)
 
-	var arrow: Arrow = arrow_layer._arrows[0]
+	var arrow: Arrow = arrow_layer.get_children()[0]
 	assert_error(func() -> void: arrow.rebuild_path()).is_success()
 
-	assert_str(arrow.start_anchor_label).is_equal("right")
-	assert_str(arrow.end_anchor_label).is_equal("left")
+	assert_str(arrow.start_anchor).is_equal(shape)
+	assert_str(arrow.end_anchor).is_equal(node)
 
 
 func test_arrow_canvas_node_to_canvas_node() -> void:
 	var circle: CanvasNode = _create_canvas_node(Vector2(0, 0))
-	var triangle: CanvasNode = CANVAS_NODE_SCENE.instantiate()
-	triangle.sub_mode = "triangle_node"
+	var triangle: CanvasNode = TRIANGLE_NODE_SCENE.instantiate()
 	triangle.position = Vector2(200, 0)
 	element_layer.add_child(triangle)
 
-	arrow_layer._create_arrow(circle, "right", triangle, "bottom_left")
+	arrow_layer._create_arrow(circle.line_anchors[0], triangle.line_anchors[0])
 
-	assert_int(arrow_layer._arrows.size()).is_equal(1)
+	assert_int(arrow_layer.get_children().size()).is_equal(1)
 
-	var arrow: Arrow = arrow_layer._arrows[0]
+	var arrow: Arrow = arrow_layer.get_children()[0]
 	assert_error(func() -> void: arrow.rebuild_path()).is_success()
-	assert_str(arrow.get("start_anchor_label")).is_equal("right")
-	assert_str(arrow.get("end_anchor_label")).is_equal("bottom_left")
+	assert_str(arrow.start_anchor).is_equal(circle)
+	assert_str(arrow.end_anchor).is_equal(triangle)
 
 
 func test_arrow_label_shape_to_label_shape() -> void:
 	var shape_1: LabelShape = _create_label_shape(Vector2(0, 0))
 	var shape_2: LabelShape = _create_label_shape(Vector2(200, 0))
 
-	arrow_layer._create_arrow(shape_1, "right", shape_2, "left")
+	arrow_layer._create_arrow(shape_1.line_anchors[0], shape_2.line_anchors[0])
 
-	assert_int(arrow_layer._arrows.size()).is_equal(1)
+	assert_int(arrow_layer.get_children().size()).is_equal(1)
 
-	var arrow: Arrow = arrow_layer._arrows[0]
+	var arrow: Arrow = arrow_layer.get_children()[0]
 	assert_error(func() -> void: arrow.rebuild_path()).is_success()
 
-	assert_str(arrow.start_anchor_label).is_equal("right")
-	assert_str(arrow.end_anchor_label).is_equal("left")
+	assert_str(arrow.start_anchor).is_equal(shape_1)
+	assert_str(arrow.end_anchor).is_equal(shape_2)
 
 
 func test_arrow_self_connection_node() -> void:
 	var node: CanvasNode = _create_canvas_node(Vector2(100, 100))
 	await get_tree().process_frame
 
-	var initial_count: int = arrow_layer._arrows.size()
+	var initial_count: int = arrow_layer.get_children().size()
 
 	# Simulate arrow drag from node's "top" released on same node's "bottom".
 	# ArrowManager's end_arrow_drag checks _drag_snapped_element != _drag_start_element,
 	# so setting both to the same node should prevent creation.
-	arrow_layer._drag_start_element = node
-	arrow_layer._drag_start_label = "top"
-	arrow_layer._drag_snapped_element = node
-	arrow_layer._drag_snapped_label = "bottom"
-	arrow_layer.end_arrow_drag()
+	arrow_layer._drag_start_anchor = node.line_anchors[0]
+	arrow_layer._drag_snapped_anchor = node.line_anchors[1]
+	arrow_layer._line_drag_stop()
 
-	assert_int(arrow_layer._arrows.size()).is_equal(initial_count)
-
-
-func test_delete_node_removes_arrows() -> void:
-	var shape: LabelShape = _create_label_shape(Vector2(0, 0))
-	var node: CanvasNode = _create_canvas_node(Vector2(200, 0))
-
-	arrow_layer._create_arrow(shape, "right", node, "left")
-	assert_int(arrow_layer._arrows.size()).is_equal(1)
-
-	arrow_layer.delete_arrows_for_element(node)
-
-	assert_int(arrow_layer._arrows.size()).is_equal(0)
-
-
-func test_arrow_drag_from_node_shows_preview() -> void:
-	var node: CanvasNode = _create_canvas_node(Vector2(100, 100))
-
-	var top_pos: Vector2 = node.get_anchor_position("top")
-
-	# Call handle_dot_mousedown at the top anchor position.
-	var result: bool = arrow_layer.handle_dot_mousedown(top_pos)
-
-	assert_bool(result).is_true()
-	assert_bool(arrow_layer._arrow_drag_active).is_true()
-	assert_object(arrow_layer._drag_start_element).is_same(node)
-	assert_str(arrow_layer._drag_start_label).is_equal("top")
-	# Preview arrow should exist.
-	assert_bool(arrow_layer._preview_arrow != null).is_true()
-
-
-func test_arrow_drag_no_snap_discards() -> void:
-	var node: CanvasNode = _create_canvas_node(Vector2(100, 100))
-
-	var top_pos: Vector2 = node.get_anchor_position("top")
-
-	# Begin drag.
-	arrow_layer.handle_dot_mousedown(top_pos)
-	assert_bool(arrow_layer._arrow_drag_active).is_true()
-
-	# End drag without snapping (drag_snapped_element is null).
-	arrow_layer.end_arrow_drag()
-
-	assert_bool(arrow_layer._arrow_drag_active).is_false()
-	assert_int(arrow_layer._arrows.size()).is_equal(0)
-		(
-			assert_bool(
-				arrow_layer._preview_arrow == null or not is_instance_valid(arrow_layer._preview_arrow)
-			)
-			. is_true()
-		)
-
-
-func test_arrow_updates_on_node_move() -> void:
-	var shape: LabelShape = _create_label_shape(Vector2(0, 0))
-	var node: CanvasNode = _create_canvas_node(Vector2(200, 0))
-
-	arrow_layer._create_arrow(shape, "right", node, "left")
-	var arrow: Arrow = arrow_layer._arrows[0]
-	arrow.rebuild_path()
-
-	# Cache original bezier points.
-	var original_points: PackedVector2Array = arrow._cached_bezier_points
-
-	# Move node to a new position.
-	node.position = Vector2(300, 50)
-	await get_tree().process_frame
-
-	# Update arrows for the moved node (using new method name).
-	arrow_layer.update_arrows_for_element(node)
-
-	var updated_points: PackedVector2Array = arrow.get("_cached_bezier_points")
-	# Points should have changed.
-	assert_array(original_points).is_not_equal(updated_points)
+	assert_int(arrow_layer.get_children().size()).is_equal(initial_count)

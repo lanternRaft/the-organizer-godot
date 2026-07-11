@@ -68,12 +68,11 @@ func _draw() -> void:
 
 			for v: Vector2 in TRIANGLE_VERTICES:
 				stroke_verts.append(v * stroke_scale)
-			
+
 			draw_colored_polygon(stroke_verts, stroke_color)
 
 			# Fill
 			draw_colored_polygon(TRIANGLE_VERTICES, fill_color)
-
 
 
 ## CanvasNode does not support text editing.

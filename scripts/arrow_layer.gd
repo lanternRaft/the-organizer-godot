@@ -42,8 +42,9 @@ func _process(_delta: float) -> void:
 func _anchor_highlight(line_anchor: LineAnchor) -> void:
 	_drag_snapped_anchor = line_anchor
 
+
 ## Ends an arrow drag. Creates arrow if valid, otherwise discards.
-func _line_drag_stop(_line_anchor: LineAnchor) -> void:
+func _line_drag_stop() -> void:
 	if not _drag_start_anchor:
 		return
 	_arrow_drag_active = false
@@ -55,8 +56,12 @@ func _line_drag_stop(_line_anchor: LineAnchor) -> void:
 	_preview_arrow = null
 
 	# If snapped to a valid different element, create arrow.
-	if _drag_snapped_anchor != null and _drag_snapped_anchor.canvas_element != _drag_start_anchor.canvas_element:
+	if (
+		_drag_snapped_anchor != null
+		and _drag_snapped_anchor.canvas_element != _drag_start_anchor.canvas_element
+	):
 		_create_arrow(_drag_start_anchor, _drag_snapped_anchor)
+
 
 func _line_drag_start(line_anchor: LineAnchor) -> void:
 	_arrow_drag_active = true
@@ -68,8 +73,6 @@ func _line_drag_start(line_anchor: LineAnchor) -> void:
 		_preview_arrow = ARROW_SCENE.instantiate()
 		element_layer.add_child(_preview_arrow)
 		_preview_arrow.setup_preview(line_anchor)
-
-
 
 
 # ----- Public API ------------------------------------------------------------

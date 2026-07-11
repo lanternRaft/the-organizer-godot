@@ -60,7 +60,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				_handle_pointer_up(mb)
 
 	#elif event is InputEventMouseMotion and _drag_active:
-		#_handle_drag_move(event as InputEventMouseMotion)
+	#_handle_drag_move(event as InputEventMouseMotion)
 
 
 # ----- private helpers -------------------------------------------------------

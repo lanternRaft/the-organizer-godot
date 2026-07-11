@@ -133,7 +133,7 @@ func rebuild_path() -> void:
 		queue_free()
 		return
 
-	var p0: Vector2 = start_anchor.get_line_global_position() 
+	var p0: Vector2 = start_anchor.get_line_global_position()
 	var outward_start: Vector2 = start_anchor.get_normal()
 
 	var p3: Vector2 = end_anchor.get_line_global_position()

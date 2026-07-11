@@ -64,7 +64,6 @@ signal double_clicked(shape: Node)
 		fill_color = value
 		queue_redraw()
 
-
 @onready var _collision_shape: CollisionShape2D = $Area2D/CollisionShape2D
 @onready var _handle_tl: ColorRect = $HandleTL
 @onready var _handle_tr: ColorRect = $HandleTR
@@ -110,8 +109,6 @@ func _set_handles_visible(val: bool) -> void:
 	_handle_tr.visible = val
 	_handle_bl.visible = val
 	_handle_br.visible = val
-
-
 
 
 # ----- Text Display ---------------------------------------------------------
