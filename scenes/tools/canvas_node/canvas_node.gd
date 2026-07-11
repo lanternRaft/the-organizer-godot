@@ -18,14 +18,9 @@ extends CanvasElement
 ##   - Fixed size (no resize handles).
 ##   - No legend entry, no text editing.
 
-## "circle_node" or "triangle_node". Setter triggers redraw and collision shape update.
-@export var sub_mode: String = "circle_node":
-	set(value):
-		if value == sub_mode:
-			return
-		sub_mode = value
-		queue_redraw()
-		_update_collision_shape()
+enum SHAPE_MODE { CIRCLE_NODE, TRIANGLE_NODE }
+
+@export var shape_mode: SHAPE_MODE = SHAPE_MODE.CIRCLE_NODE
 
 ## Fill color; stroke is automatically adjusted for selection state.
 @export var fill_color: Color = Color(0.231, 0.51, 0.965):
@@ -83,11 +78,11 @@ func _draw() -> void:
 		stroke_color = fill_color.darkened(0.4)
 		stroke_width = 2.0
 
-	match sub_mode:
-		"circle_node":
+	match shape_mode:
+		SHAPE_MODE.CIRCLE_NODE:
 			draw_circle(Vector2.ZERO, CIRCLE_RADIUS, fill_color)
 			draw_circle(Vector2.ZERO, CIRCLE_RADIUS, stroke_color, false, stroke_width)
-		"triangle_node":
+		SHAPE_MODE.TRIANGLE_NODE:
 			# Fill
 			draw_colored_polygon(TRIANGLE_VERTICES, fill_color)
 			# Stroke: draw each edge as a line
@@ -119,35 +114,6 @@ func _draw() -> void:
 	#return true
 
 
-# ----- Anchor System ---------------------------------------------------------
-
-
-## Returns the list of anchor labels for this node's current sub-mode.
-func get_anchor_points() -> Array[String]:
-	match sub_mode:
-		"circle_node":
-			return CIRCLE_ANCHOR_LABELS
-		"triangle_node":
-			return TRIANGLE_ANCHOR_LABELS
-	return []
-
-
-## Returns the global position of the given anchor label.
-func get_anchor_position(label: String) -> Vector2:
-	var local_pos: Vector2 = ANCHOR_POSITIONS.get(label, Vector2.ZERO)
-	return to_global(local_pos)
-
-
-## Returns anchor definitions as an Array of Dictionaries with "label" and "offset" keys.
-## Overrides the base class virtual method.
-func get_anchor_positions() -> Array[Dictionary]:
-	var labels: Array[String] = get_anchor_points()
-	var result: Array[Dictionary] = []
-	for label: String in labels:
-		result.append({"label": label, "offset": ANCHOR_POSITIONS.get(label, Vector2.ZERO)})
-	return result
-
-
 # ----- Virtual Properties ----------------------------------------------------
 
 
@@ -167,12 +133,12 @@ func shows_in_legend() -> bool:
 func _update_collision_shape() -> void:
 	if not is_node_ready():
 		return
-	match sub_mode:
-		"circle_node":
+	match shape_mode:
+		SHAPE_MODE.CIRCLE_NODE:
 			var circle_shape: CircleShape2D = CircleShape2D.new()
 			circle_shape.radius = CIRCLE_RADIUS
 			_collision_shape.shape = circle_shape
-		"triangle_node":
+		SHAPE_MODE.TRIANGLE_NODE:
 			var poly_shape: ConvexPolygonShape2D = ConvexPolygonShape2D.new()
 			poly_shape.points = TRIANGLE_VERTICES
 			_collision_shape.shape = poly_shape

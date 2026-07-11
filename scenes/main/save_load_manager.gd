@@ -59,7 +59,7 @@ func serialize_canvas(legend_data: Array) -> Dictionary:
 							"fill_g": color.g,
 							"fill_b": color.b,
 							"fill_a": color.a,
-							"sub_mode": node.sub_mode,
+							"shape_mode": node.shape_mode,
 						}
 					)
 				)
@@ -157,7 +157,8 @@ func _instantiate_canvas_node(data: Dictionary) -> CanvasNode:
 	var fb: float = data.get("fill_b", 0.965)
 	var fa: float = data.get("fill_a", 1.0)
 	node.fill_color = Color(fr, fg, fb, fa)
-	node.sub_mode = str(data.get("sub_mode", "circle_node"))
+	if data.has("shape_mode"):
+		node.shape_mode = CanvasNode.SHAPE_MODE[str(data.shape_mode)]
 
 	_element_layer.add_child(node)
 	return node

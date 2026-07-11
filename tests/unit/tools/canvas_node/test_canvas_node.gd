@@ -118,61 +118,6 @@ func test_sub_mode_switch_updates_collision() -> void:
 	node.free()
 
 
-# ===== A4-A5: Anchor Positions ==============================================
-
-
-## A4: Circle node anchor positions.
-func test_circle_node_anchors() -> void:
-	var node: Node2D = await _create_node("circle_node")
-	node.position = Vector2(100, 200)
-	await get_tree().process_frame
-
-	var anchors: Array[String] = node.call("get_anchor_points")
-	assert_int(anchors.size()).is_equal(4)
-	assert_str(anchors[0]).is_equal("top")
-	assert_str(anchors[1]).is_equal("bottom")
-	assert_str(anchors[2]).is_equal("left")
-	assert_str(anchors[3]).is_equal("right")
-
-	# Each anchor at the expected global position.
-	var top_pos: Vector2 = node.call("get_anchor_position", "top")
-	assert_vector(top_pos).is_equal_approx(Vector2(100, 192), Vector2(0.5, 0.5))
-
-	var bottom_pos: Vector2 = node.call("get_anchor_position", "bottom")
-	assert_vector(bottom_pos).is_equal_approx(Vector2(100, 208), Vector2(0.5, 0.5))
-
-	var left_pos: Vector2 = node.call("get_anchor_position", "left")
-	assert_vector(left_pos).is_equal_approx(Vector2(92, 200), Vector2(0.5, 0.5))
-
-	var right_pos: Vector2 = node.call("get_anchor_position", "right")
-	assert_vector(right_pos).is_equal_approx(Vector2(108, 200), Vector2(0.5, 0.5))
-
-	node.free()
-
-
-## A5: Triangle node anchor positions.
-func test_triangle_node_anchors() -> void:
-	var node: Node2D = await _create_node("triangle_node")
-	node.position = Vector2(100, 200)
-	await get_tree().process_frame
-
-	var anchors: Array[String] = node.call("get_anchor_points")
-	assert_int(anchors.size()).is_equal(3)
-	assert_str(anchors[0]).is_equal("top")
-	assert_str(anchors[1]).is_equal("bottom_left")
-	assert_str(anchors[2]).is_equal("bottom_right")
-
-	var top_pos: Vector2 = node.call("get_anchor_position", "top")
-	assert_vector(top_pos).is_equal_approx(Vector2(100, 192), Vector2(0.5, 0.5))
-
-	var bl_pos: Vector2 = node.call("get_anchor_position", "bottom_left")
-	assert_vector(bl_pos).is_equal_approx(Vector2(93, 204), Vector2(1.0, 1.0))
-
-	var br_pos: Vector2 = node.call("get_anchor_position", "bottom_right")
-	assert_vector(br_pos).is_equal_approx(Vector2(107, 204), Vector2(1.0, 1.0))
-
-	node.free()
-
 
 # ===== A6-A7: Click Signals =================================================
 

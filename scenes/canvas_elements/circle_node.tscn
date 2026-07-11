@@ -11,8 +11,8 @@ radius = 8.0
 [sub_resource type="CircleShape2D" id="CircleShape2D_ty0p8"]
 radius = 23.0
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_gmo8x"]
-radius = 9.0
+[sub_resource type="CircleShape2D" id="CircleShape2D_utdq7"]
+radius = 8.0
 
 [node name="CircleNode" type="Node2D" unique_id=1844598271]
 script = ExtResource("1_7c70g")
@@ -52,4 +52,4 @@ shape = SubResource("CircleShape2D_ty0p8")
 script = ExtResource("4_utdq7")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="SelectArea2D" unique_id=435742010]
-shape = SubResource("CircleShape2D_gmo8x")
+shape = SubResource("CircleShape2D_utdq7")
