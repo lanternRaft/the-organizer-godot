@@ -6,7 +6,7 @@ extends Node
 
 const SAVE_PATH: String = "user://canvas.save"
 const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
-const CANVAS_NODE_SCENE: PackedScene = preload("res://scenes/tools/canvas_node/canvas_node.tscn")
+const TRIANGLE_NODE_SCENE: PackedScene = preload("res://scenes/canvas_elements/triangle_node.tscn")
 const CIRCLE_NODE_SCENE: PackedScene = preload("res://scenes/canvas_elements/circle_node.tscn")
 
 ## Path to the ElementLayer node (under Main/Canvas).
@@ -148,7 +148,7 @@ func _instantiate_canvas_node(data: Dictionary) -> CanvasNode:
 	if sub_mode == "circle_node":
 		node = CIRCLE_NODE_SCENE.instantiate()
 	else:
-		node = CANVAS_NODE_SCENE.instantiate()
+		node = TRIANGLE_NODE_SCENE.instantiate()
 	var px: float = data.get("position_x", 0.0)
 	var py: float = data.get("position_y", 0.0)
 	node.position = Vector2(px, py)
@@ -158,7 +158,7 @@ func _instantiate_canvas_node(data: Dictionary) -> CanvasNode:
 	var fa: float = data.get("fill_a", 1.0)
 	node.fill_color = Color(fr, fg, fb, fa)
 	if data.has("shape_mode"):
-		node.shape_mode = CanvasNode.SHAPE_MODE[str(data.shape_mode)]
+		node.shape_mode = CanvasNode.SHAPE_MODE.keys()[data.get("shape_mode")]
 
 	_element_layer.add_child(node)
 	return node

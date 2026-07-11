@@ -47,6 +47,8 @@ var is_primary: bool = false
 ## Is it being dragged?
 var dragging: bool = false
 
+var line_anchors: Array[LineAnchor]
+
 ## World position where the current drag started.
 #var _drag_start_world: Vector2 = Vector2.ZERO
 
@@ -141,9 +143,9 @@ func handle_drag_end(_event: Dictionary) -> void:
 ## Returns all arrows connected to this element's LineAnchors.
 func get_arrows() -> Array[Arrow]:
 	var result: Array[Arrow] = []
-	for anchor: LineAnchor in find_children("*", "LineAnchor"):
-		if anchor != null:
-			result.append_array(anchor.connected_arrows)
+	for anchor: LineAnchor in line_anchors:
+		result.append_array(anchor.connected_arrows)
+
 	return result
 
 

@@ -93,9 +93,9 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	if is_instance_valid(start_anchor):
-		start_anchor.unregister_arrow(self)
+		start_anchor.connected_arrows.erase(self)
 	if is_instance_valid(end_anchor):
-		end_anchor.unregister_arrow(self)
+		end_anchor.connected_arrows.erase(self)
 
 
 func _draw() -> void:

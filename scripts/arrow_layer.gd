@@ -1,6 +1,3 @@
-class_name ArrowLayer
-extends Node2D
-
 ## Manages anchor dots, arrow drag, creation, and deletion.
 ## Child of Main; populates AnchorLayer with visual dot nodes and owns the
 ## arrow preview line.
@@ -9,16 +6,13 @@ extends Node2D
 ## positions via the CanvasElement.get_anchor_positions() virtual method,
 ## which returns an Array[Dictionary] each with "label" and "offset" keys.
 ## This manager reads that interface generically — no per-type logic.
+class_name ArrowLayer
+extends Node2D
 
 const ARROW_SCENE: PackedScene = preload("res://scenes/tools/arrow/arrow.tscn")
 
 ## Distance threshold for clicking an arrow path (world-space).
 const ARROW_CLICK_DISTANCE: float = 7.0
-
-## ----- State ---------------------------------------------------------------
-
-## List of all CanvasElement instances currently in ElementLayer.
-var _elements: Array[CanvasElement] = []
 
 ## Arrow drag state.
 var _arrow_drag_active: bool = false
@@ -38,12 +32,12 @@ func _ready() -> void:
 	EventBus.line_drag_stop.connect(_line_drag_stop)
 	EventBus.anchor_highlight.connect(_anchor_highlight)
 
-	# Scan for existing elements.
-	_refresh_element_list()
 
-	# Listen for new elements being added.
-	element_layer.child_entered_tree.connect(_on_element_child_added)
-	element_layer.child_exiting_tree.connect(_on_element_child_removed)
+func _process(_delta: float) -> void:
+	if _arrow_drag_active:
+		var mouse_pos: Vector2 = element_layer.get_global_mouse_position()
+		_update_drag_preview(mouse_pos)
+
 
 func _anchor_highlight(line_anchor: LineAnchor) -> void:
 	_drag_snapped_anchor = line_anchor
@@ -61,7 +55,7 @@ func _line_drag_stop(_line_anchor: LineAnchor) -> void:
 	_preview_arrow = null
 
 	# If snapped to a valid different element, create arrow.
-	if _drag_snapped_anchor != null and _drag_snapped_anchor.get_element() != _drag_start_anchor.get_element():
+	if _drag_snapped_anchor != null and _drag_snapped_anchor.canvas_element != _drag_start_anchor.canvas_element:
 		_create_arrow(_drag_start_anchor, _drag_snapped_anchor)
 
 func _line_drag_start(line_anchor: LineAnchor) -> void:
@@ -76,16 +70,6 @@ func _line_drag_start(line_anchor: LineAnchor) -> void:
 		_preview_arrow.setup_preview(line_anchor)
 
 
-func _process(_delta: float) -> void:
-	#if not toolbar.select_mode_active:
-		##_hide_all_dots()
-		#return
-
-	var mouse_pos: Vector2 = element_layer.get_global_mouse_position()
-	#_update_anchor_dots(mouse_pos)
-
-	if _arrow_drag_active:
-		_update_drag_preview(mouse_pos)
 
 
 # ----- Public API ------------------------------------------------------------
@@ -161,110 +145,6 @@ func update_arrows_for_element(element: CanvasElement) -> void:
 		arrow_node.rebuild_if_connected(element)
 
 
-# ----- Anchor Position Helpers (uses CanvasElement interface) ----------------
-
-
-## Returns the global edge position for a given element and anchor label.
-## Reads offsets from the element's get_anchor_positions() virtual method.
-static func _get_anchor_edge_global_position(element: CanvasElement, label: String) -> Vector2:
-	var anchors: Array[Dictionary] = element.get_anchor_positions()
-	for entry: Dictionary in anchors:
-		if entry.get("label", "") == label:
-			var local_offset: Vector2 = entry.get("offset", Vector2.ZERO)
-			return element.to_global(local_offset)
-	# Fallback: return element's origin.
-	return element.global_position
-
-
-## Returns the global dot position (with outward offset) for a given element and anchor label.
-## Uses same get_anchor_positions() data, adding an outward push for visual clearance.
-static func _get_anchor_dot_global_position(element: CanvasElement, label: String) -> Vector2:
-	var anchors: Array[Dictionary] = element.get_anchor_positions()
-	for entry: Dictionary in anchors:
-		if entry.get("label", "") == label:
-			var local_offset: Vector2 = entry.get("offset", Vector2.ZERO)
-			# Push the dot slightly outward from the edge for visual clarity.
-			var outward_dir: Vector2 = local_offset.normalized()
-			if outward_dir.length_squared() < 0.001:
-				outward_dir = Vector2.DOWN
-			return element.to_global(local_offset + outward_dir * 5.0)
-	# Fallback.
-	return element.global_position
-
-
-## Returns the list of anchor labels for a given element, read from get_anchor_positions().
-static func _get_anchor_labels_from_element(element: CanvasElement) -> Array[String]:
-	var labels: Array[String] = []
-	var anchors: Array[Dictionary] = element.get_anchor_positions()
-	for entry: Dictionary in anchors:
-		var label_v: Variant = entry.get("label", "")
-		if label_v is String:
-			var label: String = label_v
-			if not label.is_empty():
-				labels.append(label)
-	return labels
-
-
-## Returns the outward normal for an anchor label by reading the offset from get_anchor_positions().
-## Falls back to axis-aligned normals for cardinal directions as a convenience.
-static func _get_anchor_outward_normal(element: CanvasElement, label: String) -> Vector2:
-	var anchors: Array[Dictionary] = element.get_anchor_positions()
-	for entry: Dictionary in anchors:
-		if entry.get("label", "") == label:
-			var offset: Vector2 = entry.get("offset", Vector2.ZERO)
-			if offset.length_squared() > 0.001:
-				return offset.normalized()
-	# Fallback for cardinal directions (works for most elements).
-	match label:
-		"top":
-			return Vector2(0, -1)
-		"bottom":
-			return Vector2(0, 1)
-		"left":
-			return Vector2(-1, 0)
-		"right":
-			return Vector2(1, 0)
-	return Vector2.ZERO
-
-
-# ----- Private helpers: element tracking -------------------------------------
-
-
-func _refresh_element_list() -> void:
-	_elements.clear()
-	for child: Node in element_layer.get_children():
-		if child is CanvasElement:
-			_elements.append(child)
-
-
-func _on_element_child_added(child: Node) -> void:
-	if child is CanvasElement:
-		_elements.append(child)
-		child.connect("tree_exiting", Callable(self, "_on_element_tree_exiting").bind(child))
-
-
-func _on_element_child_removed(child: Node) -> void:
-	_elements.erase(child)
-	# Remove dot nodes for this element.
-	#_remove_dot_nodes_for_element(child as CanvasElement)
-	# Remove connected arrows.
-	var canvas_elem: CanvasElement = child as CanvasElement
-	if canvas_elem != null:
-		delete_arrows_for_element(canvas_elem)
-
-
-func _on_element_tree_exiting(element: CanvasElement) -> void:
-	_elements.erase(element)
-	#_remove_dot_nodes_for_element(element)
-
-
-func _get_dot_position(element: CanvasElement, label: String) -> Vector2:
-	return _get_anchor_dot_global_position(element, label)
-
-
-# ----- Private helpers: drag preview -----------------------------------------
-
-
 func _update_drag_preview(mouse_pos: Vector2) -> void:
 	if _preview_arrow == null || _arrow_drag_active == false || _drag_start_anchor == null:
 		return
@@ -285,9 +165,6 @@ func _update_drag_preview(mouse_pos: Vector2) -> void:
 	_preview_arrow.update_preview(end_pos, end_normal, drag_snapped)
 
 
-# ----- Private helpers: arrow creation ---------------------------------------
-
-
 func _create_arrow(start_anchor: LineAnchor, end_anchor: LineAnchor) -> void:
 	var arrow: Arrow = ARROW_SCENE.instantiate()
 
@@ -295,8 +172,8 @@ func _create_arrow(start_anchor: LineAnchor, end_anchor: LineAnchor) -> void:
 
 	arrow.start_anchor = start_anchor
 	arrow.end_anchor = end_anchor
-	start_anchor.register_arrow(arrow)
-	end_anchor.register_arrow(arrow)
+	start_anchor.connected_arrows.append(arrow)
+	end_anchor.connected_arrows.append(arrow)
 	arrow.rebuild_path()
 
 
