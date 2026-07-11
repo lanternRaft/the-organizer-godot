@@ -49,7 +49,6 @@ var primary_selection: Node = null
 @onready var camera_controller: Camera2D = %MainCamera
 @onready var zoom_controls: Control = $UI/ZoomControls
 @onready var arrow_layer: ArrowLayer = %ArrowLayer
-@onready var array_layer: ArrowLayer = %ArrayLayer
 @onready var save_load_manager: SaveLoadManager = %SaveLoadManager
 @onready var _viewport: Viewport = get_viewport()
 @onready var ui_layer: CanvasLayer = $UI

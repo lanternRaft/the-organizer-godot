@@ -91,6 +91,13 @@ func _ready() -> void:
 	hit_line.antialiased = true
 
 
+func _exit_tree() -> void:
+	if is_instance_valid(start_anchor):
+		start_anchor.unregister_arrow(self)
+	if is_instance_valid(end_anchor):
+		end_anchor.unregister_arrow(self)
+
+
 func _draw() -> void:
 	if not is_preview and _cached_bezier_points.is_empty():
 		return

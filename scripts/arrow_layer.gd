@@ -28,9 +28,6 @@ var _drag_snapped_anchor: LineAnchor
 ## Preview arrow shown during drag.
 var _preview_arrow: Arrow = null
 
-## Signals from ClickHandler (connected in _ready).
-var _click_handler: Node = null
-
 @onready var element_layer: Node2D = %ElementLayer
 @onready var anchor_layer: Node2D = %AnchorLayer
 @onready var toolbar: Toolbar = %Toolbar
@@ -40,7 +37,6 @@ func _ready() -> void:
 	EventBus.line_drag_start.connect(_line_drag_start)
 	EventBus.line_drag_stop.connect(_line_drag_stop)
 	EventBus.anchor_highlight.connect(_anchor_highlight)
-	_click_handler = get_parent().get_node("ClickHandler")
 
 	# Scan for existing elements.
 	_refresh_element_list()
@@ -299,6 +295,8 @@ func _create_arrow(start_anchor: LineAnchor, end_anchor: LineAnchor) -> void:
 
 	arrow.start_anchor = start_anchor
 	arrow.end_anchor = end_anchor
+	start_anchor.register_arrow(arrow)
+	end_anchor.register_arrow(arrow)
 	arrow.rebuild_path()
 
 

@@ -5,6 +5,9 @@ enum ANCHOR_POSITION { TOP, LEFT, BOTTOM, RIGHT }
 
 @export var anchor_position: ANCHOR_POSITION
 
+## Arrows connected to this anchor.
+var connected_arrows: Array[Arrow] = []
+
 @onready var anchor_highlight_dot: Node2D = $AnchorHighlightDot
 @onready var area_2d: Area2D = $Area2D
 @onready var connection_marker_2d: Marker2D = $ConnectionMarker2D
@@ -13,6 +16,16 @@ enum ANCHOR_POSITION { TOP, LEFT, BOTTOM, RIGHT }
 func _ready() -> void:
 	area_2d.mouse_entered.connect(show_highlight)
 	area_2d.mouse_exited.connect(hide_highlight)
+
+
+## Registers an arrow as connected to this anchor.
+func register_arrow(arrow: Arrow) -> void:
+	connected_arrows.append(arrow)
+
+
+## Unregisters an arrow from this anchor.
+func unregister_arrow(arrow: Arrow) -> void:
+	connected_arrows.erase(arrow)
 
 
 func show_highlight() -> void:

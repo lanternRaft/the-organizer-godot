@@ -65,6 +65,8 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if dragging:
 		global_position = get_global_mouse_position()
+		for arrow: Arrow in get_arrows():
+			arrow.rebuild_path()
 
 
 ## Updates selection state and triggers visual update.
@@ -134,6 +136,15 @@ func handle_drag_end(_event: Dictionary) -> void:
 		multi_drag_ended.emit()
 	dragging = false
 	queue_redraw()
+
+
+## Returns all arrows connected to this element's LineAnchors.
+func get_arrows() -> Array[Arrow]:
+	var result: Array[Arrow] = []
+	for anchor: LineAnchor in find_children("*", "LineAnchor"):
+		if anchor != null:
+			result.append_array(anchor.connected_arrows)
+	return result
 
 
 # ----- Anchor System (virtual) -----------------------------------------------
