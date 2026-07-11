@@ -158,8 +158,8 @@ func test_arrow_drag_from_node_shows_preview() -> void:
 	assert_bool(arrow_layer._arrow_drag_active).is_true()
 	assert_object(arrow_layer._drag_start_element).is_same(node)
 	assert_str(arrow_layer._drag_start_label).is_equal("top")
-	# Preview line should exist.
-	assert_bool(arrow_layer._preview_line != null).is_true()
+	# Preview arrow should exist.
+	assert_bool(arrow_layer._preview_arrow != null).is_true()
 
 
 func test_arrow_drag_no_snap_discards() -> void:
@@ -176,12 +176,12 @@ func test_arrow_drag_no_snap_discards() -> void:
 
 	assert_bool(arrow_layer._arrow_drag_active).is_false()
 	assert_int(arrow_layer._arrows.size()).is_equal(0)
-	(
-		assert_bool(
-			arrow_layer._preview_line == null or not is_instance_valid(arrow_layer._preview_line)
+		(
+			assert_bool(
+				arrow_layer._preview_arrow == null or not is_instance_valid(arrow_layer._preview_arrow)
+			)
+			. is_true()
 		)
-		. is_true()
-	)
 
 
 func test_arrow_updates_on_node_move() -> void:

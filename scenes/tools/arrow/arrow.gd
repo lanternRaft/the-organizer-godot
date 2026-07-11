@@ -4,6 +4,11 @@ extends Node2D
 ## Cubic bezier arrow connecting two CanvasElement anchors.
 ## Renders a visible stroke, an invisible wider hit-line for click detection,
 ## and a mono-directional arrowhead at the end point.
+##
+## Can also operate in "preview" mode (is_preview = true) for arrow drag
+## previews. In preview mode, the arrow is configured with only a start anchor
+## and the endpoint is updated dynamically via update_preview(). The arrowhead
+## is suppressed in preview mode.
 
 signal selected(arrow: Arrow)
 
@@ -18,6 +23,9 @@ var start_shape_path: NodePath
 var end_shape_path: NodePath
 var start_anchor: LineAnchor
 var end_anchor: LineAnchor
+
+## When true, this arrow is a drag preview (no arrowhead drawn, dynamic endpoint).
+var is_preview: bool = false
 
 var is_selected: bool = false:
 	set(value):
@@ -57,12 +65,19 @@ const ARROWHEAD_HALF_ANGLE: float = 0.4  # half-angle in radians (~23 degrees)
 ## Number of sample points for bezier approximation (affects smoothness).
 const CURVE_SAMPLES: int = 40
 
+## Number of sample points for preview bezier (fewer for performance during drag).
+const PREVIEW_SAMPLES: int = 20
+
 ## Cached bezier points used for hit-testing and arrowhead rendering.
 var _cached_bezier_points: PackedVector2Array = PackedVector2Array()
 var _cached_arrowhead_tip: Vector2 = Vector2.ZERO
 var _cached_arrowhead_dir: Vector2 = Vector2.ZERO
 
+## The visible stroke Line2D that renders the cubic bezier path of the arrow.
+## Styled with white (default) or highlight color when selected.
 @onready var vis_line: Line2D = $VisLine
+## An invisible, wider Line2D layered on top of vis_line for click/hit detection.
+## Has 14px width and transparent color so the user can easily click on thin arrows.
 @onready var hit_line: Line2D = $HitLine
 
 
@@ -77,7 +92,11 @@ func _ready() -> void:
 
 
 func _draw() -> void:
-	if _cached_bezier_points.is_empty():
+	if not is_preview and _cached_bezier_points.is_empty():
+		return
+
+	if is_preview:
+		# In preview mode, draw nothing extra; vis_line handles the path.
 		return
 
 	# Draw arrowhead as a filled triangle at the end point.
@@ -135,6 +154,57 @@ func rebuild_path() -> void:
 	vis_line.points = points
 	hit_line.points = points
 	queue_redraw()
+
+
+# ----- Preview Mode ----------------------------------------------------------
+
+
+## Configures this arrow as a drag preview. The hit line is hidden and
+## vis_line gets preview styling. Only the start anchor is set; the endpoint
+## will be updated dynamically via update_preview().
+func setup_preview(anchor: LineAnchor) -> void:
+	is_preview = true
+	start_anchor = anchor
+	hit_line.hide()
+	vis_line.width = 2.0
+	vis_line.default_color = Color(0.6, 0.8, 1.0)
+	vis_line.antialiased = true
+	vis_line.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	vis_line.end_cap_mode = Line2D.LINE_CAP_ROUND
+
+
+## Updates the preview bezier path with a dynamic endpoint.
+## Called each frame during arrow drag.
+func update_preview(end_pos: Vector2, end_normal: Vector2, is_snapped: bool) -> void:
+	if start_anchor == null:
+		return
+
+	var p0: Vector2 = start_anchor.global_position
+	var outward_start: Vector2 = start_anchor.get_normal()
+
+	var p3: Vector2 = end_pos
+	var outward_end: Vector2 = end_normal
+
+	var segment_len: float = p0.distance_to(p3)
+	if segment_len < 1.0:
+		vis_line.points = PackedVector2Array([p0, p3])
+		return
+
+	var reach: float = clampf(segment_len * 0.35, 30.0, 100.0)
+	var p1: Vector2 = p0 + outward_start * reach
+	var p2: Vector2 = p3 + outward_end * reach
+
+	var points: PackedVector2Array = PackedVector2Array()
+	points.resize(PREVIEW_SAMPLES)
+	for i: int in PREVIEW_SAMPLES:
+		var t: float = float(i) / (PREVIEW_SAMPLES - 1)
+		points[i] = _cubic_bezier(p0, p1, p2, p3, t)
+
+	vis_line.points = points
+	vis_line.default_color = Color(0.6, 0.8, 1.0, 0.8 if not is_snapped else 1.0)
+
+
+# ----- Original Arrow API ----------------------------------------------------
 
 
 ## Returns the start shape node resolved from the stored NodePath.

@@ -25,8 +25,8 @@ var _arrow_drag_active: bool = false
 var _drag_start_anchor: LineAnchor
 var _drag_snapped_anchor: LineAnchor
 
-## Preview line shown during drag.
-var _preview_line: Line2D = null
+## Preview arrow shown during drag.
+var _preview_arrow: Arrow = null
 
 ## Signals from ClickHandler (connected in _ready).
 var _click_handler: Node = null
@@ -58,11 +58,11 @@ func _line_drag_stop(_line_anchor: LineAnchor) -> void:
 		return
 	_arrow_drag_active = false
 
-	# Remove preview line.
-	if _preview_line != null and _preview_line.get_parent() != null:
-		_preview_line.get_parent().remove_child(_preview_line)
-		_preview_line.queue_free()
-	_preview_line = null
+	# Remove preview arrow.
+	if _preview_arrow != null and _preview_arrow.get_parent() != null:
+		_preview_arrow.get_parent().remove_child(_preview_arrow)
+		_preview_arrow.queue_free()
+	_preview_arrow = null
 
 	# If snapped to a valid different element, create arrow.
 	if _drag_snapped_anchor != null and _drag_snapped_anchor.get_element() != _drag_start_anchor.get_element():
@@ -73,15 +73,12 @@ func _line_drag_start(line_anchor: LineAnchor) -> void:
 	_drag_start_anchor = line_anchor
 	_drag_snapped_anchor = null
 
-	if _preview_line == null:
-		_preview_line = Line2D.new()
-		_preview_line.width = 2.0
-		_preview_line.default_color = Color(0.6, 0.8, 1.0)
-		_preview_line.antialiased = true
-		_preview_line.begin_cap_mode = Line2D.LINE_CAP_ROUND
-		_preview_line.end_cap_mode = Line2D.LINE_CAP_ROUND
-		_preview_line.show()
-	element_layer.add_child(_preview_line)
+	# Create a preview arrow (as a special type of arrow).
+	if _preview_arrow == null:
+		_preview_arrow = ARROW_SCENE.instantiate()
+		element_layer.add_child(_preview_arrow)
+		_preview_arrow.setup_preview(line_anchor)
+
 
 func _process(_delta: float) -> void:
 	#if not toolbar.select_mode_active:
@@ -273,43 +270,23 @@ func _get_dot_position(element: CanvasElement, label: String) -> Vector2:
 
 
 func _update_drag_preview(mouse_pos: Vector2) -> void:
-	if _preview_line == null || _arrow_drag_active == false || _drag_start_anchor == null:
+	if _preview_arrow == null || _arrow_drag_active == false || _drag_start_anchor == null:
 		return
 
-	var p0: Vector2 = _drag_start_anchor.global_position
-	var outward_start: Vector2 = _drag_start_anchor.get_normal()
-
 	# Determine end position: snapped or free.
-	var p3: Vector2
-	var outward_end: Vector2
+	var end_pos: Vector2
+	var end_normal: Vector2
 	var drag_snapped: bool = false
 
 	if _drag_snapped_anchor != null and _drag_snapped_anchor != _drag_start_anchor:
-		p3 = _drag_snapped_anchor.global_position
-		outward_end = _drag_snapped_anchor.get_normal()
+		end_pos = _drag_snapped_anchor.global_position
+		end_normal = _drag_snapped_anchor.get_normal()
 		drag_snapped = true
 	else:
-		p3 = mouse_pos
-		outward_end = Vector2.ZERO
+		end_pos = mouse_pos
+		end_normal = Vector2.ZERO
 
-	var segment_len: float = p0.distance_to(p3)
-	if segment_len < 1.0:
-		_preview_line.points = PackedVector2Array([p0, p3])
-		return
-
-	var reach: float = clampf(segment_len * 0.35, 30.0, 100.0)
-	var p1: Vector2 = p0 + outward_start * reach
-	var p2: Vector2 = p3 + outward_end * reach
-
-	var points: PackedVector2Array = PackedVector2Array()
-	var samples: int = 20
-	points.resize(samples)
-	for i: int in samples:
-		var t: float = float(i) / (samples - 1)
-		points[i] = Arrow._cubic_bezier(p0, p1, p2, p3, t)
-
-	_preview_line.points = points
-	_preview_line.default_color = Color(0.6, 0.8, 1.0, 0.8 if not drag_snapped else 1.0)
+	_preview_arrow.update_preview(end_pos, end_normal, drag_snapped)
 
 
 # ----- Private helpers: arrow creation ---------------------------------------
