@@ -97,9 +97,9 @@ func _process(_delta: float) -> void:
 
 ## Returns a list of all active arrows.
 func get_arrows() -> Array[Arrow]:
-	var _arrows: Array[Arrow] = get_children() as Array[Arrow]
+	var _arrows: Array[Arrow] = []
+	_arrows.assign(get_children())
 	return _arrows
-
 
 
 ## Returns the nearest arrow hit within the given world-space distance, or null.
