@@ -43,7 +43,7 @@ var primary_selection: Node = null
 
 @onready var element_layer: Node2D = %ElementLayer
 @onready var canvas: Node2D = %Canvas
-@onready var select_button: Button = $UI/Toolbar/HBox/SelectButton
+
 @onready var click_handler: Node = $ClickHandler
 @onready var confirm_dialog: AcceptDialog = $UI/ConfirmDialog
 @onready var grid_background: ColorRect = %GridBackground
@@ -256,7 +256,7 @@ func activate_shape_mode(sub_mode: String) -> void:
 	shape_tool_active = true
 	shape_sub_mode = sub_mode
 	Input.set_default_cursor_shape(Input.CURSOR_CROSS)
-	select_button.button_pressed = false
+	#select_button.button_pressed = false
 
 
 ## Deactivates shape-placement mode and returns to neutral state.
@@ -321,7 +321,7 @@ func activate_select_mode() -> void:
 
 	GameState.toolbar.select_mode_active = true
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
-	select_button.button_pressed = true
+	#select_button.button_pressed = true
 
 
 ## Deactivates Select mode and clears selection.
@@ -329,7 +329,7 @@ func deactivate_select_mode() -> void:
 	GameState.toolbar.select_mode_active = false
 	clear_selection()
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
-	select_button.button_pressed = false
+	#select_button.button_pressed = false
 
 
 ## Toggles Shape mode on/off with the given sub-mode. Connected to Toolbar's signal.

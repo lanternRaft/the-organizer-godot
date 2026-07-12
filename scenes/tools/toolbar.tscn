@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://b1erex6nkuep0"]
 
 [ext_resource type="Script" uid="uid://bnl4uti5cdwlo" path="res://scenes/tools/toolbar.gd" id="1_i1fuw"]
+[ext_resource type="Theme" uid="uid://djjxeedxnscap" path="res://resources/theme.tres" id="2_theme"]
 
 [node name="Toolbar" type="Control" unique_id=1613292230]
 layout_mode = 3
@@ -15,9 +16,20 @@ offset_right = 115.0
 offset_bottom = -8.0
 grow_horizontal = 2
 grow_vertical = 0
+mouse_filter = 2
+theme = ExtResource("2_theme")
 script = ExtResource("1_i1fuw")
 
-[node name="HBox" type="HBoxContainer" parent="." unique_id=251104923]
+[node name="Panel" type="Panel" parent="." unique_id=1613292231]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="HBox" type="HBoxContainer" parent="Panel" unique_id=251104923]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -25,20 +37,44 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="SelectButton" type="Button" parent="HBox" unique_id=521429799]
+[node name="SelectButton" type="Button" parent="Panel/HBox" unique_id=521429799]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(70, 40)
 layout_mode = 2
+tooltip_text = "Select mode (Esc to deselect)"
 toggle_mode = true
 text = "Select"
 
-[node name="ShapeMenuButton" type="MenuButton" parent="HBox" unique_id=650451714]
+[node name="ShapeButton" type="Button" parent="Panel/HBox" unique_id=650451713]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(70, 40)
 layout_mode = 2
+tooltip_text = "Place oval/circle shape"
+toggle_mode = true
 text = "Oval ▾"
 
-[node name="NodeMenuButton" type="MenuButton" parent="HBox" unique_id=223702006]
+[node name="ShapePopup" type="PopupMenu" parent="Panel/HBox/ShapeButton" unique_id=650451714]
 unique_name_in_owner = true
+item_count = 2
+item_0/id = 0
+item_1/id = 1
+
+[node name="NodeButton" type="Button" parent="Panel/HBox" unique_id=223702005]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(70, 40)
 layout_mode = 2
+tooltip_text = "Place circle/triangle node marker"
+toggle_mode = true
 text = "Circle Node ▾"
 
-[connection signal="toggled" from="HBox/SelectButton" to="." method="_on_select_button_toggled"]
+[node name="NodePopup" type="PopupMenu" parent="Panel/HBox/NodeButton" unique_id=223702006]
+unique_name_in_owner = true
+item_count = 2
+item_0/id = 0
+item_1/id = 1
+
+[connection signal="toggled" from="Panel/HBox/SelectButton" to="." method="_on_select_button_toggled"]
+[connection signal="toggled" from="Panel/HBox/ShapeButton" to="." method="_on_shape_button_toggled"]
+[connection signal="id_pressed" from="Panel/HBox/ShapeButton/ShapePopup" to="." method="_on_shape_popup_item_selected"]
+[connection signal="toggled" from="Panel/HBox/NodeButton" to="." method="_on_node_button_toggled"]
+[connection signal="id_pressed" from="Panel/HBox/NodeButton/NodePopup" to="." method="_on_node_popup_item_selected"]

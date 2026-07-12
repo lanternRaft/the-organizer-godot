@@ -3,14 +3,21 @@ extends Control
 
 ## Bottom-center toolbar with tool buttons.
 ## Emits signals to Main.gd when tool modes change.
+## Uses toggle-mode buttons for one-click tool activation.
+## Each tool button (Shape, Node) also opens a popup for sub-mode selection.
 
 signal shape_sub_mode_changed(sub_mode: String)
 signal select_mode_toggled(active: bool)
 signal node_sub_mode_changed(sub_mode: String)
 
-@onready var shape_menu_button: MenuButton = %ShapeMenuButton
+enum ToolMode { NONE, SELECT, SHAPE, NODE }
+
+@onready var panel: Panel = $Panel
 @onready var select_button: Button = %SelectButton
-@onready var node_menu_button: MenuButton = %NodeMenuButton
+@onready var shape_button: Button = %ShapeButton
+@onready var shape_popup: PopupMenu = %ShapePopup
+@onready var node_button: Button = %NodeButton
+@onready var node_popup: PopupMenu = %NodePopup
 
 ## Shape sub-mode tracking and labels.
 const SHAPE_SUB_MODES: Array[String] = ["oval", "circle"]
@@ -29,61 +36,130 @@ var current_node_sub_mode: String = "circle_node"
 ## Whether select mode is currently active.
 var select_mode_active: bool = true
 
+## Tracks the active tool mode to enforce mutual exclusivity.
+var _active_tool: ToolMode = ToolMode.SELECT
+
 
 func _ready() -> void:
 	GameState.toolbar = self
-	_setup_shape_menu()
-	_setup_node_menu()
 	_update_shape_button_label()
 	_update_node_button_label()
+	# Start in Select mode (pressed).
+	select_button.button_pressed = true
+	_active_tool = ToolMode.SELECT
 
 
-## Configures the MenuButton's popup with Oval and Circle items.
-func _setup_shape_menu() -> void:
-	var popup: PopupMenu = shape_menu_button.get_popup()
-	popup.clear()
-	popup.add_item("Oval", 0)
-	popup.add_item("Circle", 1)
-	popup.id_pressed.connect(_on_shape_menu_item_selected)
+## Returns the human-readable label for the current shape sub-mode.
+func get_shape_label() -> String:
+	return SHAPE_LABELS[current_shape_sub_mode]
 
 
-## Handles selection from the shape dropdown menu.
-## Updates the button label and emits the new sub-mode.
-func _on_shape_menu_item_selected(id: int) -> void:
+## Returns the human-readable label for the current node sub-mode.
+func get_node_label() -> String:
+	return NODE_LABELS[current_node_sub_mode]
+
+
+## One-click shape tool activation.
+## Pressing the shape button toggles it on (and deactivates other tools)
+## and opens the variant popup immediately.
+func _on_shape_button_toggled(toggled_on: bool) -> void:
+	if toggled_on:
+		# Deactivate other tools
+		_deactivate_other_tools(ToolMode.SHAPE)
+		_active_tool = ToolMode.SHAPE
+		select_button.button_pressed = false
+		select_mode_active = false
+		select_mode_toggled.emit(false)
+		shape_sub_mode_changed.emit(current_shape_sub_mode)
+		# Open the popup so the user can change variant if desired.
+		shape_popup.popup(Rect2i(shape_button.global_position, shape_button.size))
+	else:
+		# Toggled off: go back to select mode.
+		_activate_select_mode()
+
+
+## Handles selection from the shape popup menu.
+## Updates the sub-mode label and keeps the tool active.
+func _on_shape_popup_item_selected(id: int) -> void:
 	if id >= 0 and id < SHAPE_SUB_MODES.size():
 		current_shape_sub_mode = SHAPE_SUB_MODES[id]
 		_update_shape_button_label()
 		shape_sub_mode_changed.emit(current_shape_sub_mode)
+		# Ensure the shape tool stays active.
+		if not shape_button.button_pressed:
+			shape_button.button_pressed = true
+			_on_shape_button_toggled(true)
 
 
-## Updates the MenuButton text to show current sub-mode with dropdown indicator.
-func _update_shape_button_label() -> void:
-	shape_menu_button.text = SHAPE_LABELS[current_shape_sub_mode] + " ▾"
+## One-click node tool activation.
+## Pressing the node button toggles it on (and deactivates other tools)
+## and opens the variant popup immediately.
+func _on_node_button_toggled(toggled_on: bool) -> void:
+	if toggled_on:
+		# Deactivate other tools
+		_deactivate_other_tools(ToolMode.NODE)
+		_active_tool = ToolMode.NODE
+		select_button.button_pressed = false
+		select_mode_active = false
+		select_mode_toggled.emit(false)
+		node_sub_mode_changed.emit(current_node_sub_mode)
+		# Open the popup so the user can change variant if desired.
+		node_popup.popup(Rect2i(node_button.global_position, node_button.size))
+	else:
+		# Toggled off: go back to select mode.
+		_activate_select_mode()
 
 
-## Configures the MenuButton's popup with Circle Node and Triangle Node items.
-func _setup_node_menu() -> void:
-	var popup: PopupMenu = node_menu_button.get_popup()
-	popup.clear()
-	popup.add_item("Circle Node", 0)
-	popup.add_item("Triangle Node", 1)
-	popup.id_pressed.connect(_on_node_menu_item_selected)
-
-
-## Handles selection from the node dropdown menu.
-## Updates the button label and emits the new sub-mode.
-func _on_node_menu_item_selected(id: int) -> void:
+## Handles selection from the node popup menu.
+## Updates the sub-mode label and keeps the tool active.
+func _on_node_popup_item_selected(id: int) -> void:
 	if id >= 0 and id < NODE_SUB_MODES.size():
 		current_node_sub_mode = NODE_SUB_MODES[id]
 		_update_node_button_label()
 		node_sub_mode_changed.emit(current_node_sub_mode)
-
-
-## Updates the MenuButton text to show current node sub-mode with dropdown indicator.
-func _update_node_button_label() -> void:
-	node_menu_button.text = NODE_LABELS[current_node_sub_mode] + " ▾"
+		# Ensure the node tool stays active.
+		if not node_button.button_pressed:
+			node_button.button_pressed = true
+			_on_node_button_toggled(true)
 
 
 ## Forward the button toggle state to Main via signal.
 func _on_select_button_toggled(toggled_on: bool) -> void:
-	select_mode_toggled.emit(toggled_on)
+	if toggled_on:
+		_activate_select_mode()
+	else:
+		# If select was turned off but no other tool is active, default to shape?
+		# For now, just update state.
+		if _active_tool == ToolMode.SELECT:
+			_active_tool = ToolMode.NONE
+		select_mode_active = false
+		select_mode_toggled.emit(false)
+
+
+## Deactivates other tool buttons when one tool is activated.
+func _deactivate_other_tools(active: ToolMode) -> void:
+	if active != ToolMode.SELECT:
+		if shape_button.button_pressed and active != ToolMode.SHAPE:
+			shape_button.button_pressed = false
+		if node_button.button_pressed and active != ToolMode.NODE:
+			node_button.button_pressed = false
+
+
+## Activates select mode and deactivates all other tools.
+func _activate_select_mode() -> void:
+	_active_tool = ToolMode.SELECT
+	select_mode_active = true
+	select_button.button_pressed = true
+	shape_button.button_pressed = false
+	node_button.button_pressed = false
+	select_mode_toggled.emit(true)
+
+
+## Updates the shape button text to show current sub-mode with dropdown indicator.
+func _update_shape_button_label() -> void:
+	shape_button.text = SHAPE_LABELS[current_shape_sub_mode] + " ▾"
+
+
+## Updates the node button text to show current sub-mode with dropdown indicator.
+func _update_node_button_label() -> void:
+	node_button.text = NODE_LABELS[current_node_sub_mode] + " ▾"
