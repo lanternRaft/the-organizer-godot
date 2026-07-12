@@ -81,7 +81,6 @@ func _ready() -> void:
 	## Connect zoom controls to camera controller (string-based to bypass type inference).
 	zoom_controls.connect("zoom_in_requested", _on_zoom_in_requested)
 	zoom_controls.connect("zoom_out_requested", _on_zoom_out_requested)
-	zoom_controls.connect("zoom_reset_requested", _on_zoom_reset_requested)
 
 	## Track zoom changes for the info bar.
 	camera_controller.connect("zoom_changed", _on_zoom_changed)
@@ -578,11 +577,6 @@ func _on_zoom_in_requested() -> void:
 func _on_zoom_out_requested() -> void:
 	var vp_center: Vector2 = _viewport.get_visible_rect().size / 2.0
 	camera_controller.call("zoom_by_factor", 0.8, vp_center)
-
-
-## Relays zoom-reset button press to the camera controller.
-func _on_zoom_reset_requested() -> void:
-	camera_controller.call("reset_zoom")
 
 
 ## Updates the cached zoom level and refreshes the info bar.

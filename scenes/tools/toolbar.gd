@@ -49,36 +49,71 @@ func _ready() -> void:
 	_active_tool = ToolMode.SELECT
 
 
+## Activates a tool mode, deactivating all others.
+## Opens the tool's popup for sub-mode selection.
+func _activate_tool(
+	mode: ToolMode,
+	button: Button,
+	popup: PopupMenu,
+	sub_mode_signal: Signal
+) -> void:
+	_deactivate_other_tools(mode)
+	_active_tool = mode
+	select_button.button_pressed = false
+	select_mode_active = false
+	select_mode_toggled.emit(false)
+	sub_mode_signal.emit()
+	popup.popup(Rect2i(button.global_position, button.size))
+
+
+## Handles popup item selection for a tool.
+## Updates the sub-mode, label, and keeps the tool active.
+func _on_popup_item_selected(
+	id: int,
+	sub_modes: Array[String],
+	set_sub_mode: Callable,
+	label_update: Callable,
+	sub_mode_signal: Signal,
+	button: Button,
+	toggle_handler: Callable
+) -> void:
+	if id >= 0 and id < sub_modes.size():
+		set_sub_mode.call(sub_modes[id])
+		label_update.call()
+		sub_mode_signal.emit(sub_modes[id])
+		# Ensure the tool button stays active.
+		if not button.button_pressed:
+			button.button_pressed = true
+			toggle_handler.call(true)
+
+
 ## One-click shape tool activation.
 ## Pressing the shape button toggles it on (and deactivates other tools)
 ## and opens the variant popup immediately.
 func _on_shape_button_toggled(toggled_on: bool) -> void:
 	if toggled_on:
-		# Deactivate other tools
-		_deactivate_other_tools(ToolMode.SHAPE)
-		_active_tool = ToolMode.SHAPE
-		select_button.button_pressed = false
-		select_mode_active = false
-		select_mode_toggled.emit(false)
-		shape_sub_mode_changed.emit(current_shape_sub_mode)
-		# Open the popup so the user can change variant if desired.
-		shape_popup.popup(Rect2i(shape_button.global_position, shape_button.size))
+		_activate_tool(
+			ToolMode.SHAPE,
+			shape_button,
+			shape_popup,
+			shape_sub_mode_changed.bind(current_shape_sub_mode)
+		)
 	else:
-		# Toggled off: go back to select mode.
 		_activate_select_mode()
 
 
 ## Handles selection from the shape popup menu.
 ## Updates the sub-mode label and keeps the tool active.
 func _on_shape_popup_item_selected(id: int) -> void:
-	if id >= 0 and id < SHAPE_SUB_MODES.size():
-		current_shape_sub_mode = SHAPE_SUB_MODES[id]
-		_update_shape_button_label()
-		shape_sub_mode_changed.emit(current_shape_sub_mode)
-		# Ensure the shape tool stays active.
-		if not shape_button.button_pressed:
-			shape_button.button_pressed = true
-			_on_shape_button_toggled(true)
+	_on_popup_item_selected(
+		id,
+		SHAPE_SUB_MODES,
+		func(v: String): current_shape_sub_mode = v,
+		_update_shape_button_label,
+		shape_sub_mode_changed,
+		shape_button,
+		_on_shape_button_toggled
+	)
 
 
 ## One-click node tool activation.
@@ -86,31 +121,28 @@ func _on_shape_popup_item_selected(id: int) -> void:
 ## and opens the variant popup immediately.
 func _on_node_button_toggled(toggled_on: bool) -> void:
 	if toggled_on:
-		# Deactivate other tools
-		_deactivate_other_tools(ToolMode.NODE)
-		_active_tool = ToolMode.NODE
-		select_button.button_pressed = false
-		select_mode_active = false
-		select_mode_toggled.emit(false)
-		node_sub_mode_changed.emit(current_node_sub_mode)
-		# Open the popup so the user can change variant if desired.
-		node_popup.popup(Rect2i(node_button.global_position, node_button.size))
+		_activate_tool(
+			ToolMode.NODE,
+			node_button,
+			node_popup,
+			node_sub_mode_changed.bind(current_node_sub_mode)
+		)
 	else:
-		# Toggled off: go back to select mode.
 		_activate_select_mode()
 
 
 ## Handles selection from the node popup menu.
 ## Updates the sub-mode label and keeps the tool active.
 func _on_node_popup_item_selected(id: int) -> void:
-	if id >= 0 and id < NODE_SUB_MODES.size():
-		current_node_sub_mode = NODE_SUB_MODES[id]
-		_update_node_button_label()
-		node_sub_mode_changed.emit(current_node_sub_mode)
-		# Ensure the node tool stays active.
-		if not node_button.button_pressed:
-			node_button.button_pressed = true
-			_on_node_button_toggled(true)
+	_on_popup_item_selected(
+		id,
+		NODE_SUB_MODES,
+		func(v: String): current_node_sub_mode = v,
+		_update_node_button_label,
+		node_sub_mode_changed,
+		node_button,
+		_on_node_button_toggled
+	)
 
 
 ## Forward the button toggle state to Main via signal.
