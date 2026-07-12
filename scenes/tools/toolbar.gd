@@ -101,7 +101,7 @@ func _on_node_button_pressed() -> void:
 	select_mode_active = false
 	select_mode_toggled.emit(false)
 	node_sub_mode_changed.emit(current_node_sub_mode)
-	
+
 	_show_popup_menu(node_button, node_popup)
 
 

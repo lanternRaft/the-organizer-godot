@@ -1,6 +1,6 @@
 ## Tracks ToolContext so multiple nodes know what tool is active
-extends Resource
 class_name ToolContext
+extends Resource
 
 enum ToolTypes { SELECT, CIRCLE_NODE }
 
