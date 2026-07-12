@@ -1,45 +1,63 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cfdpemajr42cg"]
 
-[ext_resource type="Script" path="res://scenes/ui/zoom_controls/zoom_controls.gd" id="1_vqj2s"]
+[ext_resource type="Theme" uid="uid://djjxeedxnscap" path="res://resources/theme.tres" id="1_c05i1"]
+[ext_resource type="Script" uid="uid://crxxb7vysfhra" path="res://scenes/ui/zoom_controls/zoom_controls.gd" id="1_vqj2s"]
 
-[node name="ZoomControls" type="Control"]
-anchors_preset = 12
+[node name="ZoomControls" type="Control" unique_id=1859507582]
+layout_mode = 3
+anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -144.0
-offset_top = -180.0
-offset_right = -12.0
-offset_bottom = -50.0
+offset_left = -140.0
+offset_top = -138.0
+offset_right = -8.0
+offset_bottom = -8.0
 grow_horizontal = 0
 grow_vertical = 0
+theme = ExtResource("1_c05i1")
 script = ExtResource("1_vqj2s")
 
-[node name="VBox" type="VBoxContainer" parent="."]
+[node name="VBox" type="VBoxContainer" parent="." unique_id=1873439553]
+custom_maximum_size = Vector2(40, -1)
 layout_mode = 1
-anchors_preset = 15
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+offset_left = -40.0
+offset_top = -75.0
+grow_horizontal = 0
+grow_vertical = 0
 alignment = 2
 
-[node name="ZoomIn" type="Button" parent="VBox"]
+[node name="ZoomIn" type="Button" parent="VBox" unique_id=1765607217]
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
-text = "+"
 tooltip_text = "Zoom in (Ctrl+=)"
 
-[node name="ZoomOut" type="Button" parent="VBox"]
+[node name="Label" type="Label" parent="VBox/ZoomIn" unique_id=864006755]
+layout_mode = 0
+offset_left = 10.0
+offset_top = -5.0
+offset_right = 50.0
+offset_bottom = 44.0
+text = "+"
+
+[node name="ZoomOut" type="Button" parent="VBox" unique_id=999136695]
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
-text = "−"
 tooltip_text = "Zoom out (Ctrl+-)"
 
-[node name="ZoomReset" type="Button" parent="VBox"]
-layout_mode = 2
-text = "⟳"
-tooltip_text = "Reset zoom (Ctrl+0)"
+[node name="Label" type="Label" parent="VBox/ZoomOut" unique_id=1279128343]
+layout_mode = 0
+offset_left = 14.0
+offset_top = -7.0
+offset_right = 54.0
+offset_bottom = 42.0
+text = "-"
 
 [connection signal="pressed" from="VBox/ZoomIn" to="." method="_on_zoom_in_pressed"]
 [connection signal="pressed" from="VBox/ZoomOut" to="." method="_on_zoom_out_pressed"]
-[connection signal="pressed" from="VBox/ZoomReset" to="." method="_on_zoom_reset_pressed"]
