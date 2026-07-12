@@ -18,12 +18,12 @@ var _entry_rows: Dictionary = {}
 ## Global counter for default "Group N" names.
 var _group_counter: int = 0
 
-@onready var _entry_list: VBoxContainer = %EntryList
-
 ## Whether the legend has any colors to display. Exposed for Main to check.
 var has_entries: bool = false:
 	get:
 		return not _entry_rows.is_empty()
+
+@onready var _entry_list: VBoxContainer = %EntryList
 
 
 func _ready() -> void:

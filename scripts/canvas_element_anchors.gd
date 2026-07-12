@@ -51,6 +51,6 @@ func _line_drag_show(_line_anchor: LineAnchor) -> void:
 	_refresh()
 
 
-func _line_drag_hide(_line_anchor: LineAnchor) -> void:
+func _line_drag_hide() -> void:
 	active_line_drag = false
 	_refresh()

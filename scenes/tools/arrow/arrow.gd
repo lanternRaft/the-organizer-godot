@@ -17,6 +17,26 @@ signal selected(arrow: Arrow)
 ## delta: raw movement offset in world-space pixels.
 signal multi_drag_moved(delta: Vector2)
 
+const ARROWHEAD_SIZE: float = 10.0
+const ARROWHEAD_HALF_ANGLE: float = 0.4  # half-angle in radians (~23 degrees)
+
+## Number of sample points for bezier approximation (affects smoothness).
+const CURVE_SAMPLES: int = 40
+
+## Number of sample points for preview bezier (fewer for performance during drag).
+const PREVIEW_SAMPLES: int = 20
+
+## Last-clicked world position for drag delta calculation.
+var _drag_start_world: Vector2 = Vector2.ZERO
+
+## Arrow position when the drag started.
+var _drag_start_position: Vector2 = Vector2.ZERO
+
+## Cached bezier points used for hit-testing and arrowhead rendering.
+var _cached_bezier_points: PackedVector2Array = PackedVector2Array()
+var _cached_arrowhead_tip: Vector2 = Vector2.ZERO
+var _cached_arrowhead_dir: Vector2 = Vector2.ZERO
+
 ## Anchor reference data: shape paths are used instead of direct refs so that
 ## shape deletion doesn't leave dangling pointers.
 var start_shape_path: NodePath
@@ -52,26 +72,6 @@ var is_primary: bool = false:
 				)
 			else:
 				vis_line.default_color = Color(1, 1, 1)
-
-## Last-clicked world position for drag delta calculation.
-var _drag_start_world: Vector2 = Vector2.ZERO
-
-## Arrow position when the drag started.
-var _drag_start_position: Vector2 = Vector2.ZERO
-
-const ARROWHEAD_SIZE: float = 10.0
-const ARROWHEAD_HALF_ANGLE: float = 0.4  # half-angle in radians (~23 degrees)
-
-## Number of sample points for bezier approximation (affects smoothness).
-const CURVE_SAMPLES: int = 40
-
-## Number of sample points for preview bezier (fewer for performance during drag).
-const PREVIEW_SAMPLES: int = 20
-
-## Cached bezier points used for hit-testing and arrowhead rendering.
-var _cached_bezier_points: PackedVector2Array = PackedVector2Array()
-var _cached_arrowhead_tip: Vector2 = Vector2.ZERO
-var _cached_arrowhead_dir: Vector2 = Vector2.ZERO
 
 ## The visible stroke Line2D that renders the cubic bezier path of the arrow.
 ## Styled with white (default) or highlight color when selected.
