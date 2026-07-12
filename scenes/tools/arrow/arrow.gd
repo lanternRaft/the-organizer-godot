@@ -4,6 +4,11 @@ extends Node2D
 ## Cubic bezier arrow connecting two CanvasElement anchors.
 ## Renders a visible stroke, an invisible wider hit-line for click detection,
 ## and a mono-directional arrowhead at the end point.
+##
+## Can also operate in "preview" mode (is_preview = true) for arrow drag
+## previews. In preview mode, the arrow is configured with only a start anchor
+## and the endpoint is updated dynamically via update_preview(). The arrowhead
+## is suppressed in preview mode.
 
 signal selected(arrow: Arrow)
 
@@ -12,12 +17,35 @@ signal selected(arrow: Arrow)
 ## delta: raw movement offset in world-space pixels.
 signal multi_drag_moved(delta: Vector2)
 
+const ARROWHEAD_SIZE: float = 10.0
+const ARROWHEAD_HALF_ANGLE: float = 0.4  # half-angle in radians (~23 degrees)
+
+## Number of sample points for bezier approximation (affects smoothness).
+const CURVE_SAMPLES: int = 40
+
+## Number of sample points for preview bezier (fewer for performance during drag).
+const PREVIEW_SAMPLES: int = 20
+
+## Last-clicked world position for drag delta calculation.
+var _drag_start_world: Vector2 = Vector2.ZERO
+
+## Arrow position when the drag started.
+var _drag_start_position: Vector2 = Vector2.ZERO
+
+## Cached bezier points used for hit-testing and arrowhead rendering.
+var _cached_bezier_points: PackedVector2Array = PackedVector2Array()
+var _cached_arrowhead_tip: Vector2 = Vector2.ZERO
+var _cached_arrowhead_dir: Vector2 = Vector2.ZERO
+
 ## Anchor reference data: shape paths are used instead of direct refs so that
 ## shape deletion doesn't leave dangling pointers.
 var start_shape_path: NodePath
 var end_shape_path: NodePath
-var start_anchor_label: String  # "top", "bottom", "left", "right", etc.
-var end_anchor_label: String
+var start_anchor: LineAnchor
+var end_anchor: LineAnchor
+
+## When true, this arrow is a drag preview (no arrowhead drawn, dynamic endpoint).
+var is_preview: bool = false
 
 var is_selected: bool = false:
 	set(value):
@@ -45,24 +73,11 @@ var is_primary: bool = false:
 			else:
 				vis_line.default_color = Color(1, 1, 1)
 
-## Last-clicked world position for drag delta calculation.
-var _drag_start_world: Vector2 = Vector2.ZERO
-
-## Arrow position when the drag started.
-var _drag_start_position: Vector2 = Vector2.ZERO
-
-const ARROWHEAD_SIZE: float = 10.0
-const ARROWHEAD_HALF_ANGLE: float = 0.4  # half-angle in radians (~23 degrees)
-
-## Number of sample points for bezier approximation (affects smoothness).
-const CURVE_SAMPLES: int = 40
-
-## Cached bezier points used for hit-testing and arrowhead rendering.
-var _cached_bezier_points: PackedVector2Array = PackedVector2Array()
-var _cached_arrowhead_tip: Vector2 = Vector2.ZERO
-var _cached_arrowhead_dir: Vector2 = Vector2.ZERO
-
+## The visible stroke Line2D that renders the cubic bezier path of the arrow.
+## Styled with white (default) or highlight color when selected.
 @onready var vis_line: Line2D = $VisLine
+## An invisible, wider Line2D layered on top of vis_line for click/hit detection.
+## Has 14px width and transparent color so the user can easily click on thin arrows.
 @onready var hit_line: Line2D = $HitLine
 
 
@@ -76,8 +91,19 @@ func _ready() -> void:
 	hit_line.antialiased = true
 
 
+func _exit_tree() -> void:
+	if is_instance_valid(start_anchor):
+		start_anchor.connected_arrows.erase(self)
+	if is_instance_valid(end_anchor):
+		end_anchor.connected_arrows.erase(self)
+
+
 func _draw() -> void:
-	if _cached_bezier_points.is_empty():
+	if not is_preview and _cached_bezier_points.is_empty():
+		return
+
+	if is_preview:
+		# In preview mode, draw nothing extra; vis_line handles the path.
 		return
 
 	# Draw arrowhead as a filled triangle at the end point.
@@ -102,35 +128,16 @@ func _draw() -> void:
 ## Uses the CanvasElement.get_anchor_positions() interface to find anchor offsets.
 ## Must be called after either element moves or resizes.
 func rebuild_path() -> void:
-	var start_shape: Node = _resolve_shape(start_shape_path)
-	var end_shape: Node = _resolve_shape(end_shape_path)
-
-	if start_shape == null or end_shape == null:
+	if start_anchor == null or end_anchor == null:
 		# One of the connected elements was deleted; queue free.
 		queue_free()
 		return
 
-	# Use CanvasElement interface if available; fall back to static utility.
-	var p0: Vector2
-	var p3: Vector2
-	var outward_start: Vector2
-	var outward_end: Vector2
+	var p0: Vector2 = start_anchor.get_line_global_position()
+	var outward_start: Vector2 = start_anchor.get_normal()
 
-	var start_canvas: CanvasElement = start_shape as CanvasElement
-	if start_canvas != null:
-		p0 = get_canvas_element_anchor_edge(start_canvas, start_anchor_label)
-		outward_start = get_canvas_element_anchor_outward(start_canvas, start_anchor_label)
-	else:
-		p0 = get_anchor_edge_position_static(start_shape, start_anchor_label)
-		outward_start = get_anchor_outward_normal_static(start_anchor_label)
-
-	var end_canvas: CanvasElement = end_shape as CanvasElement
-	if end_canvas != null:
-		p3 = get_canvas_element_anchor_edge(end_canvas, end_anchor_label)
-		outward_end = get_canvas_element_anchor_outward(end_canvas, end_anchor_label)
-	else:
-		p3 = get_anchor_edge_position_static(end_shape, end_anchor_label)
-		outward_end = get_anchor_outward_normal_static(end_anchor_label)
+	var p3: Vector2 = end_anchor.get_line_global_position()
+	var outward_end: Vector2 = end_anchor.get_normal()
 
 	var segment_len: float = p0.distance_to(p3)
 	var reach: float = clampf(segment_len * 0.35, 30.0, 100.0)
@@ -154,6 +161,57 @@ func rebuild_path() -> void:
 	vis_line.points = points
 	hit_line.points = points
 	queue_redraw()
+
+
+# ----- Preview Mode ----------------------------------------------------------
+
+
+## Configures this arrow as a drag preview. The hit line is hidden and
+## vis_line gets preview styling. Only the start anchor is set; the endpoint
+## will be updated dynamically via update_preview().
+func setup_preview(anchor: LineAnchor) -> void:
+	is_preview = true
+	start_anchor = anchor
+	hit_line.hide()
+	vis_line.width = 2.0
+	vis_line.default_color = Color(0.6, 0.8, 1.0)
+	vis_line.antialiased = true
+	vis_line.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	vis_line.end_cap_mode = Line2D.LINE_CAP_ROUND
+
+
+## Updates the preview bezier path with a dynamic endpoint.
+## Called each frame during arrow drag.
+func update_preview(end_pos: Vector2, end_normal: Vector2, is_snapped: bool) -> void:
+	if start_anchor == null:
+		return
+
+	var p0: Vector2 = start_anchor.global_position
+	var outward_start: Vector2 = start_anchor.get_normal()
+
+	var p3: Vector2 = end_pos
+	var outward_end: Vector2 = end_normal
+
+	var segment_len: float = p0.distance_to(p3)
+	if segment_len < 1.0:
+		vis_line.points = PackedVector2Array([p0, p3])
+		return
+
+	var reach: float = clampf(segment_len * 0.35, 30.0, 100.0)
+	var p1: Vector2 = p0 + outward_start * reach
+	var p2: Vector2 = p3 + outward_end * reach
+
+	var points: PackedVector2Array = PackedVector2Array()
+	points.resize(PREVIEW_SAMPLES)
+	for i: int in PREVIEW_SAMPLES:
+		var t: float = float(i) / (PREVIEW_SAMPLES - 1)
+		points[i] = _cubic_bezier(p0, p1, p2, p3, t)
+
+	vis_line.points = points
+	vis_line.default_color = Color(0.6, 0.8, 1.0, 0.8 if not is_snapped else 1.0)
+
+
+# ----- Original Arrow API ----------------------------------------------------
 
 
 ## Returns the start shape node resolved from the stored NodePath.
@@ -195,28 +253,6 @@ static func get_canvas_element_anchor_edge(element: CanvasElement, label: String
 	return element.global_position
 
 
-## Returns the outward normal for a CanvasElement anchor by reading the offset
-## from get_anchor_positions().
-static func get_canvas_element_anchor_outward(element: CanvasElement, label: String) -> Vector2:
-	var anchors: Array[Dictionary] = element.get_anchor_positions()
-	for entry: Dictionary in anchors:
-		if entry.get("label", "") == label:
-			var offset: Vector2 = entry.get("offset", Vector2.ZERO)
-			if offset.length_squared() > 0.001:
-				return offset.normalized()
-	# Fallback for cardinal directions.
-	match label:
-		"top":
-			return Vector2(0, -1)
-		"bottom":
-			return Vector2(0, 1)
-		"left":
-			return Vector2(-1, 0)
-		"right":
-			return Vector2(1, 0)
-	return Vector2.ZERO
-
-
 # ----- private helpers -------------------------------------------------------
 
 
@@ -253,50 +289,7 @@ func handle_drag_end(_event: Dictionary) -> void:
 	position = position.snapped(Vector2(20.0, 20.0))
 
 
-## Static utility: returns the edge position (on the ellipse boundary) for an anchor label.
-## Uses duck-typing: if the element has get_anchor_position(label), uses that.
-## Falls back to ellipse-based calculation for LabelShape.
-static func get_anchor_edge_position_static(shape: Node, label: String) -> Vector2:
-	# CanvasNode and similar elements provide their own anchor positions.
-	if shape.has_method(&"get_anchor_position"):
-		var pos: Vector2 = shape.call(&"get_anchor_position", label)
-		return pos
-	# Default LabelShape ellipse-based calculation.
-	var rx: float = shape.get("rx")
-	var ry: float = shape.get("ry")
-	var local_pos: Vector2
-	match label:
-		"top":
-			local_pos = Vector2(0, -ry)
-		"bottom":
-			local_pos = Vector2(0, ry)
-		"left":
-			local_pos = Vector2(-rx, 0)
-		"right":
-			local_pos = Vector2(rx, 0)
-		_:
-			local_pos = Vector2.ZERO
-	var shape_2d: Node2D = shape as Node2D
-	if shape_2d != null:
-		return shape_2d.to_global(local_pos)
-	return local_pos
-
-
-## Static utility: returns the outward normal for an anchor label.
-static func get_anchor_outward_normal_static(label: String) -> Vector2:
-	match label:
-		"top":
-			return Vector2(0, -1)
-		"bottom":
-			return Vector2(0, 1)
-		"left":
-			return Vector2(-1, 0)
-		"right":
-			return Vector2(1, 0)
-	return Vector2.ZERO
-
-
-func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float) -> Vector2:
+static func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float) -> Vector2:
 	var u: float = 1.0 - t
 	var ut: float = u * t
 	return u * u * u * p0 + 3.0 * u * ut * p1 + 3.0 * t * ut * p2 + t * t * t * p3

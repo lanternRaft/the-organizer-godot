@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://dtc5yxqrc1gn7"]
+
+[ext_resource type="Script" uid="uid://dlb50qs4dp4in" path="res://scenes/tools/canvas_node/canvas_node.gd" id="1_7c70g"]
+[ext_resource type="PackedScene" uid="uid://b4hn1afvgxgsd" path="res://scenes/canvas_elements/line_anchor.tscn" id="2_p2sbl"]
+[ext_resource type="Script" uid="uid://vdyib6u72p3w" path="res://scripts/canvas_element_anchors.gd" id="2_xeyld"]
+[ext_resource type="Script" uid="uid://bkmvn3nld53p1" path="res://scripts/select_area_2d.gd" id="4_utdq7"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_xeyld"]
+radius = 8.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ty0p8"]
+radius = 23.0
+
+[node name="TriangleNode" type="Node2D" unique_id=1894558271]
+script = ExtResource("1_7c70g")
+shape_mode = 1
+
+[node name="HoverArea2D" type="Area2D" parent="." unique_id=1873259315]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HoverArea2D" unique_id=1845053714]
+shape = SubResource("CircleShape2D_xeyld")
+
+[node name="Anchors" type="Node2D" parent="." unique_id=820419591]
+script = ExtResource("2_xeyld")
+
+[node name="LineAnchorTop" parent="Anchors" unique_id=2133260073 instance=ExtResource("2_p2sbl")]
+position = Vector2(0, -14)
+
+[node name="LineAnchorBottomLeft" parent="Anchors" unique_id=866498723 instance=ExtResource("2_p2sbl")]
+position = Vector2(-12, 7)
+rotation = -2.094395
+anchor_position = 1
+
+[node name="LineAnchorBottomRight" parent="Anchors" unique_id=1216750874 instance=ExtResource("2_p2sbl")]
+position = Vector2(12, 7)
+rotation = 2.094395
+anchor_position = 3
+
+[node name="AnchorShowArea2D" type="Area2D" parent="." unique_id=774070204]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AnchorShowArea2D" unique_id=1721170396]
+shape = SubResource("CircleShape2D_ty0p8")
+
+[node name="SelectArea2D" type="Area2D" parent="." unique_id=1303631338]
+script = ExtResource("4_utdq7")
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="SelectArea2D" unique_id=1183397098]
+polygon = PackedVector2Array(0, -8, -7, 4, 7, 4)

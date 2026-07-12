@@ -106,7 +106,8 @@ func _input(event: InputEvent) -> void:
 ## Commits the current text (even empty) and closes the overlay.
 ## Edge cases:
 ## - Escape fires before focus_exited; cancel() sets is_open=false, making this a no-op.
-## - Enter fires commit() before focus_exited; _close() clears editing_shape, making commit() a no-op.
+## - Enter fires commit() before focus_exited; _close() clears editing_shape,
+## making commit() a no-op.
 func _on_text_edit_focus_exited() -> void:
 	if is_open:
 		commit()

@@ -48,8 +48,8 @@ var _last_click_time: int = 0
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	## Keyboard events (Escape etc.) are intentionally left for Main.gd.
-	## Only handle mouse-button and mouse-motion events here.
+	# Keyboard events (Escape etc.) are intentionally left for Main.gd.
+	# Only handle mouse-button and mouse-motion events here.
 
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event
@@ -59,8 +59,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			else:
 				_handle_pointer_up(mb)
 
-	elif event is InputEventMouseMotion and _drag_active:
-		_handle_drag_move(event as InputEventMouseMotion)
+	#elif event is InputEventMouseMotion and _drag_active:
+	#_handle_drag_move(event as InputEventMouseMotion)
 
 
 # ----- private helpers -------------------------------------------------------

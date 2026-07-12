@@ -6,6 +6,8 @@ extends Node
 ## Preload LabelShape and CanvasNode scenes for instantiation.
 const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
 const CANVAS_NODE_SCENE: PackedScene = preload("res://scenes/tools/canvas_node/canvas_node.tscn")
+const CIRCLE_NODE_SCENE: PackedScene = preload("res://scenes/canvas_elements/circle_node.tscn")
+const TRIANGLE_NODE_SCENE: PackedScene = preload("res://scenes/canvas_elements/triangle_node.tscn")
 const TEXT_OVERLAY_SCENE: PackedScene = preload(
 	"res://scenes/ui/text_edit_overlay/text_edit_overlay.tscn"
 )
@@ -48,7 +50,6 @@ var primary_selection: Node = null
 @onready var camera_controller: Camera2D = %MainCamera
 @onready var zoom_controls: Control = $UI/ZoomControls
 @onready var arrow_layer: ArrowLayer = %ArrowLayer
-@onready var array_layer: ArrowLayer = %ArrayLayer
 @onready var save_load_manager: SaveLoadManager = %SaveLoadManager
 @onready var _viewport: Viewport = get_viewport()
 @onready var ui_layer: CanvasLayer = $UI
@@ -62,7 +63,7 @@ func _ready() -> void:
 	## Connect ClickHandler's empty-canvas signal for mode-specific actions.
 	click_handler.connect("empty_canvas_clicked", _on_empty_canvas_clicked)
 	## Connect ClickHandler's pointer-up signal (used by ArrowManager to end arrow drags).
-	click_handler.connect("pointer_up", _on_pointer_up)
+	#click_handler.connect("pointer_up", _on_pointer_up)
 	## Start in Select mode by default.
 	activate_select_mode()
 
@@ -285,10 +286,15 @@ func deactivate_node_mode() -> void:
 
 ## Creates a new CanvasNode at the given world position and parents it to ElementLayer.
 ## The node's sub-mode is determined by the current node_sub_mode.
+## Uses the dedicated circle_node.tscn scene for circle nodes and the generic
+## canvas_node.tscn for triangle nodes.
 ## After placement, auto-switches to Select mode and selects the new node.
 func place_node(world_pos: Vector2) -> void:
-	var node: Node2D = CANVAS_NODE_SCENE.instantiate() as Node2D
-	node.set("sub_mode", node_sub_mode)
+	var node: Node2D
+	if node_sub_mode == "circle_node":
+		node = CIRCLE_NODE_SCENE.instantiate() as Node2D
+	else:
+		node = TRIANGLE_NODE_SCENE.instantiate() as Node2D
 	node.position = world_pos
 	element_layer.add_child(node)
 	last_placed = node
@@ -610,18 +616,17 @@ func _on_arrow_clicked_at(world_pos: Vector2) -> bool:
 
 ## Called by ClickHandler as a secondary path after arrow check fails.
 ## Checks whether the click is on an anchor dot (to begin arrow drag).
-func _on_anchor_dot_mousedown(world_pos: Vector2) -> bool:
-	if not GameState.toolbar.select_mode_active:
-		return false
-
-	return arrow_layer.handle_dot_mousedown(world_pos)
-
+#func _on_anchor_dot_mousedown(world_pos: Vector2) -> bool:
+#if not GameState.toolbar.select_mode_active:
+#return false
+#
+#return arrow_layer.handle_dot_mousedown(world_pos)
 
 ## Called by ClickHandler's pointer_up signal to notify ArrowManager.
-func _on_pointer_up(_world_pos: Vector2) -> void:
-	if arrow_layer == null:
-		return
-	arrow_layer.handle_dot_mouseup()
+#func _on_pointer_up(_world_pos: Vector2) -> void:
+#if arrow_layer == null:
+#return
+#arrow_layer.handle_dot_mouseup()
 
 
 ## Called by Main when any CanvasElement emits anchor_changed (resized or moved).

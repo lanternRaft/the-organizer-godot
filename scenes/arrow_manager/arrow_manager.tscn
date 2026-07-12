@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://0soj1di6ppw7"]
-
-[ext_resource type="Script" uid="uid://cuqdarlbwli3w" path="res://scripts/arrow_layer.gd" id="1_vdutk"]
-
-[node name="ArrowManager" type="Node" unique_id=1878729129]
-script = ExtResource("1_vdutk")

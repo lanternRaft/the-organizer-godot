@@ -14,7 +14,7 @@ func test_camera_moved_emitted_on_pan() -> void:
 	_controller.pan_by(Vector2(100.0, 50.0))
 
 	assert_signal(monitor).is_emitted("camera_moved")
-	assert_that(_controller.position).is_equal(Vector2(100.0, 50.0))
+	assert_vector(_controller.position).is_equal(Vector2(100.0, 50.0))
 
 
 func test_camera_moved_emitted_on_zoom() -> void:
@@ -35,7 +35,7 @@ func test_camera_moved_emitted_on_reset() -> void:
 	_controller.reset_zoom()
 
 	assert_signal(monitor).is_emitted("camera_moved")
-	assert_that(_controller.position).is_equal(Vector2.ZERO)
+	assert_vector(_controller.position).is_equal(Vector2.ZERO)
 
 
 func test_camera_moved_not_emitted_when_clamped() -> void:
