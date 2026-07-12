@@ -12,13 +12,6 @@ signal node_sub_mode_changed(sub_mode: String)
 
 enum ToolMode { NONE, SELECT, SHAPE, NODE }
 
-@onready var panel: Panel = $Panel
-@onready var select_button: Button = %SelectButton
-@onready var shape_button: Button = %ShapeButton
-@onready var shape_popup: PopupMenu = %ShapePopup
-@onready var node_button: Button = %NodeButton
-@onready var node_popup: PopupMenu = %NodePopup
-
 ## Shape sub-mode tracking and labels.
 const SHAPE_SUB_MODES: Array[String] = ["oval", "circle"]
 const SHAPE_LABELS: Dictionary = {"oval": "Oval", "circle": "Circle"}
@@ -39,6 +32,13 @@ var select_mode_active: bool = true
 ## Tracks the active tool mode to enforce mutual exclusivity.
 var _active_tool: ToolMode = ToolMode.SELECT
 
+@onready var panel: Panel = $Panel
+@onready var select_button: Button = %SelectButton
+@onready var shape_button: Button = %ShapeButton
+@onready var shape_popup: PopupMenu = %ShapePopup
+@onready var node_button: Button = %NodeButton
+@onready var node_popup: PopupMenu = %NodePopup
+
 
 func _ready() -> void:
 	GameState.toolbar = self
@@ -47,16 +47,6 @@ func _ready() -> void:
 	# Start in Select mode (pressed).
 	select_button.button_pressed = true
 	_active_tool = ToolMode.SELECT
-
-
-## Returns the human-readable label for the current shape sub-mode.
-func get_shape_label() -> String:
-	return SHAPE_LABELS[current_shape_sub_mode]
-
-
-## Returns the human-readable label for the current node sub-mode.
-func get_node_label() -> String:
-	return NODE_LABELS[current_node_sub_mode]
 
 
 ## One-click shape tool activation.
@@ -128,8 +118,8 @@ func _on_select_button_toggled(toggled_on: bool) -> void:
 	if toggled_on:
 		_activate_select_mode()
 	else:
-		# If select was turned off but no other tool is active, default to shape?
-		# For now, just update state.
+		# If select is manually un-toggled (e.g. another tool deactivated it first),
+		# only update state if it was previously in SELECT.
 		if _active_tool == ToolMode.SELECT:
 			_active_tool = ToolMode.NONE
 		select_mode_active = false
@@ -137,6 +127,7 @@ func _on_select_button_toggled(toggled_on: bool) -> void:
 
 
 ## Deactivates other tool buttons when one tool is activated.
+## Called only from shape/node button handlers, so SELECT check is a safety guard.
 func _deactivate_other_tools(active: ToolMode) -> void:
 	if active != ToolMode.SELECT:
 		if shape_button.button_pressed and active != ToolMode.SHAPE:

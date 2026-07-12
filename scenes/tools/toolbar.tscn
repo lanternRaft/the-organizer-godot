@@ -56,7 +56,9 @@ text = "Oval ▾"
 [node name="ShapePopup" type="PopupMenu" parent="Panel/HBox/ShapeButton" unique_id=650451714]
 unique_name_in_owner = true
 item_count = 2
+item_0/text = "Oval"
 item_0/id = 0
+item_1/text = "Circle"
 item_1/id = 1
 
 [node name="NodeButton" type="Button" parent="Panel/HBox" unique_id=223702005]
@@ -70,7 +72,9 @@ text = "Circle Node ▾"
 [node name="NodePopup" type="PopupMenu" parent="Panel/HBox/NodeButton" unique_id=223702006]
 unique_name_in_owner = true
 item_count = 2
+item_0/text = "Circle Node"
 item_0/id = 0
+item_1/text = "Triangle Node"
 item_1/id = 1
 
 [connection signal="toggled" from="Panel/HBox/SelectButton" to="." method="_on_select_button_toggled"]
