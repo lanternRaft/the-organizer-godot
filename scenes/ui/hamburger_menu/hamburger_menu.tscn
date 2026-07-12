@@ -30,3 +30,8 @@ offset_bottom = 54.0
 text = "☰"
 
 [node name="PopupMenu" type="PopupMenu" parent="." unique_id=97636590]
+oversampling_override = 1.0
+visible = true
+item_count = 1
+item_0/text = "Clear"
+item_0/id = 0

@@ -288,7 +288,7 @@ func deactivate_node_mode() -> void:
 ## After placement, auto-switches to Select mode and selects the new node.
 func place_node(world_pos: Vector2) -> void:
 	if true:
-		return 
+		return
 	var node: Node2D
 	if node_sub_mode == "circle_node":
 		node = TRIANGLE_NODE_SCENE.instantiate() as Node2D

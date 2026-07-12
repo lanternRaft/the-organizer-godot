@@ -55,6 +55,7 @@ text = "Oval ▾"
 
 [node name="ShapePopup" type="PopupMenu" parent="Panel/HBox/ShapeButton" unique_id=650451714]
 unique_name_in_owner = true
+oversampling_override = 1.0
 item_count = 2
 item_0/text = "Oval"
 item_0/id = 0
@@ -71,6 +72,8 @@ text = "Circle Node ▾"
 
 [node name="NodePopup" type="PopupMenu" parent="Panel/HBox/NodeButton" unique_id=223702006]
 unique_name_in_owner = true
+oversampling_override = 1.0
+size = Vector2i(149, 100)
 item_count = 2
 item_0/text = "Circle Node"
 item_0/id = 0
