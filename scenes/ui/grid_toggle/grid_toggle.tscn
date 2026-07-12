@@ -2,22 +2,23 @@
 
 [ext_resource type="Script" uid="uid://do57iugg6hwwj" path="res://scenes/ui/grid_toggle/grid_toggle.gd" id="1_eacqy"]
 [ext_resource type="Theme" uid="uid://djjxeedxnscap" path="res://resources/theme.tres" id="1_oexyr"]
+[ext_resource type="Texture2D" uid="uid://g5ljgbnnd8ud" path="res://assets/grid-3x3.svg" id="3_8nmj1"]
 
 [node name="GridToggle" type="Control" unique_id=2078793579]
 layout_mode = 3
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -60.0
-offset_top = 8.0
-offset_right = -8.0
-offset_bottom = 60.0
+offset_left = -68.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 68.0
 grow_horizontal = 0
 theme = ExtResource("1_oexyr")
 script = ExtResource("1_eacqy")
 
 [node name="Button" type="Button" parent="." unique_id=1078205274]
-custom_minimum_size = Vector2(40, 40)
+custom_minimum_size = Vector2(80, 80)
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -27,10 +28,10 @@ offset_bottom = 40.0
 grow_horizontal = 0
 tooltip_text = "Toggle grid (G)"
 
-[node name="Label" type="Label" parent="Button" unique_id=367455585]
+[node name="GridIcon" type="TextureRect" parent="Button" unique_id=541230646]
 layout_mode = 0
-offset_left = 7.0
-offset_top = -8.0
-offset_right = 47.0
-offset_bottom = 55.0
-text = "⊞"
+offset_left = 12.0
+offset_top = 11.0
+offset_right = 69.0
+offset_bottom = 68.0
+texture = ExtResource("3_8nmj1")

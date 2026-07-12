@@ -21,25 +21,7 @@ offset_right = 60.0
 offset_bottom = 60.0
 tooltip_text = "Menu"
 
-[node name="Menu" type="Sprite2D" parent="MenuButton" unique_id=379371856]
-visible = false
-modulate = Color(0.22745098, 0.45882353, 1, 1)
-self_modulate = Color(1, 0.19607843, 1, 1)
-texture_filter = 1
-position = Vector2(20, 20)
-scale = Vector2(1.2031249, 1.2031249)
-texture = ExtResource("3_lq165")
-
-[node name="Label" type="Label" parent="MenuButton" unique_id=2060456560]
-visible = false
-layout_mode = 0
-offset_left = 5.0
-offset_top = -9.0
-offset_right = 45.0
-offset_bottom = 54.0
-text = "☰"
-
-[node name="TextureRect" type="TextureRect" parent="MenuButton" unique_id=341902912]
+[node name="HamburgerIcon" type="TextureRect" parent="MenuButton" unique_id=341902912]
 layout_mode = 0
 offset_left = 11.0
 offset_top = 10.0
@@ -50,7 +32,6 @@ texture = ExtResource("3_lq165")
 [node name="PopupMenu" type="PopupMenu" parent="." unique_id=97636590]
 oversampling_override = 1.0
 size = Vector2i(131, 100)
-visible = true
 item_count = 1
 item_0/text = "Clear"
 item_0/id = 0
