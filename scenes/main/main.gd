@@ -6,7 +6,6 @@ extends Node
 ## Preload LabelShape and CanvasNode scenes for instantiation.
 const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
 const CANVAS_NODE_SCENE: PackedScene = preload("res://scenes/tools/canvas_node/canvas_node.tscn")
-const CIRCLE_NODE_SCENE: PackedScene = preload("res://scenes/canvas_elements/circle_node.tscn")
 const TRIANGLE_NODE_SCENE: PackedScene = preload("res://scenes/canvas_elements/triangle_node.tscn")
 const TEXT_OVERLAY_SCENE: PackedScene = preload(
 	"res://scenes/ui/text_edit_overlay/text_edit_overlay.tscn"
@@ -43,7 +42,7 @@ var primary_selection: Node = null
 
 @onready var element_layer: Node2D = %ElementLayer
 @onready var canvas: Node2D = %Canvas
-@onready var select_button: Button = $UI/Toolbar/HBox/SelectButton
+
 @onready var click_handler: Node = $ClickHandler
 @onready var confirm_dialog: AcceptDialog = $UI/ConfirmDialog
 @onready var grid_background: ColorRect = %GridBackground
@@ -81,7 +80,6 @@ func _ready() -> void:
 	## Connect zoom controls to camera controller (string-based to bypass type inference).
 	zoom_controls.connect("zoom_in_requested", _on_zoom_in_requested)
 	zoom_controls.connect("zoom_out_requested", _on_zoom_out_requested)
-	zoom_controls.connect("zoom_reset_requested", _on_zoom_reset_requested)
 
 	## Track zoom changes for the info bar.
 	camera_controller.connect("zoom_changed", _on_zoom_changed)
@@ -256,7 +254,6 @@ func activate_shape_mode(sub_mode: String) -> void:
 	shape_tool_active = true
 	shape_sub_mode = sub_mode
 	Input.set_default_cursor_shape(Input.CURSOR_CROSS)
-	select_button.button_pressed = false
 
 
 ## Deactivates shape-placement mode and returns to neutral state.
@@ -290,9 +287,11 @@ func deactivate_node_mode() -> void:
 ## canvas_node.tscn for triangle nodes.
 ## After placement, auto-switches to Select mode and selects the new node.
 func place_node(world_pos: Vector2) -> void:
+	if true:
+		return
 	var node: Node2D
 	if node_sub_mode == "circle_node":
-		node = CIRCLE_NODE_SCENE.instantiate() as Node2D
+		node = TRIANGLE_NODE_SCENE.instantiate() as Node2D
 	else:
 		node = TRIANGLE_NODE_SCENE.instantiate() as Node2D
 	node.position = world_pos
@@ -321,7 +320,6 @@ func activate_select_mode() -> void:
 
 	GameState.toolbar.select_mode_active = true
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
-	select_button.button_pressed = true
 
 
 ## Deactivates Select mode and clears selection.
@@ -329,7 +327,6 @@ func deactivate_select_mode() -> void:
 	GameState.toolbar.select_mode_active = false
 	clear_selection()
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
-	select_button.button_pressed = false
 
 
 ## Toggles Shape mode on/off with the given sub-mode. Connected to Toolbar's signal.
@@ -581,11 +578,6 @@ func _on_zoom_in_requested() -> void:
 func _on_zoom_out_requested() -> void:
 	var vp_center: Vector2 = _viewport.get_visible_rect().size / 2.0
 	camera_controller.call("zoom_by_factor", 0.8, vp_center)
-
-
-## Relays zoom-reset button press to the camera controller.
-func _on_zoom_reset_requested() -> void:
-	camera_controller.call("reset_zoom")
 
 
 ## Updates the cached zoom level and refreshes the info bar.

@@ -29,12 +29,6 @@ func _create_test_scene() -> void:
 	canvas.add_child(element_layer)
 	element_layer.owner = main
 
-	var anchor_layer: Node2D = auto_free(Node2D.new())
-	anchor_layer.name = "AnchorLayer"
-	anchor_layer.unique_name_in_owner = true
-	canvas.add_child(anchor_layer)
-	anchor_layer.owner = main
-
 	click_handler = auto_free(Node.new())
 	click_handler.name = "ClickHandler"
 	main.add_child(click_handler)

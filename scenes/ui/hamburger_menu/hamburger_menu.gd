@@ -1,7 +1,6 @@
-extends Control
-
 ## Top-left hamburger menu that opens a dropdown with actions.
 ## Currently: Clear (triggers confirmation dialog via signal).
+extends Control
 
 signal clear_requested
 
@@ -10,7 +9,6 @@ signal clear_requested
 
 
 func _ready() -> void:
-	popup_menu.add_item("Clear")
 	popup_menu.hide()
 	popup_menu.index_pressed.connect(_on_menu_item_pressed)
 	menu_button.pressed.connect(_on_button_pressed)
