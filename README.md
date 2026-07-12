@@ -15,3 +15,9 @@ bash addons/gdUnit4/runtest.sh -a res://tests/unit/ui/legend_panel/test_legend_p
 ```
 
 Use the `-a` flag to point to a test suite file or directory. All tests are under `tests/`.
+
+
+## Web Build
+```bash
+godot --headless --quiet --export-debug Web export/debug/index.html
+```
