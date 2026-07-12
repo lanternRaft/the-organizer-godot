@@ -2,6 +2,7 @@
 
 [ext_resource type="Theme" uid="uid://djjxeedxnscap" path="res://resources/theme.tres" id="1_ktr2w"]
 [ext_resource type="Script" uid="uid://bw2xfqe5gg8xl" path="res://scenes/ui/hamburger_menu/hamburger_menu.gd" id="1_vhq2c"]
+[ext_resource type="Texture2D" uid="uid://dutnin1fjd2t0" path="res://assets/menu.svg" id="3_lq165"]
 
 [node name="HamburgerMenu" type="Control" unique_id=106620619]
 layout_mode = 3
@@ -14,14 +15,26 @@ theme = ExtResource("1_ktr2w")
 script = ExtResource("1_vhq2c")
 
 [node name="MenuButton" type="Button" parent="." unique_id=1134958803]
+custom_minimum_size = Vector2(60, 60)
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+tooltip_text = "Menu"
+
+[node name="Menu" type="Sprite2D" parent="MenuButton" unique_id=379371856]
+visible = false
+modulate = Color(0.22745098, 0.45882353, 1, 1)
+self_modulate = Color(1, 0.19607843, 1, 1)
+texture_filter = 1
+position = Vector2(20, 20)
+scale = Vector2(1.2031249, 1.2031249)
+texture = ExtResource("3_lq165")
 
 [node name="Label" type="Label" parent="MenuButton" unique_id=2060456560]
+visible = false
 layout_mode = 0
 offset_left = 5.0
 offset_top = -9.0
@@ -29,9 +42,16 @@ offset_right = 45.0
 offset_bottom = 54.0
 text = "☰"
 
+[node name="TextureRect" type="TextureRect" parent="MenuButton" unique_id=341902912]
+layout_mode = 0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = 47.0
+offset_bottom = 47.0
+texture = ExtResource("3_lq165")
+
 [node name="PopupMenu" type="PopupMenu" parent="." unique_id=97636590]
 oversampling_override = 1.0
-visible = true
 item_count = 1
 item_0/text = "Clear"
 item_0/id = 0
