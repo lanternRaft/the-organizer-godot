@@ -47,17 +47,17 @@ var _last_clicked_element: Node = null
 var _last_click_time: int = 0
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	# Keyboard events (Escape etc.) are intentionally left for Main.gd.
-	# Only handle mouse-button and mouse-motion events here.
-
-	if event is InputEventMouseButton:
-		var mb: InputEventMouseButton = event
-		if mb.button_index == MOUSE_BUTTON_LEFT:
-			if mb.pressed:
-				_handle_pointer_down(mb)
-			else:
-				_handle_pointer_up(mb)
+#func _unhandled_input(event: InputEvent) -> void:
+	## Keyboard events (Escape etc.) are intentionally left for Main.gd.
+	## Only handle mouse-button and mouse-motion events here.
+#
+	#if event is InputEventMouseButton:
+		#var mb: InputEventMouseButton = event
+		#if mb.button_index == MOUSE_BUTTON_LEFT:
+			#if mb.pressed:
+				#_handle_pointer_down(mb)
+			#else:
+				#_handle_pointer_up(mb)
 
 	#elif event is InputEventMouseMotion and _drag_active:
 	#_handle_drag_move(event as InputEventMouseMotion)

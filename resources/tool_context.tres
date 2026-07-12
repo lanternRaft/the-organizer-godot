@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="ToolContext" format=3 uid="uid://cgmt207kt08s4"]
+
+[ext_resource type="Script" uid="uid://blging1f5bpts" path="res://resources/tool_context.gd" id="1_2wqgf"]
+
+[resource]
+script = ExtResource("1_2wqgf")
+metadata/_custom_type_script = "uid://blging1f5bpts"

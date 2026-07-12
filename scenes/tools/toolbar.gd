@@ -6,6 +6,7 @@ extends Control
 ## Uses toggle-mode buttons for one-click tool activation.
 ## Each tool button (Shape, Node) also opens a popup for sub-mode selection.
 
+
 signal shape_sub_mode_changed(sub_mode: String)
 signal select_mode_toggled(active: bool)
 signal node_sub_mode_changed(sub_mode: String)
@@ -19,6 +20,8 @@ const SHAPE_LABELS: Dictionary = {"oval": "Oval", "circle": "Circle"}
 ## Node sub-mode tracking and labels.
 const NODE_SUB_MODES: Array[String] = ["circle_node", "triangle_node"]
 const NODE_LABELS: Dictionary = {"circle_node": "Circle Node", "triangle_node": "Triangle Node"}
+
+@export var tool_context: ToolContext = preload("uid://cgmt207kt08s4")
 
 ## Currently selected shape sub-mode ("oval" or "circle").
 var current_shape_sub_mode: String = "oval"
@@ -40,6 +43,7 @@ var _active_tool: ToolMode = ToolMode.SELECT
 @onready var node_popup: PopupMenu = %NodePopup
 
 
+
 func _ready() -> void:
 	GameState.toolbar = self
 	_update_shape_button_label()
@@ -47,6 +51,12 @@ func _ready() -> void:
 	# Start in Select mode (pressed).
 	select_button.button_pressed = true
 	_active_tool = ToolMode.SELECT
+	
+	select_button.toggled.connect(_on_select_button_toggled)
+	shape_button.toggled.connect(_on_shape_button_toggled)
+	shape_popup.id_pressed.connect(_on_shape_popup_item_selected)
+	node_button.toggled.connect(_on_node_button_toggled)
+	node_popup.id_pressed.connect(_on_node_popup_item_selected)
 
 
 ## One-click shape tool activation.
@@ -86,6 +96,7 @@ func _on_shape_popup_item_selected(id: int) -> void:
 ## and opens the variant popup immediately.
 func _on_node_button_toggled(toggled_on: bool) -> void:
 	if toggled_on:
+		tool_context.current_tool_type = ToolContext.ToolTypes.CIRCLE_NODE
 		# Deactivate other tools
 		_deactivate_other_tools(ToolMode.NODE)
 		_active_tool = ToolMode.NODE

@@ -23,7 +23,6 @@ var _drag_snapped_anchor: LineAnchor
 var _preview_arrow: Arrow = null
 
 @onready var element_layer: Node2D = %ElementLayer
-@onready var anchor_layer: Node2D = %AnchorLayer
 @onready var toolbar: Toolbar = %Toolbar
 
 
