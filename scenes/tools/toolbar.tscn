@@ -2,42 +2,28 @@
 
 [ext_resource type="Script" uid="uid://bnl4uti5cdwlo" path="res://scenes/tools/toolbar.gd" id="1_i1fuw"]
 [ext_resource type="Theme" uid="uid://djjxeedxnscap" path="res://resources/theme.tres" id="2_theme"]
+[ext_resource type="Texture2D" uid="uid://b2jfm1yva5ojl" path="res://assets/chevron-up.svg" id="3_8ledp"]
 
-[node name="Toolbar" type="Control" unique_id=1613292230]
-layout_mode = 3
+[node name="Toolbar" type="PanelContainer" unique_id=1106617798]
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -115.0
-offset_top = -48.0
-offset_right = 115.0
-offset_bottom = -8.0
+offset_left = -300.0
+offset_top = -80.0
+offset_right = 300.0
+offset_bottom = -20.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
 theme = ExtResource("2_theme")
 script = ExtResource("1_i1fuw")
 
-[node name="Panel" type="Panel" parent="." unique_id=1613292231]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 1
+[node name="HBox" type="HBoxContainer" parent="." unique_id=251104923]
+layout_mode = 2
 
-[node name="HBox" type="HBoxContainer" parent="Panel" unique_id=251104923]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="SelectButton" type="Button" parent="Panel/HBox" unique_id=521429799]
+[node name="SelectButton" type="Button" parent="HBox" unique_id=521429799]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(70, 40)
 layout_mode = 2
@@ -45,15 +31,18 @@ tooltip_text = "Select mode (Esc to deselect)"
 toggle_mode = true
 text = "Select"
 
-[node name="ShapeButton" type="Button" parent="Panel/HBox" unique_id=650451713]
+[node name="ShapeButton" type="Button" parent="HBox" unique_id=650451713]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(70, 40)
+custom_minimum_size = Vector2(190, 40)
 layout_mode = 2
 tooltip_text = "Place oval/circle shape"
 toggle_mode = true
-text = "Oval ▾"
+text = "Oval"
+icon = ExtResource("3_8ledp")
+icon_alignment = 2
+expand_icon = true
 
-[node name="ShapePopup" type="PopupMenu" parent="Panel/HBox/ShapeButton" unique_id=650451714]
+[node name="ShapePopup" type="PopupMenu" parent="HBox/ShapeButton" unique_id=650451714]
 unique_name_in_owner = true
 oversampling_override = 1.0
 item_count = 2
@@ -62,7 +51,7 @@ item_0/id = 0
 item_1/text = "Circle"
 item_1/id = 1
 
-[node name="NodeButton" type="Button" parent="Panel/HBox" unique_id=223702005]
+[node name="NodeButton" type="Button" parent="HBox" unique_id=223702005]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(70, 40)
 layout_mode = 2
@@ -70,7 +59,7 @@ tooltip_text = "Place circle/triangle node marker"
 toggle_mode = true
 text = "Circle Node ▾"
 
-[node name="NodePopup" type="PopupMenu" parent="Panel/HBox/NodeButton" unique_id=223702006]
+[node name="NodePopup" type="PopupMenu" parent="HBox/NodeButton" unique_id=223702006]
 unique_name_in_owner = true
 oversampling_override = 1.0
 size = Vector2i(149, 100)

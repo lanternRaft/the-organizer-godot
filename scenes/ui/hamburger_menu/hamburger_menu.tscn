@@ -2,36 +2,39 @@
 
 [ext_resource type="Theme" uid="uid://djjxeedxnscap" path="res://resources/theme.tres" id="1_ktr2w"]
 [ext_resource type="Script" uid="uid://bw2xfqe5gg8xl" path="res://scenes/ui/hamburger_menu/hamburger_menu.gd" id="1_vhq2c"]
+[ext_resource type="Texture2D" uid="uid://dutnin1fjd2t0" path="res://assets/menu.svg" id="3_lq165"]
 
 [node name="HamburgerMenu" type="Control" unique_id=106620619]
 layout_mode = 3
 anchors_preset = 0
-offset_left = 8.0
-offset_top = 8.0
-offset_right = 48.0
-offset_bottom = 48.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 56.0
+offset_bottom = 56.0
 theme = ExtResource("1_ktr2w")
 script = ExtResource("1_vhq2c")
 
 [node name="MenuButton" type="Button" parent="." unique_id=1134958803]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Label" type="Label" parent="MenuButton" unique_id=2060456560]
+custom_minimum_size = Vector2(80, 80)
 layout_mode = 0
-offset_left = 5.0
-offset_top = -9.0
-offset_right = 45.0
-offset_bottom = 54.0
-text = "☰"
+offset_right = 60.0
+offset_bottom = 60.0
+tooltip_text = "Menu"
+icon = ExtResource("3_lq165")
+expand_icon = true
+
+[node name="HamburgerIcon" type="TextureRect" parent="MenuButton" unique_id=341902912]
+visible = false
+layout_mode = 0
+offset_left = 11.0
+offset_top = 10.0
+offset_right = 68.0
+offset_bottom = 67.0
+texture = ExtResource("3_lq165")
 
 [node name="PopupMenu" type="PopupMenu" parent="." unique_id=97636590]
 oversampling_override = 1.0
-visible = true
+size = Vector2i(131, 100)
 item_count = 1
 item_0/text = "Clear"
 item_0/id = 0

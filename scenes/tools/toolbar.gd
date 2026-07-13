@@ -1,5 +1,5 @@
 class_name Toolbar
-extends Control
+extends PanelContainer
 
 ## Bottom-center toolbar with tool buttons.
 ## Emits signals to Main.gd when tool modes change.
@@ -152,9 +152,9 @@ func _activate_select_mode() -> void:
 
 ## Updates the shape button text to show current sub-mode with dropdown indicator.
 func _update_shape_button_label() -> void:
-	shape_button.text = SHAPE_LABELS[current_shape_sub_mode] + " ▾"
+	shape_button.text = SHAPE_LABELS[current_shape_sub_mode]
 
 
 ## Updates the node button text to show current sub-mode with dropdown indicator.
 func _update_node_button_label() -> void:
-	node_button.text = NODE_LABELS[current_node_sub_mode] + " ▾"
+	node_button.text = NODE_LABELS[current_node_sub_mode]
