@@ -21,6 +21,8 @@ const NODE_SUB_MODES: Array[String] = ["circle_node", "triangle_node"]
 const NODE_LABELS: Dictionary = {"circle_node": "Circle Node", "triangle_node": "Triangle Node"}
 
 @export var tool_context: ToolContext = preload("uid://cgmt207kt08s4")
+@export var label_shape_tools: Array[Tool]
+@export var canvas_node_tools: Array[Tool]
 
 ## Currently selected shape sub-mode ("oval" or "circle").
 var current_shape_sub_mode: String = "oval"
@@ -34,7 +36,6 @@ var select_mode_active: bool = true
 ## Tracks the active tool mode to enforce mutual exclusivity.
 var _active_tool: ToolMode = ToolMode.SELECT
 
-@onready var panel: Panel = $Panel
 @onready var select_button: Button = %SelectButton
 @onready var shape_button: Button = %ShapeButton
 @onready var shape_popup: PopupMenu = %ShapePopup
@@ -43,7 +44,7 @@ var _active_tool: ToolMode = ToolMode.SELECT
 
 
 func _ready() -> void:
-	GameState.toolbar = self
+	#GameState.toolbar = self
 	_update_shape_button_label()
 	_update_node_button_label()
 	# Start in Select mode (pressed).
@@ -55,6 +56,10 @@ func _ready() -> void:
 	shape_popup.id_pressed.connect(_on_shape_popup_item_selected)
 	node_button.pressed.connect(_on_node_button_pressed)
 	node_popup.id_pressed.connect(_on_node_popup_item_selected)
+	
+	node_button.text = canvas_node_tools[0].name
+	node_button.icon = canvas_node_tools[0].icon
+		
 
 
 ## Activate Shape tool

@@ -23,15 +23,6 @@ tooltip_text = "Menu"
 icon = ExtResource("3_lq165")
 expand_icon = true
 
-[node name="HamburgerIcon" type="TextureRect" parent="MenuButton" unique_id=341902912]
-visible = false
-layout_mode = 0
-offset_left = 11.0
-offset_top = 10.0
-offset_right = 68.0
-offset_bottom = 67.0
-texture = ExtResource("3_lq165")
-
 [node name="PopupMenu" type="PopupMenu" parent="." unique_id=97636590]
 oversampling_override = 1.0
 size = Vector2i(131, 100)

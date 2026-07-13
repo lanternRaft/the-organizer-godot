@@ -265,8 +265,8 @@ func deactivate_shape_mode() -> void:
 ## Activates node-placement mode with the given sub-mode.
 ## Deactivates Select mode and Shape mode if active.
 func activate_node_mode(sub_mode: String) -> void:
-	if GameState.toolbar.select_mode_active:
-		deactivate_select_mode()
+	#if GameState.toolbar.select_mode_active:
+		#deactivate_select_mode()
 	if shape_tool_active:
 		deactivate_shape_mode()
 
@@ -318,13 +318,13 @@ func activate_select_mode() -> void:
 	if shape_tool_active:
 		deactivate_shape_mode()
 
-	GameState.toolbar.select_mode_active = true
+	#GameState.toolbar.select_mode_active = true
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 
 
 ## Deactivates Select mode and clears selection.
 func deactivate_select_mode() -> void:
-	GameState.toolbar.select_mode_active = false
+	#GameState.toolbar.select_mode_active = false
 	clear_selection()
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 

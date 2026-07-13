@@ -3,6 +3,9 @@
 [ext_resource type="Script" uid="uid://bnl4uti5cdwlo" path="res://scenes/tools/toolbar.gd" id="1_i1fuw"]
 [ext_resource type="Theme" uid="uid://djjxeedxnscap" path="res://resources/theme.tres" id="2_theme"]
 [ext_resource type="Texture2D" uid="uid://b2jfm1yva5ojl" path="res://assets/chevron-up.svg" id="3_8ledp"]
+[ext_resource type="Script" uid="uid://blivx2mmk41c" path="res://resources/tool.gd" id="3_idi8a"]
+[ext_resource type="Resource" uid="uid://c2uudkc1mokhq" path="res://resources/circle_node.tres" id="4_8x8vq"]
+[ext_resource type="Texture2D" uid="uid://8bgijfolw8tc" path="res://assets/circle-small.svg" id="6_8x8vq"]
 
 [node name="Toolbar" type="PanelContainer" unique_id=1106617798]
 anchors_preset = 7
@@ -19,6 +22,7 @@ grow_vertical = 0
 mouse_filter = 2
 theme = ExtResource("2_theme")
 script = ExtResource("1_i1fuw")
+canvas_node_tools = Array[ExtResource("3_idi8a")]([ExtResource("4_8x8vq")])
 
 [node name="HBox" type="HBoxContainer" parent="." unique_id=251104923]
 layout_mode = 2
@@ -53,11 +57,13 @@ item_1/id = 1
 
 [node name="NodeButton" type="Button" parent="HBox" unique_id=223702005]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(70, 40)
+custom_minimum_size = Vector2(300, 40)
 layout_mode = 2
 tooltip_text = "Place circle/triangle node marker"
 toggle_mode = true
-text = "Circle Node ▾"
+text = "Circle Node"
+icon = ExtResource("6_8x8vq")
+expand_icon = true
 
 [node name="NodePopup" type="PopupMenu" parent="HBox/NodeButton" unique_id=223702006]
 unique_name_in_owner = true
