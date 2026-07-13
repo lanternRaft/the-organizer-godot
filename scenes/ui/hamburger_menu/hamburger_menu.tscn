@@ -20,8 +20,11 @@ layout_mode = 0
 offset_right = 60.0
 offset_bottom = 60.0
 tooltip_text = "Menu"
+icon = ExtResource("3_lq165")
+expand_icon = true
 
 [node name="HamburgerIcon" type="TextureRect" parent="MenuButton" unique_id=341902912]
+visible = false
 layout_mode = 0
 offset_left = 11.0
 offset_top = 10.0
