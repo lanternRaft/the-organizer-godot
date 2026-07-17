@@ -10,9 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://dg8nopt5kevjk" path="res://scenes/main/grid/grid_background.tscn" id="6_qdpx4"]
 [ext_resource type="Script" uid="uid://d0o5xb1imq4xn" path="res://scenes/main/camera_controller/camera_controller.gd" id="7_mpbl4"]
 [ext_resource type="PackedScene" uid="uid://cfdpemajr42cg" path="res://scenes/ui/zoom_controls/zoom_controls.tscn" id="8_i6qj"]
-[ext_resource type="Script" uid="uid://blivx2mmk41c" path="res://resources/tool.gd" id="9_raeie"]
 [ext_resource type="PackedScene" uid="uid://c0r5whgxbsfe4" path="res://scenes/ui/selection_menu/selection_menu.tscn" id="10_4mh8d"]
-[ext_resource type="Resource" uid="uid://c2uudkc1mokhq" path="res://resources/circle_node.tres" id="10_hxu8e"]
 [ext_resource type="Script" uid="uid://bgqqlb21iocs3" path="res://scenes/main/save_load_manager.gd" id="11_blune"]
 [ext_resource type="PackedScene" uid="uid://b64yqge5mdqf7" path="res://scenes/ui/grid_toggle/grid_toggle.tscn" id="11_t5x6f"]
 
@@ -51,8 +49,8 @@ script = ExtResource("3_j8xj4")
 unique_name_in_owner = true
 offset_top = -40.0
 offset_bottom = 0.0
-label_shape_group = null
-canvas_node_group = Array[ExtResource("9_raeie")]([ExtResource("10_hxu8e")])
+shape_tools = null
+canvas_node_tools = null
 
 [node name="ZoomControls" parent="UI" unique_id=469378522 instance=ExtResource("8_i6qj")]
 

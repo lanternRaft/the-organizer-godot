@@ -21,20 +21,14 @@ const NODE_SUB_MODES: Array[String] = ["circle_node", "triangle_node"]
 const NODE_LABELS: Dictionary = {"circle_node": "Circle Node", "triangle_node": "Triangle Node"}
 
 @export var tool_context: ToolContext = preload("uid://cgmt207kt08s4")
-@export var label_shape_tools: Array[Tool]
-@export var canvas_node_tools: Array[Tool]
+@export var shape_tools: Array[Tool]
+@export var node_tools: Array[Tool]
 
-## Currently selected shape sub-mode ("oval" or "circle").
-var current_shape_sub_mode: String = "oval"
+## Current shape tool index in shape_tools
+var current_shape_tool_idx: int = 0
 
-## Currently selected node sub-mode ("circle_node" or "triangle_node").
-var current_node_sub_mode: String = "circle_node"
-
-## Whether select mode is currently active.
-var select_mode_active: bool = true
-
-## Tracks the active tool mode to enforce mutual exclusivity.
-var _active_tool: ToolMode = ToolMode.SELECT
+## Current node tool index in node_tools
+var current_node_tool_idx: int = 0
 
 @onready var select_button: Button = %SelectButton
 @onready var shape_button: Button = %ShapeButton
@@ -44,33 +38,45 @@ var _active_tool: ToolMode = ToolMode.SELECT
 
 
 func _ready() -> void:
-	#GameState.toolbar = self
-	_update_shape_button_label()
-	_update_node_button_label()
-	# Start in Select mode (pressed).
-	select_button.button_pressed = true
-	_active_tool = ToolMode.SELECT
+	_setup_popups()
+	_connect_signals()
+	_refresh()
 
-	select_button.toggled.connect(_on_select_button_toggled)
+
+func _connect_signals() -> void:
+	select_button.pressed.connect(_on_select_button_pressed)
 	shape_button.pressed.connect(_on_shape_button_pressed)
 	shape_popup.id_pressed.connect(_on_shape_popup_item_selected)
 	node_button.pressed.connect(_on_node_button_pressed)
 	node_popup.id_pressed.connect(_on_node_popup_item_selected)
-	
-	node_button.text = canvas_node_tools[0].name
-	node_button.icon = canvas_node_tools[0].icon
-		
+	tool_context.tool_changed.connect(_refresh)
+
+
+func _setup_popups() -> void:
+	node_popup.clear()
+	for tool: Tool in node_tools:
+		node_popup.add_icon_item(tool.icon, tool.name)
+
+	shape_popup.clear()
+	for tool: Tool in shape_tools:
+		shape_popup.add_icon_item(tool.icon, tool.name)
+
+
+func _refresh() -> void:
+	if tool_context.current_tool == ToolContext.SELECT_TOOL:
+		select_button.button_pressed = true
+		shape_button.button_pressed = false
+		node_button.button_pressed = false
+
+	node_button.text = node_tools[current_node_tool_idx].name
+	node_button.icon = node_tools[current_node_tool_idx].icon
+	#shape_button.text = shape_tools[current_shape_tool_idx].name
+	#shape_button.icon = shape_tools[current_shape_tool_idx].icon
 
 
 ## Activate Shape tool
 func _on_shape_button_pressed() -> void:
-	_deactivate_other_tools(ToolMode.SHAPE)
-	_active_tool = ToolMode.SHAPE
-	select_button.button_pressed = false
-	select_mode_active = false
-	select_mode_toggled.emit(false)
-	shape_sub_mode_changed.emit(current_shape_sub_mode)
-
+	tool_context.current_tool = shape_tools[current_node_tool_idx]
 	_show_popup_menu(shape_button, shape_popup)
 
 
@@ -86,80 +92,22 @@ func _show_popup_menu(button: Button, popup: PopupMenu) -> void:
 ## Handles selection from the shape popup menu.
 ## Updates the sub-mode label and keeps the tool active.
 func _on_shape_popup_item_selected(id: int) -> void:
-	if id >= 0 and id < SHAPE_SUB_MODES.size():
-		current_shape_sub_mode = SHAPE_SUB_MODES[id]
-		_update_shape_button_label()
-		shape_sub_mode_changed.emit(current_shape_sub_mode)
-		# Ensure the shape tool stays active.
-		if not shape_button.button_pressed:
-			shape_button.button_pressed = true
-			_on_shape_button_pressed()
+	current_shape_tool_idx = id
+	tool_context.current_tool = shape_tools[id]
 
 
 ## Activate Node tool
 func _on_node_button_pressed() -> void:
-	tool_context.current_tool_type = ToolContext.ToolTypes.CIRCLE_NODE
-	# Deactivate other tools
-	_deactivate_other_tools(ToolMode.NODE)
-	_active_tool = ToolMode.NODE
-	select_button.button_pressed = false
-	select_mode_active = false
-	select_mode_toggled.emit(false)
-	node_sub_mode_changed.emit(current_node_sub_mode)
-
+	tool_context.current_tool = node_tools[current_node_tool_idx]
 	_show_popup_menu(node_button, node_popup)
 
 
 ## Handles selection from the node popup menu.
-## Updates the sub-mode label and keeps the tool active.
 func _on_node_popup_item_selected(id: int) -> void:
-	if id >= 0 and id < NODE_SUB_MODES.size():
-		current_node_sub_mode = NODE_SUB_MODES[id]
-		_update_node_button_label()
-		node_sub_mode_changed.emit(current_node_sub_mode)
-		# Ensure the node tool stays active.
-		if not node_button.button_pressed:
-			_on_node_button_pressed()
+	current_node_tool_idx = id
+	tool_context.current_tool = node_tools[id]
 
 
-## Forward the button toggle state to Main via signal.
-func _on_select_button_toggled(toggled_on: bool) -> void:
-	if toggled_on:
-		_activate_select_mode()
-	else:
-		# If select is manually un-toggled (e.g. another tool deactivated it first),
-		# only update state if it was previously in SELECT.
-		if _active_tool == ToolMode.SELECT:
-			_active_tool = ToolMode.NONE
-		select_mode_active = false
-		select_mode_toggled.emit(false)
-
-
-## Deactivates other tool buttons when one tool is activated.
-## Called only from shape/node button handlers, so SELECT check is a safety guard.
-func _deactivate_other_tools(active: ToolMode) -> void:
-	if active != ToolMode.SELECT:
-		if shape_button.button_pressed and active != ToolMode.SHAPE:
-			shape_button.button_pressed = false
-		if node_button.button_pressed and active != ToolMode.NODE:
-			node_button.button_pressed = false
-
-
-## Activates select mode and deactivates all other tools.
-func _activate_select_mode() -> void:
-	_active_tool = ToolMode.SELECT
-	select_mode_active = true
-	select_button.button_pressed = true
-	shape_button.button_pressed = false
-	node_button.button_pressed = false
-	select_mode_toggled.emit(true)
-
-
-## Updates the shape button text to show current sub-mode with dropdown indicator.
-func _update_shape_button_label() -> void:
-	shape_button.text = SHAPE_LABELS[current_shape_sub_mode]
-
-
-## Updates the node button text to show current sub-mode with dropdown indicator.
-func _update_node_button_label() -> void:
-	node_button.text = NODE_LABELS[current_node_sub_mode]
+## Reset tool context when select is selected
+func _on_select_button_pressed() -> void:
+	tool_context.reset()
