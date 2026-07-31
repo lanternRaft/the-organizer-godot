@@ -5,7 +5,6 @@ extends Node
 
 ## Preload LabelShape and CanvasNode scenes for instantiation.
 const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
-const CANVAS_NODE_SCENE: PackedScene = preload("res://scenes/tools/canvas_node/canvas_node.tscn")
 const TRIANGLE_NODE_SCENE: PackedScene = preload("res://scenes/canvas_elements/triangle_node.tscn")
 const TEXT_OVERLAY_SCENE: PackedScene = preload(
 	"res://scenes/ui/text_edit_overlay/text_edit_overlay.tscn"
@@ -100,12 +99,12 @@ func _ready() -> void:
 	legend_panel.connect("name_changed", _on_legend_name_changed)
 
 	## Load persisted canvas state.
-	var load_result: Dictionary = save_load_manager.load_canvas()
-	var legend_data: Array = load_result.get("legend", [])
-	if not legend_data.is_empty():
-		legend_panel.call("load_legend_data", legend_data)
-	for element: Node in load_result.get("elements", []):
-		_wire_element_signals(element)
+	#var load_result: Dictionary = save_load_manager.load_canvas()
+	#var legend_data: Array = load_result.get("legend", [])
+	#if not legend_data.is_empty():
+		#legend_panel.call("load_legend_data", legend_data)
+	#for element: Node in load_result.get("elements", []):
+		#_wire_element_signals(element)
 	_refresh_legend()
 
 
@@ -216,29 +215,29 @@ func _on_confirm_dialog_confirmed() -> void:
 ## Creates a new shape at the given world position and parents it to ElementLayer.
 ## The shape's sub-mode (oval or circle) is determined by the current shape_sub_mode.
 ## After placement, auto-switches to Select mode and selects the new shape.
-func place_shape(world_pos: Vector2) -> void:
-	var shape: LabelShape = LABEL_SHAPE_SCENE.instantiate() as LabelShape
-	shape.position = world_pos
-	shape.shape_mode = shape_sub_mode
-	element_layer.add_child(shape)
-	last_placed = shape
-
-	# Connect the click signal for selection.
-	#shape.clicked.connect(_on_element_clicked)
-	# Connect double-click for text editing.
-	shape.double_clicked.connect(_on_shape_double_clicked)
-	# Connect anchor_changed so ArrowManager updates connected arrows.
-	shape.anchor_changed.connect(_on_element_anchor_changed.bind(shape))
-	shape.multi_drag_moved.connect(_on_multi_drag_moved.bind(shape))
-	shape.multi_drag_ended.connect(_on_multi_drag_ended.bind(shape))
-	# Auto-switch to Select mode and select the new shape.
-	deactivate_shape_mode()
-	activate_select_mode()
-	select_element(shape, false)
-	set_primary_selection(shape)
-	# Save after placement.
-	_save_state()
-	_refresh_legend()
+#func place_shape(world_pos: Vector2) -> void:
+	#var shape: LabelShape = LABEL_SHAPE_SCENE.instantiate() as LabelShape
+	#shape.position = world_pos
+	#shape.shape_mode = shape_sub_mode
+	#element_layer.add_child(shape)
+	#last_placed = shape
+#
+	## Connect the click signal for selection.
+	##shape.clicked.connect(_on_element_clicked)
+	## Connect double-click for text editing.
+	#shape.double_clicked.connect(_on_shape_double_clicked)
+	## Connect anchor_changed so ArrowManager updates connected arrows.
+	#shape.anchor_changed.connect(_on_element_anchor_changed.bind(shape))
+	#shape.multi_drag_moved.connect(_on_multi_drag_moved.bind(shape))
+	#shape.multi_drag_ended.connect(_on_multi_drag_ended.bind(shape))
+	## Auto-switch to Select mode and select the new shape.
+	#deactivate_shape_mode()
+	#activate_select_mode()
+	#select_element(shape, false)
+	#set_primary_selection(shape)
+	## Save after placement.
+	#_save_state()
+	#_refresh_legend()
 
 
 ## Activates shape-placement mode with the given sub-mode. Deactivates Select mode if active.

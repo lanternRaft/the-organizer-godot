@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="Tool" format=3 uid="uid://dr6lau5maw0hw"]
+
+[ext_resource type="Texture2D" uid="uid://3yew1yyrj2qp" path="res://assets/ellipse.svg" id="1_qj3g2"]
+[ext_resource type="PackedScene" uid="uid://c1mt7raw11kws" path="res://scenes/canvas_elements/oval_label_shape.tscn" id="2_qj3g2"]
+[ext_resource type="Script" uid="uid://blivx2mmk41c" path="res://resources/tool.gd" id="3_mwrwx"]
+
+[resource]
+script = ExtResource("3_mwrwx")
+name = "Oval"
+scene = ExtResource("2_qj3g2")
+icon = ExtResource("1_qj3g2")
+metadata/_custom_type_script = "uid://blivx2mmk41c"

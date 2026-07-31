@@ -4,6 +4,7 @@
 [ext_resource type="Theme" uid="uid://djjxeedxnscap" path="res://resources/theme.tres" id="2_theme"]
 [ext_resource type="Texture2D" uid="uid://b2jfm1yva5ojl" path="res://assets/chevron-up.svg" id="3_8ledp"]
 [ext_resource type="Script" uid="uid://blivx2mmk41c" path="res://resources/tool.gd" id="3_idi8a"]
+[ext_resource type="Resource" uid="uid://dr6lau5maw0hw" path="res://resources/oval_label_shape_tool.tres" id="4_7drip"]
 [ext_resource type="Resource" uid="uid://c2uudkc1mokhq" path="res://resources/circle_node_tool.tres" id="4_8x8vq"]
 [ext_resource type="Resource" uid="uid://cchm6uh32pbee" path="res://resources/triangle_node_tool.tres" id="5_wstqx"]
 [ext_resource type="Texture2D" uid="uid://8bgijfolw8tc" path="res://assets/circle-small.svg" id="6_8x8vq"]
@@ -23,6 +24,7 @@ grow_vertical = 0
 mouse_filter = 2
 theme = ExtResource("2_theme")
 script = ExtResource("1_i1fuw")
+shape_tools = Array[ExtResource("3_idi8a")]([ExtResource("4_7drip")])
 node_tools = Array[ExtResource("3_idi8a")]([ExtResource("4_8x8vq"), ExtResource("5_wstqx")])
 
 [node name="HBox" type="HBoxContainer" parent="." unique_id=251104923]
@@ -44,7 +46,6 @@ tooltip_text = "Place oval/circle shape"
 toggle_mode = true
 text = "Oval"
 icon = ExtResource("3_8ledp")
-icon_alignment = 2
 expand_icon = true
 
 [node name="ShapePopup" type="PopupMenu" parent="HBox/ShapeButton" unique_id=650451714]

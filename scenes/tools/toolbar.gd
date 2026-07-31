@@ -38,7 +38,7 @@ var current_node_tool_idx: int = 0
 
 
 func _ready() -> void:
-	_setup_popups()
+	_setup_tools()
 	_connect_signals()
 	_refresh()
 
@@ -52,10 +52,14 @@ func _connect_signals() -> void:
 	tool_context.tool_changed.connect(_refresh)
 
 
-func _setup_popups() -> void:
+func _setup_tools() -> void:
 	node_popup.clear()
-	for tool: Tool in node_tools:
-		node_popup.add_icon_item(tool.icon, tool.name)
+	for i: int in node_tools.size():
+		if i == 0:
+			shape_button.text = node_tools[i].name
+			shape_button.icon = node_tools[i].icon
+		node_popup.add_icon_item(node_tools[i].icon, node_tools[i].name)
+
 
 	shape_popup.clear()
 	for tool: Tool in shape_tools:

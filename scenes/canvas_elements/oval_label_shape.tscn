@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://c1mt7raw11kws"]
+
+[ext_resource type="Script" uid="uid://bf1jgkunuphg6" path="res://scenes/tools/label_shape/label_shape.gd" id="1_mpgrw"]
+[ext_resource type="Script" uid="uid://vdyib6u72p3w" path="res://scripts/canvas_element_anchors.gd" id="2_1ot7t"]
+[ext_resource type="PackedScene" uid="uid://b4hn1afvgxgsd" path="res://scenes/canvas_elements/line_anchor.tscn" id="3_i8ymp"]
+[ext_resource type="Script" uid="uid://bkmvn3nld53p1" path="res://scripts/select_area_2d.gd" id="4_sm0ut"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_xeyld"]
+radius = 8.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ty0p8"]
+radius = 23.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_utdq7"]
+radius = 8.0
+
+[node name="CircleNode" type="Node2D" unique_id=1844598271]
+modulate = Color(1, 1, 1, 0.9)
+script = ExtResource("1_mpgrw")
+
+[node name="HoverArea2D" type="Area2D" parent="." unique_id=1873259314]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HoverArea2D" unique_id=1845053713]
+shape = SubResource("CircleShape2D_xeyld")
+
+[node name="Anchors" type="Node2D" parent="." unique_id=820419590]
+script = ExtResource("2_1ot7t")
+
+[node name="LineAnchorTop" parent="Anchors" unique_id=2133260072 instance=ExtResource("3_i8ymp")]
+position = Vector2(0, -15)
+
+[node name="LineAnchorLeft" parent="Anchors" unique_id=866498722 instance=ExtResource("3_i8ymp")]
+position = Vector2(-15, 0)
+rotation = 4.712389
+anchor_position = 1
+
+[node name="LineAnchorBottom" parent="Anchors" unique_id=1216750873 instance=ExtResource("3_i8ymp")]
+position = Vector2(0, 15)
+rotation = 3.1415927
+anchor_position = 2
+
+[node name="LineAnchorRight" parent="Anchors" unique_id=1190308540 instance=ExtResource("3_i8ymp")]
+position = Vector2(15, 0)
+rotation = 1.5707964
+anchor_position = 3
+
+[node name="AnchorShowArea2D" type="Area2D" parent="." unique_id=774070203]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AnchorShowArea2D" unique_id=1721170395]
+shape = SubResource("CircleShape2D_ty0p8")
+
+[node name="SelectArea2D" type="Area2D" parent="." unique_id=1303631337]
+script = ExtResource("4_sm0ut")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SelectArea2D" unique_id=435742010]
+shape = SubResource("CircleShape2D_utdq7")
