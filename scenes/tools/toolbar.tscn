@@ -8,6 +8,7 @@
 [ext_resource type="Resource" uid="uid://c2uudkc1mokhq" path="res://resources/circle_node_tool.tres" id="4_8x8vq"]
 [ext_resource type="Resource" uid="uid://cchm6uh32pbee" path="res://resources/triangle_node_tool.tres" id="5_wstqx"]
 [ext_resource type="Texture2D" uid="uid://8bgijfolw8tc" path="res://assets/circle-small.svg" id="6_8x8vq"]
+[ext_resource type="Texture2D" uid="uid://b5daki0uigs5r" path="res://assets/mouse-pointer.svg" id="7_wojs2"]
 
 [node name="Toolbar" type="PanelContainer" unique_id=1106617798]
 anchors_preset = 7
@@ -32,11 +33,13 @@ layout_mode = 2
 
 [node name="SelectButton" type="Button" parent="HBox" unique_id=521429799]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(70, 40)
+custom_minimum_size = Vector2(100, 80)
 layout_mode = 2
 tooltip_text = "Select mode (Esc to deselect)"
 toggle_mode = true
-text = "Select"
+icon = ExtResource("7_wojs2")
+icon_alignment = 1
+expand_icon = true
 
 [node name="ShapeButton" type="Button" parent="HBox" unique_id=650451713]
 unique_name_in_owner = true
