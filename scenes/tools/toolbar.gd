@@ -68,10 +68,10 @@ func _setup_tools() -> void:
 	_refresh()
 
 func _refresh() -> void:
-	if tool_context.current_tool == ToolContext.SELECT_TOOL:
-		select_button.button_pressed = true
-		shape_button.button_pressed = false
-		node_button.button_pressed = false
+	# Only the active tool's button should be in the pressed state.
+	select_button.button_pressed = tool_context.current_tool == ToolContext.SELECT_TOOL
+	shape_button.button_pressed = shape_tools.has(tool_context.current_tool)
+	node_button.button_pressed = node_tools.has(tool_context.current_tool)
 
 	node_button.icon = node_tools[current_node_tool_idx].icon
 	node_button.tooltip_text = node_tools[current_node_tool_idx].name
