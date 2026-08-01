@@ -55,16 +55,17 @@ func _connect_signals() -> void:
 func _setup_tools() -> void:
 	node_popup.clear()
 	for i: int in node_tools.size():
-		if i == 0:
-			shape_button.text = node_tools[i].name
-			shape_button.icon = node_tools[i].icon
-		node_popup.add_icon_item(node_tools[i].icon, node_tools[i].name)
+		node_popup.add_icon_item(node_tools[i].icon, "")
+		node_popup.set_item_tooltip(i, node_tools[i].name)
 
 
 	shape_popup.clear()
-	for tool: Tool in shape_tools:
-		shape_popup.add_icon_item(tool.icon, tool.name)
+	for i: int in shape_tools.size():
+		var tool: Tool = shape_tools[i]
+		shape_popup.add_icon_item(tool.icon, "")
+		shape_popup.set_item_tooltip(i, tool.name)
 
+	_refresh()
 
 func _refresh() -> void:
 	if tool_context.current_tool == ToolContext.SELECT_TOOL:
@@ -72,10 +73,10 @@ func _refresh() -> void:
 		shape_button.button_pressed = false
 		node_button.button_pressed = false
 
-	node_button.text = node_tools[current_node_tool_idx].name
 	node_button.icon = node_tools[current_node_tool_idx].icon
-	#shape_button.text = shape_tools[current_shape_tool_idx].name
-	#shape_button.icon = shape_tools[current_shape_tool_idx].icon
+	node_button.tooltip_text = node_tools[current_node_tool_idx].name
+	shape_button.icon = shape_tools[current_shape_tool_idx].icon
+	shape_button.tooltip_text = shape_tools[current_shape_tool_idx].name
 
 
 ## Activate Shape tool
