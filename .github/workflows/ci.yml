@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  pull_request:
+
+jobs:
+  static-checks:
+    name: 'Static checks'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: Scony/godot-gdscript-toolkit@master
+    - run: gdformat --check .
+    - run: gdlint .
+
+  gdunit4-tests:
+    name: 'GDUnit4 Tests'
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
+      contents: read
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Godot
+      uses: chickensoft-games/setup-godot@v1
+      with:
+        version: 4.6.1
+        use-dotnet: false
+
+    - name: Validate GDScript (check for parse errors)
+      shell: bash
+      run: |
+        # Run Godot to check for script errors - any SCRIPT ERROR will fail the build
+        godot --headless --import --quit 2>&1 | tee godot_output.log
+        if grep -E "SCRIPT ERROR|ERROR:.*Parse Error|ERROR:.*Compilation failed" godot_output.log; then
+          echo "❌ Script errors detected!"
+          exit 1
+        fi
+        echo "✅ No script errors detected"
+
+    - name: Run GDUnit4 Tests
+      shell: bash
+      run: |
+        # Run tests and capture all output
+        godot --headless -s addons/gdUnit4/bin/GdUnitCmdTool.gd -a res://tests --ignoreHeadlessMode 2>&1 | tee test_output.log
