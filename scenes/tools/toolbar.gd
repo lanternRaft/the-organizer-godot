@@ -58,7 +58,6 @@ func _setup_tools() -> void:
 		node_popup.add_icon_item(node_tools[i].icon, "")
 		node_popup.set_item_tooltip(i, node_tools[i].name)
 
-
 	shape_popup.clear()
 	for i: int in shape_tools.size():
 		var tool: Tool = shape_tools[i]
@@ -66,6 +65,7 @@ func _setup_tools() -> void:
 		shape_popup.set_item_tooltip(i, tool.name)
 
 	_refresh()
+
 
 func _refresh() -> void:
 	# Only the active tool's button should be in the pressed state.
