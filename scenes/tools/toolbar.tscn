@@ -5,8 +5,8 @@
 [ext_resource type="Texture2D" uid="uid://b2jfm1yva5ojl" path="res://assets/chevron-up.svg" id="3_8ledp"]
 [ext_resource type="Script" uid="uid://blivx2mmk41c" path="res://resources/tool.gd" id="3_idi8a"]
 [ext_resource type="Resource" uid="uid://dr6lau5maw0hw" path="res://resources/oval_label_shape_tool.tres" id="4_7drip"]
-[ext_resource type="Resource" uid="uid://d1rc1cl3tl00l0a0b" path="res://resources/circle_label_shape_tool.tres" id="5_7drip"]
 [ext_resource type="Resource" uid="uid://c2uudkc1mokhq" path="res://resources/circle_node_tool.tres" id="4_8x8vq"]
+[ext_resource type="Resource" uid="uid://bir7iavjoyj1t" path="res://resources/circle_label_shape_tool.tres" id="5_7drip"]
 [ext_resource type="Resource" uid="uid://cchm6uh32pbee" path="res://resources/triangle_node_tool.tres" id="5_wstqx"]
 [ext_resource type="Texture2D" uid="uid://8bgijfolw8tc" path="res://assets/circle-small.svg" id="6_8x8vq"]
 [ext_resource type="Texture2D" uid="uid://b5daki0uigs5r" path="res://assets/mouse-pointer.svg" id="7_wojs2"]
@@ -17,9 +17,7 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = 0.0
 offset_top = -80.0
-offset_right = 0.0
 offset_bottom = -20.0
 grow_horizontal = 2
 grow_vertical = 0
@@ -34,7 +32,7 @@ layout_mode = 2
 
 [node name="SelectButton" type="Button" parent="HBox" unique_id=521429799]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(56, 48)
+custom_minimum_size = Vector2(100, 80)
 layout_mode = 2
 tooltip_text = "Select mode (Esc to deselect)"
 toggle_mode = true
@@ -44,7 +42,7 @@ expand_icon = true
 
 [node name="ShapeButton" type="Button" parent="HBox" unique_id=650451713]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(56, 48)
+custom_minimum_size = Vector2(100, 80)
 layout_mode = 2
 toggle_mode = true
 icon = ExtResource("3_8ledp")
@@ -62,7 +60,7 @@ item_1/id = 1
 
 [node name="NodeButton" type="Button" parent="HBox" unique_id=223702005]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(56, 48)
+custom_minimum_size = Vector2(100, 80)
 layout_mode = 2
 toggle_mode = true
 icon = ExtResource("6_8x8vq")
