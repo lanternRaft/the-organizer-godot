@@ -25,6 +25,7 @@ var _group_counter: int = 0
 
 @onready var _entry_list: VBoxContainer = %EntryList
 
+
 ## Checks if a Color is in an array (by value equality).
 static func _color_in_array(color: Color, arr: Array[Color]) -> bool:
 	for c: Color in arr:
@@ -32,8 +33,10 @@ static func _color_in_array(color: Color, arr: Array[Color]) -> bool:
 			return true
 	return false
 
+
 func _ready() -> void:
 	visible = false
+
 
 ## Sync entries with the given set of unique colors currently in use on the canvas.
 ## Adds rows for new colors with auto-generated "Group N" names.
@@ -57,6 +60,7 @@ func set_colors_in_use(colors: Array[Color]) -> void:
 	# Update visibility.
 	visible = not _entry_rows.is_empty()
 
+
 ## Returns legend data for serialization.
 ## Format: [[Color, "custom_name"], ...] — deterministic ordering.
 func get_legend_data() -> Array:
@@ -64,6 +68,7 @@ func get_legend_data() -> Array:
 	for color: Color in _color_names.keys():
 		data.append([color, _color_names[color]])
 	return data
+
 
 ## Restores custom names from saved data.
 ## data is an array of [Color, String] pairs.
@@ -79,6 +84,7 @@ func load_legend_data(data: Array) -> void:
 		if typeof(color_val) == TYPE_COLOR and typeof(name_val) == TYPE_STRING:
 			_color_names[color_val] = name_val
 
+
 ## Clears all entries and resets the group counter.
 func clear_all() -> void:
 	for color: Color in _entry_rows.keys():
@@ -86,6 +92,7 @@ func clear_all() -> void:
 	_color_names.clear()
 	_group_counter = 0
 	visible = false
+
 
 ## --- Private helpers ---
 ## Gets or generates a name for the given color.
@@ -97,6 +104,7 @@ func _get_name_for_color(color: Color) -> String:
 	var label_name: String = "Group %d" % _group_counter
 	_color_names[color] = label_name
 	return label_name
+
 
 ## Creates a row entry node for the given color and name.
 func _add_entry(color: Color, label_name: String) -> void:
@@ -153,6 +161,7 @@ func _add_entry(color: Color, label_name: String) -> void:
 	_entry_list.add_child(row)
 	_entry_rows[color] = row
 
+
 ## Removes the row entry for the given color.
 ## The custom name is preserved in _color_names for re-appearance.
 func _remove_entry(color: Color) -> void:
@@ -162,13 +171,16 @@ func _remove_entry(color: Color) -> void:
 		row.queue_free()
 	_entry_rows.erase(color)
 
+
 ## Called when the user presses Enter in a LineEdit.
 func _on_name_submitted(new_name: String, color: Color, name_field: LineEdit) -> void:
 	_try_apply_name_change(color, new_name, name_field)
 
+
 ## Called when the LineEdit loses focus.
 func _on_name_focus_exited(color: Color, name_field: LineEdit) -> void:
 	_try_apply_name_change(color, name_field.text, name_field)
+
 
 ## Applies a name change or reverts to cached name if text is empty.
 ## Called from both text_submitted and focus_exited paths.
@@ -182,6 +194,7 @@ func _try_apply_name_change(color: Color, new_text: String, name_field: LineEdit
 		return
 	_apply_name_change(color, new_text)
 
+
 ## Applies a name change: updates cache, emits signal for Main to save.
 func _apply_name_change(color: Color, new_name: String) -> void:
 	if new_name.is_empty():
@@ -190,6 +203,7 @@ func _apply_name_change(color: Color, new_name: String) -> void:
 		return
 	_color_names[color] = new_name
 	name_changed.emit(color, new_name)
+
 
 ## Deduplicates a Color array. Godot's Color is a struct with == comparison.
 func _deduplicate_colors(colors: Array[Color]) -> Array[Color]:

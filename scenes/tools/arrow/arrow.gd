@@ -88,6 +88,7 @@ var _cached_arrowhead_dir: Vector2 = Vector2.ZERO
 ## Has 14px width and transparent color so the user can easily click on thin arrows.
 @onready var hit_line: Line2D = $HitLine
 
+
 ## Iterates arrows managed by ArrowManager that are connected to the given shape
 ## and calls rebuild_path on them.
 static func rebuild_arrows_for_shape(shape: Node, all_arrows: Array[Arrow]) -> void:
@@ -102,6 +103,7 @@ static func rebuild_arrows_for_shape(shape: Node, all_arrows: Array[Arrow]) -> v
 		if start_shape == shape or end_shape == shape:
 			a.rebuild_path()
 
+
 # ----- CanvasElement-aware helpers -------------------------------------------
 ## Returns the global edge position for a CanvasElement anchor by reading
 ## the offset from get_anchor_positions().
@@ -113,10 +115,12 @@ static func get_canvas_element_anchor_edge(element: CanvasElement, label: String
 			return element.to_global(local_offset)
 	return element.global_position
 
+
 static func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float) -> Vector2:
 	var u: float = 1.0 - t
 	var ut: float = u * t
 	return u * u * u * p0 + 3.0 * u * ut * p1 + 3.0 * t * ut * p2 + t * t * t * p3
+
 
 func _ready() -> void:
 	add_to_group("arrows")
@@ -127,11 +131,13 @@ func _ready() -> void:
 	hit_line.default_color = Color.TRANSPARENT
 	hit_line.antialiased = true
 
+
 func _exit_tree() -> void:
 	if is_instance_valid(start_anchor):
 		start_anchor.connected_arrows.erase(self)
 	if is_instance_valid(end_anchor):
 		end_anchor.connected_arrows.erase(self)
+
 
 func _draw() -> void:
 	if not is_preview and _cached_bezier_points.is_empty():
@@ -151,6 +157,7 @@ func _draw() -> void:
 	var base_right: Vector2 = tip - dir * half_size + perp * half_width
 	var arrowhead_color: Color = vis_line.default_color
 	draw_colored_polygon(PackedVector2Array([tip, base_left, base_right]), arrowhead_color)
+
 
 ## Rebuilds the bezier path from the connected elements' current anchor positions.
 ## Uses the CanvasElement.get_anchor_positions() interface to find anchor offsets.
@@ -183,6 +190,7 @@ func rebuild_path() -> void:
 	hit_line.points = points
 	queue_redraw()
 
+
 # ----- Preview Mode ----------------------------------------------------------
 ## Configures this arrow as a drag preview. The hit line is hidden and
 ## vis_line gets preview styling. Only the start anchor is set; the endpoint
@@ -196,6 +204,7 @@ func setup_preview(anchor: LineAnchor) -> void:
 	vis_line.antialiased = true
 	vis_line.begin_cap_mode = Line2D.LINE_CAP_ROUND
 	vis_line.end_cap_mode = Line2D.LINE_CAP_ROUND
+
 
 ## Updates the preview bezier path with a dynamic endpoint.
 ## Called each frame during arrow drag.
@@ -221,20 +230,24 @@ func update_preview(end_pos: Vector2, end_normal: Vector2, is_snapped: bool) -> 
 	vis_line.points = points
 	vis_line.default_color = Color(0.6, 0.8, 1.0, 0.8 if not is_snapped else 1.0)
 
+
 # ----- Original Arrow API ----------------------------------------------------
 ## Returns the start shape node resolved from the stored NodePath.
 func get_start_shape() -> Node:
 	return _resolve_shape(start_shape_path)
 
+
 ## Returns the end shape node resolved from the stored NodePath.
 func get_end_shape() -> Node:
 	return _resolve_shape(end_shape_path)
+
 
 # ----- private helpers -------------------------------------------------------
 ## Unified setter called by Main during selection state changes.
 ## Matches the CanvasElement API so both types can be treated uniformly.
 func set_selected(value: bool) -> void:
 	self.is_selected = value
+
 
 ## Called by ClickHandler to determine if a drag should begin on this element.
 ## Returns true if the arrow is selected (allows multi-drag from any selected element).
@@ -244,6 +257,7 @@ func handle_drag_begin(event: Dictionary) -> bool:
 	_drag_start_world = event.get("world_pos", Vector2.ZERO)
 	_drag_start_position = position
 	return true
+
 
 ## Called by ClickHandler on each mouse move while drag is active.
 ## Moves the arrow by the world-space delta, then broadcasts delta to Main
@@ -255,10 +269,12 @@ func handle_drag_move(event: Dictionary) -> void:
 	queue_redraw()
 	multi_drag_moved.emit(delta)
 
+
 ## Called by ClickHandler on pointer up to end the drag.
 ## Snaps position to 20px grid.
 func handle_drag_end(_event: Dictionary) -> void:
 	position = position.snapped(Vector2(20.0, 20.0))
+
 
 func _resolve_shape(path: NodePath) -> CanvasElement:
 	if path.is_empty():
@@ -267,6 +283,7 @@ func _resolve_shape(path: NodePath) -> CanvasElement:
 	if not is_instance_valid(shape):
 		return null
 	return shape
+
 
 func rebuild_if_connected(element: CanvasElement) -> void:
 	var start_shape: CanvasElement = get_start_shape()

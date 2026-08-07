@@ -28,15 +28,18 @@ var grid_enabled: bool = true:
 
 @onready var grid_material: ShaderMaterial = material as ShaderMaterial
 
+
 func _ready() -> void:
 	_setup_anchors()
 	_load_state()
 	_update_shader_uniforms()
 
+
 func _process(_delta: float) -> void:
 	## Every frame, sync the camera position/zoom so the shader grid
 	## always aligns with world-space coordinates.
 	_update_shader_uniforms()
+
 
 ## Pins this ColorRect to the full viewport so it always covers the screen.
 func _setup_anchors() -> void:
@@ -48,6 +51,7 @@ func _setup_anchors() -> void:
 	offset_top = 0.0
 	offset_right = 0.0
 	offset_bottom = 0.0
+
 
 ## Reads the camera's current world position and zoom, then pushes them
 ## to the shader uniforms so the grid tracks the viewport.
@@ -66,9 +70,11 @@ func _update_shader_uniforms() -> void:
 	grid_material.set_shader_parameter("camera_zoom", zoom.x)  # uniform zoom
 	grid_material.set_shader_parameter("grid_spacing", grid_spacing)
 
+
 ## Sets the dark/light theme flag on the shader.
 func set_theme_dark(dark: bool) -> void:
 	grid_material.set_shader_parameter("theme_dark", dark)
+
 
 ## Loads grid-enabled state from ConfigFile.
 func _load_state() -> void:
@@ -80,6 +86,7 @@ func _load_state() -> void:
 	# Set via the setter so the property and signal fire.
 	grid_enabled = saved
 	visible = grid_enabled
+
 
 ## Persists the current grid-enabled state to ConfigFile.
 func _save_state() -> void:
