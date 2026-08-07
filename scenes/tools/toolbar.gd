@@ -81,7 +81,7 @@ func _refresh() -> void:
 
 ## Activate Shape tool
 func _on_shape_button_pressed() -> void:
-	tool_context.current_tool = shape_tools[current_node_tool_idx]
+	tool_context.current_tool = shape_tools[current_shape_tool_idx]
 	_show_popup_menu(shape_button, shape_popup)
 
 

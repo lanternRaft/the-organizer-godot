@@ -12,7 +12,7 @@ dest_files=["res://.godot/imported/chevron-up.svg-c101d21015081caf810e8f4c8f5992
 
 [params]
 
-base_scale=1.0
+base_scale=8.0
 saturation=1.0
 color_map={}
 fix_alpha_border=false

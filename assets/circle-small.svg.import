@@ -12,7 +12,7 @@ dest_files=["res://.godot/imported/circle-small.svg-77f438c4d8ed39d84dfd264e4378
 
 [params]
 
-base_scale=1.0
+base_scale=8.0
 saturation=1.0
 color_map={}
 fix_alpha_border=false
