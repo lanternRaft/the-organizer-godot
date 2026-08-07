@@ -8,7 +8,6 @@ const SELECT_TOOL: Tool = preload("uid://cjruthjgny6s4")
 
 signal tool_changed
 
-
 var current_tool: Tool = SELECT_TOOL:
 	set(value):
 		current_tool = value

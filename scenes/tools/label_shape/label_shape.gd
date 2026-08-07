@@ -9,7 +9,6 @@ extends CanvasElement
 
 enum SHAPE_MODE { OVAL_MODEL, CIRCLE_MODE }
 
-
 ## Emitted when the shape is double-clicked (two clicks within 400ms).
 ## Main connects to this to open the text editor.
 signal double_clicked(shape: Node)
@@ -19,14 +18,14 @@ signal double_clicked(shape: Node)
 ## oval → circle uses max(rx, ry); circle → oval keeps rx and resets ry=50.
 @export var shape_mode: SHAPE_MODE = SHAPE_MODE.OVAL_MODEL
 #@export var shape_mode: String = "oval":
-	#set(value):
-		#shape_mode = value
-		#if value == "circle":
-			#var new_r: float = max(rx, ry)
-			#rx = new_r
-			#ry = new_r
-		#elif value == "oval":
-			#ry = 50.0
+#set(value):
+#shape_mode = value
+#if value == "circle":
+#var new_r: float = max(rx, ry)
+#rx = new_r
+#ry = new_r
+#elif value == "oval":
+#ry = 50.0
 
 @export var rx: float = 80.0:
 	set(value):

@@ -2,7 +2,6 @@
 class_name CanvasElementAnchors
 extends Node2D
 
-
 @onready var anchor_show_area_2d: Area2D = $"../AnchorShowArea2D"
 @onready var canvas_element: CanvasElement = $".."
 
