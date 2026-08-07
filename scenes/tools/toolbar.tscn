@@ -17,9 +17,9 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -158.0
+offset_left = 0.0
 offset_top = -80.0
-offset_right = 158.0
+offset_right = 0.0
 offset_bottom = -20.0
 grow_horizontal = 2
 grow_vertical = 0
@@ -34,7 +34,7 @@ layout_mode = 2
 
 [node name="SelectButton" type="Button" parent="HBox" unique_id=521429799]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(100, 80)
+custom_minimum_size = Vector2(56, 48)
 layout_mode = 2
 tooltip_text = "Select mode (Esc to deselect)"
 toggle_mode = true
@@ -44,7 +44,7 @@ expand_icon = true
 
 [node name="ShapeButton" type="Button" parent="HBox" unique_id=650451713]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(100, 80)
+custom_minimum_size = Vector2(56, 48)
 layout_mode = 2
 toggle_mode = true
 icon = ExtResource("3_8ledp")
@@ -62,7 +62,7 @@ item_1/id = 1
 
 [node name="NodeButton" type="Button" parent="HBox" unique_id=223702005]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(100, 80)
+custom_minimum_size = Vector2(56, 48)
 layout_mode = 2
 toggle_mode = true
 icon = ExtResource("6_8x8vq")
