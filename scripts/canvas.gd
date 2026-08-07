@@ -3,7 +3,7 @@ extends Node2D
 
 const CIRCLE_NODE_SCENE: PackedScene = preload("res://scenes/canvas_elements/circle_node.tscn")
 
-@export var context: ToolContext = preload("uid://cgmt207kt08s4")
+@export var tool_context: ToolContext = preload("uid://cgmt207kt08s4")
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -16,16 +16,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _on_empty_canvas_clicked(world_pos: Vector2) -> void:
-	if context.current_tool_type != ToolContext.ToolTypes.SELECT:
+	if not tool_context.select_tool_active():
 		_place_canvas_element(world_pos)
 
 
 func _place_canvas_element(placement_position: Vector2) -> void:
-	var node: CanvasElement
-	if context.current_tool_type == ToolContext.ToolTypes.CIRCLE_NODE:
-		node = CIRCLE_NODE_SCENE.instantiate()
-	else:
-		node = CIRCLE_NODE_SCENE.instantiate()
+	var node: CanvasElement = tool_context.current_tool.scene.instantiate()
 
 	node.position = placement_position
 	add_child(node)
+	
+	tool_context.reset()

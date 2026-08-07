@@ -4,6 +4,20 @@ extends Resource
 
 enum ToolTypes { SELECT, CIRCLE_NODE }
 
-var current_tool_type: ToolTypes:
+const SELECT_TOOL: Tool = preload("uid://cjruthjgny6s4")
+
+signal tool_changed
+
+
+var current_tool: Tool = SELECT_TOOL:
 	set(value):
-		current_tool_type = value
+		current_tool = value
+		tool_changed.emit()
+
+
+func reset() -> void:
+	current_tool = SELECT_TOOL
+
+
+func select_tool_active() -> bool:
+	return current_tool == SELECT_TOOL

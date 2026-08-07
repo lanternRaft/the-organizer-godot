@@ -1,11 +1,14 @@
-class_name LabelShape
-extends CanvasElement
-
 ## Oval shape rendered via custom drawing (ellipse fill + stroke).
 ## Supports click-to-select via Area2D child and resize via 4 corner handles.
 ##
 ## Inherits selection state, drag lifecycle, grid snapping, group membership,
 ## anchor point interface, and multi-drag signals from CanvasElement.
+@tool
+class_name LabelShape
+extends CanvasElement
+
+enum SHAPE_MODE { OVAL_MODEL, CIRCLE_MODE }
+
 
 ## Emitted when the shape is double-clicked (two clicks within 400ms).
 ## Main connects to this to open the text editor.
@@ -14,15 +17,16 @@ signal double_clicked(shape: Node)
 ## Shape sub-mode: "oval" or "circle". When set to "circle", rx and ry are
 ## constrained to equal dimensions. Mode conversion snaps dimensions:
 ## oval → circle uses max(rx, ry); circle → oval keeps rx and resets ry=50.
-@export var shape_mode: String = "oval":
-	set(value):
-		shape_mode = value
-		if value == "circle":
-			var new_r: float = max(rx, ry)
-			rx = new_r
-			ry = new_r
-		elif value == "oval":
-			ry = 50.0
+@export var shape_mode: SHAPE_MODE = SHAPE_MODE.OVAL_MODEL
+#@export var shape_mode: String = "oval":
+	#set(value):
+		#shape_mode = value
+		#if value == "circle":
+			#var new_r: float = max(rx, ry)
+			#rx = new_r
+			#ry = new_r
+		#elif value == "oval":
+			#ry = 50.0
 
 @export var rx: float = 80.0:
 	set(value):
@@ -79,10 +83,10 @@ func _ready() -> void:
 	# CanvasElement._ready() adds to "clickable" and "clickable_element" groups.
 	super()
 	modulate.a = 0.9
-	_update_collision_shape()
-	_update_handle_positions()
-	_set_handles_visible(false)
-	_update_text_display()
+	#_update_collision_shape()
+	#_update_handle_positions()
+	#_set_handles_visible(false)
+	#_update_text_display()
 
 
 func _draw() -> void:

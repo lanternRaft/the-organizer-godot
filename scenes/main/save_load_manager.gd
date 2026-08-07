@@ -131,7 +131,7 @@ func _instantiate_label_shape(data: Dictionary) -> LabelShape:
 		data.get("fill_b", 0.965) as float,
 		data.get("fill_a", 1.0) as float
 	)
-	shape.shape_mode = str(data.get("shape_mode", "oval"))
+	#shape.shape_mode = str(data.get("shape_mode", "oval"))
 	shape.text_content = str(data.get("text", ""))
 
 	_element_layer.add_child(shape)
