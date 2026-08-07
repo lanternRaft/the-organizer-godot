@@ -3,8 +3,7 @@ extends Node
 
 ## Root controller of the app. Owns the canvas, camera, UI, and input dispatch.
 
-## Preload LabelShape and CanvasNode scenes for instantiation.
-const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
+## Preload CanvasNode scenes for instantiation.
 const TRIANGLE_NODE_SCENE: PackedScene = preload("res://scenes/canvas_elements/triangle_node.tscn")
 const TEXT_OVERLAY_SCENE: PackedScene = preload(
 	"res://scenes/ui/text_edit_overlay/text_edit_overlay.tscn"
