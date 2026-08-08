@@ -76,11 +76,11 @@ func test_shared_theme_styles_compact_popup_menus() -> void:
 	# The compact submenu styling lives in the shared theme so every app popup
 	# (toolbar submenus, hamburger menu) stays consistent. The toolbar popups
 	# carry no per-node overrides for these.
-	assert_int(THEME.get_font_size("font_size", "PopupMenu")).is_equal(24)
+	assert_int(THEME.get_font_size("font_size", "PopupMenu")).is_equal(38)
 	assert_int(THEME.get_constant("h_separation", "PopupMenu")).is_equal(8)
 	assert_int(THEME.get_constant("v_separation", "PopupMenu")).is_equal(4)
 	# The 192px source tool icons are capped so they don't balloon the menu.
-	assert_int(THEME.get_constant("icon_max_width", "PopupMenu")).is_equal(40)
+	assert_int(THEME.get_constant("icon_max_width", "PopupMenu")).is_equal(50)
 
 
 # --- Behavior ----------------------------------------------------------------
