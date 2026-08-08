@@ -32,7 +32,12 @@ jobs:
     - name: Validate GDScript (check for parse errors)
       shell: bash
       run: |
-        # Run Godot to check for script errors - any SCRIPT ERROR will fail the build
+        # First import pass warms the script cache. On a fresh checkout Godot
+        # instantiates autoloads before the class registry is built, which emits
+        # transient unsafe-access warnings that are not real errors. Ignore this pass.
+        godot --headless --import --quit > /dev/null 2>&1 || true
+
+        # Second pass runs against a warm cache; any SCRIPT ERROR here is a real error.
         godot --headless --import --quit 2>&1 | tee godot_output.log
         if grep -E "SCRIPT ERROR|ERROR:.*Parse Error|ERROR:.*Compilation failed" godot_output.log; then
           echo "❌ Script errors detected!"
