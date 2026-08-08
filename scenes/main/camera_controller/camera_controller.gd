@@ -6,24 +6,27 @@
 class_name CameraController
 extends Camera2D
 
-## Minimum zoom level (10%).
-const MIN_ZOOM: float = 0.1
-## Maximum zoom level (2000%).
-const MAX_ZOOM: float = 20.0
-## Zoom-in factor per step.
-const ZOOM_IN_FACTOR: float = 1.25
-## Zoom-out factor per step.
-const ZOOM_OUT_FACTOR: float = 1.0 / ZOOM_IN_FACTOR  # 0.8
-
-## Trackpad pan speed multiplier — converts gesture delta to world-space pixels.
-const PAN_SPEED: float = 100.0
-
 ## Emitted when zoom changes (for InfoBar display).
 signal zoom_changed(level: float)
 
 ## Emitted when the camera position changes (pan, cursor-centered zoom, or reset).
 ## UI elements that track world positions in screen-space (selection menu, text overlay) connect to this.
 signal camera_moved
+
+## Minimum zoom level (10%).
+const MIN_ZOOM: float = 0.1
+
+## Maximum zoom level (2000%).
+const MAX_ZOOM: float = 20.0
+
+## Zoom-in factor per step.
+const ZOOM_IN_FACTOR: float = 1.25
+
+## Zoom-out factor per step.
+const ZOOM_OUT_FACTOR: float = 1.0 / ZOOM_IN_FACTOR  # 0.8
+
+## Trackpad pan speed multiplier — converts gesture delta to world-space pixels.
+const PAN_SPEED: float = 100.0
 
 ## Current zoom level (1.0 = 100%).
 var zoom_level: float = 1.0:
@@ -32,21 +35,21 @@ var zoom_level: float = 1.0:
 		zoom = Vector2(zoom_level, zoom_level)
 		zoom_changed.emit(zoom_level)
 
-## Reference to the viewport, cached for size lookups.
-@onready var _viewport: Viewport = get_viewport()
-
 ## Whether a middle-click pan drag is active.
 var _pan_active: bool = false
+
 ## Cached viewport center (screen coordinates), used for keyboard-zoom focus.
 var _viewport_center: Vector2 = Vector2.ZERO
+
+## Tracks the last time a gesture event was received, used to suppress synthetic mouse wheel events.
+var _last_gesture_time: int = 0
+
+## Reference to the viewport, cached for size lookups.
+@onready var _viewport: Viewport = get_viewport()
 
 
 func _ready() -> void:
 	_viewport_center = _viewport.get_visible_rect().size / 2.0
-
-
-## Tracks the last time a gesture event was received, used to suppress synthetic mouse wheel events.
-var _last_gesture_time: int = 0
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -57,7 +60,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		zoom_by_factor(mg.factor, mg.position)
 		get_viewport().set_input_as_handled()
 		return
-
 	## -- Trackpad two-finger pan ---------------------------------------------
 	if event is InputEventPanGesture:
 		_last_gesture_time = Time.get_ticks_msec()
@@ -65,7 +67,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		pan_by(pg.delta * zoom * PAN_SPEED)
 		get_viewport().set_input_as_handled()
 		return
-
 	## -- Middle-click drag pan & Scroll-wheel ---------------------------------
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
@@ -78,7 +79,6 @@ func _unhandled_input(event: InputEvent) -> void:
 				_pan_active = false
 				get_viewport().set_input_as_handled()
 				return
-
 		## -- Scroll-wheel pan / zoom -----------------------------------------
 		if mb.pressed:
 			var is_wheel: bool = (
@@ -95,7 +95,6 @@ func _unhandled_input(event: InputEvent) -> void:
 				if Time.get_ticks_msec() - _last_gesture_time < 200:
 					get_viewport().set_input_as_handled()
 					return
-
 				# Cmd/Ctrl + Wheel = Zoom
 				if mb.is_command_or_control_pressed():
 					if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
@@ -104,11 +103,9 @@ func _unhandled_input(event: InputEvent) -> void:
 						zoom_by_factor(ZOOM_OUT_FACTOR, mb.position)
 					get_viewport().set_input_as_handled()
 					return
-
 				# Wheel without Cmd/Ctrl = Pan
 				var pan_step: float = 60.0
 				var pan_amount: Vector2 = Vector2.ZERO
-
 				# Shift + Wheel = Pan horizontally
 				if mb.shift_pressed:
 					if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
@@ -128,11 +125,9 @@ func _unhandled_input(event: InputEvent) -> void:
 						pan_amount.x = -pan_step
 					elif mb.button_index == MOUSE_BUTTON_WHEEL_RIGHT:
 						pan_amount.x = pan_step
-
 				pan_by(pan_amount * zoom)
 				get_viewport().set_input_as_handled()
 				return
-
 	## -- Middle-click drag: continuous motion --------------------------------
 	if event is InputEventMouseMotion:
 		var mm: InputEventMouseMotion = event as InputEventMouseMotion
@@ -140,13 +135,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			pan_by(-mm.relative * zoom)
 			get_viewport().set_input_as_handled()
 			return
-
 	## -- Keyboard shortcuts ---------------------------------------------------
 	if event is InputEventKey:
 		var ke: InputEventKey = event as InputEventKey
 		if not ke.pressed or ke.echo:
 			return
-
 		if ke.ctrl_pressed:
 			match ke.keycode:
 				KEY_EQUAL, KEY_KP_ADD, KEY_PLUS:
@@ -168,18 +161,15 @@ func _unhandled_input(event: InputEvent) -> void:
 func zoom_by_factor(factor: float, focus_pos: Vector2 = Vector2.INF) -> void:
 	var old_zoom: float = zoom_level
 	zoom_level *= factor
-
 	# Compute the *actual* factor applied (may differ due to clamping).
 	var applied: float = zoom_level / old_zoom
 	if applied == 1.0:
 		return
-
 	# Adjust camera position to keep focus_pos stationary on screen.
 	if focus_pos != Vector2.INF:
 		var vp_center: Vector2 = _viewport.get_visible_rect().size / 2.0
 		var new_offset: Vector2 = focus_pos - vp_center
 		position += new_offset * (1.0 - 1.0 / applied)
-
 	camera_moved.emit()
 
 

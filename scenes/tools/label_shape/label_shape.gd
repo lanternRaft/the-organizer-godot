@@ -7,16 +7,20 @@
 class_name LabelShape
 extends CanvasElement
 
-enum SHAPE_MODE { OVAL_MODEL, CIRCLE_MODE }
-
 ## Emitted when the shape is double-clicked (two clicks within 400ms).
 ## Main connects to this to open the text editor.
 signal double_clicked(shape: Node)
+
+enum SHAPE_MODE { OVAL_MODEL, CIRCLE_MODE }
+
+## Handle size in pixels.
+const HANDLE_SIZE: float = 32.0
 
 ## Shape sub-mode: "oval" or "circle". When set to "circle", rx and ry are
 ## constrained to equal dimensions. Mode conversion snaps dimensions:
 ## oval → circle uses max(rx, ry); circle → oval keeps rx and resets ry=50.
 @export var shape_mode: SHAPE_MODE = SHAPE_MODE.OVAL_MODEL
+
 #@export var shape_mode: String = "oval":
 #set(value):
 #shape_mode = value
@@ -26,7 +30,6 @@ signal double_clicked(shape: Node)
 #ry = new_r
 #elif value == "oval":
 #ry = 50.0
-
 @export var rx: float = 80.0:
 	set(value):
 		rx = value
@@ -68,14 +71,16 @@ signal double_clicked(shape: Node)
 		queue_redraw()
 
 @onready var _collision_shape: CollisionShape2D = $Area2D/CollisionShape2D
-@onready var _handle_tl: ColorRect = $HandleTL
-@onready var _handle_tr: ColorRect = $HandleTR
-@onready var _handle_bl: ColorRect = $HandleBL
-@onready var _handle_br: ColorRect = $HandleBR
-@onready var _text_label: Label = $TextLabel
 
-## Handle size in pixels.
-const HANDLE_SIZE: float = 32.0
+@onready var _handle_tl: ColorRect = $HandleTL
+
+@onready var _handle_tr: ColorRect = $HandleTR
+
+@onready var _handle_bl: ColorRect = $HandleBL
+
+@onready var _handle_br: ColorRect = $HandleBR
+
+@onready var _text_label: Label = $TextLabel
 
 
 func _ready() -> void:
@@ -91,7 +96,6 @@ func _ready() -> void:
 func _draw() -> void:
 	var stroke_color: Color
 	var stroke_width: float
-
 	if is_selected:
 		if is_primary:
 			stroke_color = fill_color.lightened(0.4)
@@ -102,7 +106,6 @@ func _draw() -> void:
 	else:
 		stroke_color = fill_color.darkened(0.4)
 		stroke_width = 2.0
-
 	draw_ellipse(Vector2.ZERO, rx, ry, fill_color)
 	draw_ellipse(Vector2.ZERO, rx, ry, stroke_color, false, stroke_width)
 
@@ -115,19 +118,15 @@ func _set_handles_visible(val: bool) -> void:
 
 
 # ----- Text Display ---------------------------------------------------------
-
-
 ## Updates the Label text and rescales the font to fit the shape bounds.
 func _update_text_display() -> void:
 	if not is_node_ready() or _text_label == null:
 		return
-
 	# Position the label to fill the shape's inner area with padding.
 	var pad: float = 10.0
 	var label_size: Vector2 = Vector2(2.0 * rx - 2.0 * pad, 2.0 * ry - 2.0 * pad)
 	_text_label.position = Vector2(-rx + pad, -ry + pad)
 	_text_label.size = label_size
-
 	_text_label.text = text_content
 	_rescale_text_font()
 
@@ -138,26 +137,20 @@ func _update_text_display() -> void:
 func _rescale_text_font() -> void:
 	if not is_node_ready() or _text_label == null:
 		return
-
 	var pad: float = 10.0
 	var available_width: float = max(1.0, 2.0 * rx - 2.0 * pad)
 	var available_height: float = max(1.0, 2.0 * ry - 2.0 * pad)
-
 	if text_content.is_empty():
 		return
-
 	var font: Font = _text_label.get_theme_default_font()
 	var font_size: int = 20
-
 	while font_size >= 8:
 		var line_height: float = font.get_height(font_size)
 		var line_count: int = _estimate_line_count(text_content, available_width, font, font_size)
 		var total_height: float = float(line_count) * line_height * 1.2
-
 		if total_height <= available_height:
 			break
 		font_size -= 1
-
 	_text_label.add_theme_font_size_override("font_size", font_size)
 
 
@@ -166,17 +159,14 @@ func _rescale_text_font() -> void:
 func _estimate_line_count(text: String, max_width: float, font: Font, font_size: int) -> int:
 	if text.is_empty():
 		return 1
-
 	var words: PackedStringArray = text.split(" ", false)
 	var count: int = 1
 	var current_line_width: float = 0.0
 	var is_first_word: bool = true
-
 	for word: String in words:
 		var word_width: float = (
 			font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
 		)
-
 		if is_first_word:
 			if word_width > max_width:
 				# Word is wider than the available space — counts as a line
@@ -194,13 +184,10 @@ func _estimate_line_count(text: String, max_width: float, font: Font, font_size:
 				current_line_width = word_width
 			else:
 				current_line_width += space_width + word_width
-
 	return max(1, count)
 
 
 # ----- Resize / Position Updates --------------------------------------------
-
-
 func _update_collision_shape() -> void:
 	if not is_node_ready():
 		return
@@ -235,19 +222,15 @@ func handle_at_pos(local_pos: Vector2) -> String:
 		"bl": Vector2(-rx - half, ry - half),
 		"br": Vector2(rx - half, ry - half),
 	}
-
 	for key: String in corners:
 		var pos: Vector2 = corners[key]
 		var rect: Rect2 = Rect2(pos, Vector2(HANDLE_SIZE, HANDLE_SIZE))
 		if rect.has_point(local_pos):
 			return key
-
 	return ""
 
 
 # ----- Anchor System (overrides) ---------------------------------------------
-
-
 ## Returns 4 cardinal anchor offsets based on current rx/ry dimensions.
 func get_anchor_positions() -> Array[Dictionary]:
 	return [
@@ -259,8 +242,6 @@ func get_anchor_positions() -> Array[Dictionary]:
 
 
 # ----- Virtual Properties (overrides) ----------------------------------------
-
-
 func supports_text_editing() -> bool:
 	return true
 
