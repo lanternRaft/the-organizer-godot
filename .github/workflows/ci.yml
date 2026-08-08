@@ -48,5 +48,15 @@ jobs:
     - name: Run GDUnit4 Tests
       shell: bash
       run: |
-        # Run tests and capture all output
+        # Run tests and capture all output. GdUnit4 exits 0 when all tests pass with
+        # no warnings and 101 when all tests pass but with warnings (e.g. orphan
+        # nodes) -- both are successes. Any other non-zero code is a failure.
+        set +e
         godot --headless -s addons/gdUnit4/bin/GdUnitCmdTool.gd -a res://tests --ignoreHeadlessMode 2>&1 | tee test_output.log
+        status=${PIPESTATUS[0]}
+        set -e
+        if [ "$status" -ne 0 ] && [ "$status" -ne 101 ]; then
+          echo "❌ GdUnit4 exited with failure code $status"
+          exit "$status"
+        fi
+        echo "✅ GDUnit4 tests passed (exit code $status)"
