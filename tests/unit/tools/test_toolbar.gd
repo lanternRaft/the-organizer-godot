@@ -68,8 +68,8 @@ func test_buttons_render_at_expected_minimum_size() -> void:
 		assert_vector(button.size).is_greater_equal(Vector2(100, 80))
 
 	# The toolbar is a single row of 80px-high buttons.
-	assert_that(toolbar.size.y >= 78.0).is_equal(true)
-	assert_that(toolbar.size.y <= 84.0).is_equal(true)
+	assert_bool(toolbar.size.y >= 78.0).is_equal(true)
+	assert_bool(toolbar.size.y <= 84.0).is_equal(true)
 
 
 func test_shared_theme_styles_compact_popup_menus() -> void:
@@ -88,18 +88,18 @@ func test_shared_theme_styles_compact_popup_menus() -> void:
 
 func test_starts_in_select_mode() -> void:
 	assert_object(toolbar.tool_context.current_tool).is_same(ToolContext.SELECT_TOOL)
-	assert_that(toolbar.select_button.button_pressed).is_equal(true)
-	assert_that(toolbar.shape_button.button_pressed).is_equal(false)
-	assert_that(toolbar.node_button.button_pressed).is_equal(false)
+	assert_bool(toolbar.select_button.button_pressed).is_equal(true)
+	assert_bool(toolbar.shape_button.button_pressed).is_equal(false)
+	assert_bool(toolbar.node_button.button_pressed).is_equal(false)
 
 
 func test_pressing_shape_opens_submenu_and_activates_shape_tool() -> void:
 	await _open_popup(toolbar.shape_button, toolbar.shape_popup)
 
 	assert_object(toolbar.tool_context.current_tool).is_same(toolbar.shape_tools[0])
-	assert_that(toolbar.shape_popup.is_visible()).is_equal(true)
-	assert_that(toolbar.shape_button.button_pressed).is_equal(true)
-	assert_that(toolbar.select_button.button_pressed).is_equal(false)
+	assert_bool(toolbar.shape_popup.is_visible()).is_equal(true)
+	assert_bool(toolbar.shape_button.button_pressed).is_equal(true)
+	assert_bool(toolbar.select_button.button_pressed).is_equal(false)
 
 
 func test_selecting_shape_submenu_item_switches_sub_mode() -> void:
@@ -118,9 +118,9 @@ func test_pressing_node_opens_submenu_and_activates_node_tool() -> void:
 	await _open_popup(toolbar.node_button, toolbar.node_popup)
 
 	assert_object(toolbar.tool_context.current_tool).is_same(toolbar.node_tools[0])
-	assert_that(toolbar.node_popup.is_visible()).is_equal(true)
-	assert_that(toolbar.node_button.button_pressed).is_equal(true)
-	assert_that(toolbar.select_button.button_pressed).is_equal(false)
+	assert_bool(toolbar.node_popup.is_visible()).is_equal(true)
+	assert_bool(toolbar.node_button.button_pressed).is_equal(true)
+	assert_bool(toolbar.select_button.button_pressed).is_equal(false)
 
 
 func test_selecting_node_submenu_item_switches_sub_mode() -> void:
@@ -143,8 +143,8 @@ func test_select_button_returns_to_select_mode() -> void:
 	toolbar.select_button.pressed.emit()
 
 	assert_object(toolbar.tool_context.current_tool).is_same(ToolContext.SELECT_TOOL)
-	assert_that(toolbar.select_button.button_pressed).is_equal(true)
-	assert_that(toolbar.shape_button.button_pressed).is_equal(false)
+	assert_bool(toolbar.select_button.button_pressed).is_equal(true)
+	assert_bool(toolbar.shape_button.button_pressed).is_equal(false)
 
 
 # --- Helpers ---------------------------------------------------------------
@@ -154,4 +154,4 @@ func test_select_button_returns_to_select_mode() -> void:
 func _open_popup(button: Button, popup: PopupMenu) -> void:
 	button.pressed.emit()
 	await get_tree().process_frame
-	assert_that(popup.is_visible()).is_equal(true)
+	assert_bool(popup.is_visible()).is_equal(true)
