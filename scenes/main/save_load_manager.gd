@@ -158,7 +158,7 @@ func _instantiate_canvas_node(data: Dictionary) -> CanvasNode:
 	var fa: float = data.get("fill_a", 1.0)
 	node.fill_color = Color(fr, fg, fb, fa)
 	if data.has("shape_mode"):
-		node.shape_mode = CanvasNode.SHAPE_MODE.keys()[data.get("shape_mode")]
+		node.shape_mode = CanvasNode.ShapeMode.keys()[data.get("shape_mode")]
 
 	_element_layer.add_child(node)
 	return node

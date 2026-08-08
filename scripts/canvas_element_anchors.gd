@@ -2,14 +2,16 @@
 class_name CanvasElementAnchors
 extends Node2D
 
-
-@onready var anchor_show_area_2d: Area2D = $"../AnchorShowArea2D"
-@onready var canvas_element: CanvasElement = $".."
-
 var mouse_in_anchor_show: bool = false
+
 ## Tracks if we are activing dragging a line
 var active_line_drag: bool = false
+
 var element_dragging: bool = false
+
+@onready var anchor_show_area_2d: Area2D = $"../AnchorShowArea2D"
+
+@onready var canvas_element: CanvasElement = $".."
 
 
 func _ready() -> void:

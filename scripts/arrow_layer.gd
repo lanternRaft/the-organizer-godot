@@ -79,9 +79,9 @@ func _line_drag_start(line_anchor: LineAnchor) -> void:
 
 ## Returns a list of all active arrows.
 func get_arrows() -> Array[Arrow]:
-	var _arrows: Array[Arrow] = []
-	_arrows.assign(get_children())
-	return _arrows
+	var arrows: Array[Arrow] = []
+	arrows.assign(get_children())
+	return arrows
 
 
 ## Returns the nearest arrow hit within the given world-space distance, or null.

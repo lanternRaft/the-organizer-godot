@@ -18,7 +18,7 @@ extends CanvasElement
 ##   - Fixed size (no resize handles).
 ##   - No legend entry, no text editing.
 
-enum SHAPE_MODE { CIRCLE_NODE, TRIANGLE_NODE }
+enum ShapeMode { CIRCLE_NODE, TRIANGLE_NODE }
 
 ## Circle radius in world-space pixels.
 const CIRCLE_RADIUS: float = 8.0
@@ -30,7 +30,7 @@ const TRIANGLE_VERTICES: PackedVector2Array = [
 	Vector2(7.0, 4.0),  # bottom-right
 ]
 
-@export var shape_mode: SHAPE_MODE = SHAPE_MODE.CIRCLE_NODE
+@export var shape_mode: ShapeMode = ShapeMode.CIRCLE_NODE
 
 ## Fill color; stroke is automatically adjusted for selection state.
 @export var fill_color: Color = Color(0.231, 0.51, 0.965):
@@ -58,10 +58,10 @@ func _draw() -> void:
 		stroke_width = 2.0
 
 	match shape_mode:
-		SHAPE_MODE.CIRCLE_NODE:
+		ShapeMode.CIRCLE_NODE:
 			draw_circle(Vector2.ZERO, CIRCLE_RADIUS, fill_color)
 			draw_circle(Vector2.ZERO, CIRCLE_RADIUS, stroke_color, false, stroke_width)
-		SHAPE_MODE.TRIANGLE_NODE:
+		ShapeMode.TRIANGLE_NODE:
 			# Stroke: draw a slightly larger triangle for the outline
 			var stroke_scale: float = 1.0 + (stroke_width / 5.0)
 			var stroke_verts: PackedVector2Array = []

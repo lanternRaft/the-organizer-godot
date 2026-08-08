@@ -8,6 +8,11 @@ extends PanelContainer
 
 signal name_changed(color: Color, new_name: String)
 
+## Whether the legend has any colors to display. Exposed for Main to check.
+var has_entries: bool = false:
+	get:
+		return not _entry_rows.is_empty()
+
 ## Color-to-custom-name mapping. Persisted and restored across sessions.
 ## Keys are Colors, values are Strings. Survives removal and re-appearance of a color.
 var _color_names: Dictionary = {}
@@ -18,12 +23,15 @@ var _entry_rows: Dictionary = {}
 ## Global counter for default "Group N" names.
 var _group_counter: int = 0
 
-## Whether the legend has any colors to display. Exposed for Main to check.
-var has_entries: bool = false:
-	get:
-		return not _entry_rows.is_empty()
-
 @onready var _entry_list: VBoxContainer = %EntryList
+
+
+## Checks if a Color is in an array (by value equality).
+static func _color_in_array(color: Color, arr: Array[Color]) -> bool:
+	for c: Color in arr:
+		if c.r == color.r and c.g == color.g and c.b == color.b and c.a == color.a:
+			return true
+	return false
 
 
 func _ready() -> void:
@@ -39,20 +47,16 @@ func set_colors_in_use(colors: Array[Color]) -> void:
 	var current_colors: Array[Color] = []
 	for color: Color in _entry_rows.keys():
 		current_colors.append(color)
-
 	var colors_set: Array[Color] = _deduplicate_colors(colors)
-
 	# Remove colors no longer in use.
 	for color: Color in current_colors:
 		if not _color_in_array(color, colors_set):
 			_remove_entry(color)
-
 	# Add new colors.
 	for color: Color in colors_set:
 		if not _entry_rows.has(color):
 			var label_name: String = _get_name_for_color(color)
 			_add_entry(color, label_name)
-
 	# Update visibility.
 	visible = not _entry_rows.is_empty()
 
@@ -91,8 +95,6 @@ func clear_all() -> void:
 
 
 ## --- Private helpers ---
-
-
 ## Gets or generates a name for the given color.
 ## Checks cached custom names first; falls back to "Group N".
 func _get_name_for_color(color: Color) -> String:
@@ -108,7 +110,6 @@ func _get_name_for_color(color: Color) -> String:
 func _add_entry(color: Color, label_name: String) -> void:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
-
 	# Color swatch.
 	var swatch: ColorRect = ColorRect.new()
 	swatch.custom_minimum_size = Vector2(16, 16)
@@ -127,7 +128,6 @@ func _add_entry(color: Color, label_name: String) -> void:
 	# Let it shrink/grow based on the style.
 	swatch.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	swatch.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
 	# Editable name field.
 	var name_field: LineEdit = LineEdit.new()
 	name_field.text = label_name
@@ -136,7 +136,6 @@ func _add_entry(color: Color, label_name: String) -> void:
 	name_field.expand_to_text_length = true
 	name_field.max_length = 64
 	name_field.select_all_on_focus = true
-
 	# Flat style — no border when not focused, subtle border on focus.
 	var normal_style: StyleBoxEmpty = StyleBoxEmpty.new()
 	name_field.add_theme_stylebox_override("normal", normal_style)
@@ -149,17 +148,14 @@ func _add_entry(color: Color, label_name: String) -> void:
 	focus_style.bg_color = Color(0, 0, 0, 0.05)
 	name_field.add_theme_stylebox_override("focus", focus_style)
 	name_field.add_theme_stylebox_override("read_only", normal_style)
-
 	# Set font color for dark theme readability.
 	var font_color: Color = Color(0.9, 0.9, 0.95)
 	name_field.add_theme_color_override("font_color", font_color)
 	name_field.add_theme_color_override("font_placeholder_color", font_color * 0.5)
 	name_field.add_theme_color_override("caret_color", font_color)
-
 	# Connect edit signals.
 	name_field.text_submitted.connect(_on_name_submitted.bind(color, name_field))
 	name_field.focus_exited.connect(_on_name_focus_exited.bind(color, name_field))
-
 	row.add_child(swatch)
 	row.add_child(name_field)
 	_entry_list.add_child(row)
@@ -216,11 +212,3 @@ func _deduplicate_colors(colors: Array[Color]) -> Array[Color]:
 		if not _color_in_array(color, result):
 			result.append(color)
 	return result
-
-
-## Checks if a Color is in an array (by value equality).
-static func _color_in_array(color: Color, arr: Array[Color]) -> bool:
-	for c: Color in arr:
-		if c.r == color.r and c.g == color.g and c.b == color.b and c.a == color.a:
-			return true
-	return false

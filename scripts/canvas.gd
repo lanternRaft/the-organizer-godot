@@ -25,5 +25,5 @@ func _place_canvas_element(placement_position: Vector2) -> void:
 
 	node.position = placement_position
 	add_child(node)
-	
+
 	tool_context.reset()

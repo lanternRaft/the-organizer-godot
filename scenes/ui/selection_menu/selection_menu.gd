@@ -91,11 +91,8 @@ func _reposition() -> void:
 
 	# Get element's world position and visual extents.
 	var world_pos: Vector2 = _target_element.global_position
-	var half_width: float = 80.0  # Fallback default
 	var half_height: float = 50.0
 
-	if _target_element.has_method("get_rx"):
-		half_width = _target_element.get("rx")
 	if _target_element.has_method("get_ry"):
 		half_height = _target_element.get("ry")
 
@@ -115,7 +112,6 @@ func _reposition() -> void:
 					min_y = min(min_y, p.y)
 					max_y = max(max_y, p.y)
 				world_pos = Vector2((min_x + max_x) / 2.0, (min_y + max_y) / 2.0)
-				half_width = (max_x - min_x) / 2.0
 				half_height = (max_y - min_y) / 2.0
 
 	# Convert world center to screen space.
@@ -124,7 +120,6 @@ func _reposition() -> void:
 
 	# Calculate the element's screen-space bounding box.
 	var zoom_scale: Vector2 = camera.zoom
-	var _screen_half_w: float = half_width * zoom_scale.x
 	var screen_half_h: float = half_height * zoom_scale.y
 
 	# Determine size to use for centering and clamping.

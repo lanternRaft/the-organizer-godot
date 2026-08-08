@@ -1,9 +1,9 @@
 class_name LineAnchor
 extends Node2D
 
-enum ANCHOR_POSITION { TOP, LEFT, BOTTOM, RIGHT }
+enum AnchorPosition { TOP, LEFT, BOTTOM, RIGHT }
 
-@export var anchor_position: ANCHOR_POSITION
+@export var anchor_position: AnchorPosition
 
 ## Arrows connected to this anchor.
 var connected_arrows: Array[Arrow] = []
@@ -31,13 +31,13 @@ func hide_highlight() -> void:
 
 func get_normal() -> Vector2:
 	match anchor_position:
-		ANCHOR_POSITION.TOP:
+		AnchorPosition.TOP:
 			return Vector2(0, -1)
-		ANCHOR_POSITION.BOTTOM:
+		AnchorPosition.BOTTOM:
 			return Vector2(0, 1)
-		ANCHOR_POSITION.LEFT:
+		AnchorPosition.LEFT:
 			return Vector2(-1, 0)
-		ANCHOR_POSITION.RIGHT:
+		AnchorPosition.RIGHT:
 			return Vector2(1, 0)
 		_:
 			return Vector2.ZERO  # Fallback safety case
