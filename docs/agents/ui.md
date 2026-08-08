@@ -1,0 +1,1 @@
+- Always use theme styling unless the user explicitly authorizes a custom override

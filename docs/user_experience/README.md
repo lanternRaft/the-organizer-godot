@@ -2,6 +2,12 @@
 
 Quick-reference index for agents to find the UX doc they need. Each file covers player-facing interactions only (not implementation).
 
+# Intent
+- Tool for organizing world building thoughts and systems
+- Fun to use
+- Useful for working through ideas
+- UX and UI patterns across the app are consistent
+
 | Location | Scope |
 |---|---|
 | [`colors.md`](colors.md) | Color palette, changing fill color, selection menu behavior |

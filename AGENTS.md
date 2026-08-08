@@ -1,0 +1,4 @@
+- Godot 4.7 application
+- Compatible with web
+- docs/agents/ui.md
+- docs/user_experience/README.md
