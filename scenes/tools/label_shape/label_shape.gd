@@ -1,8 +1,4 @@
-## Oval shape rendered via custom drawing (ellipse fill + stroke).
-## Supports click-to-select via Area2D child and resize via 4 corner handles.
-##
-## Inherits selection state, drag lifecycle, grid snapping, group membership,
-## anchor point interface, and multi-drag signals from CanvasElement.
+## Shape that supports resizing, anchors and labels
 @tool
 class_name LabelShape
 extends CanvasElement
@@ -18,24 +14,13 @@ const HANDLE_SIZE: float = 32.0
 
 ## Shape sub-mode: "oval" or "circle". When set to "circle", rx and ry are
 ## constrained to equal dimensions. Mode conversion snaps dimensions:
-## oval → circle uses max(rx, ry); circle → oval keeps rx and resets ry=50.
 @export var shape_mode: ShapeMode = ShapeMode.OVAL_MODEL
 
-#@export var shape_mode: String = "oval":
-#set(value):
-#shape_mode = value
-#if value == "circle":
-#var new_r: float = max(rx, ry)
-#rx = new_r
-#ry = new_r
-#elif value == "oval":
-#ry = 50.0
-@export var rx: float = 80.0:
+@export var rx: float = 160.0:
 	set(value):
 		rx = value
 		queue_redraw()
 		_update_collision_shape()
-		_update_handle_positions()
 		_update_text_display()
 		if Engine.is_editor_hint():
 			return
@@ -45,12 +30,11 @@ const HANDLE_SIZE: float = 32.0
 			# Delay emission to avoid mid-setter issues
 			call_deferred("emit_signal", "anchor_changed")
 
-@export var ry: float = 50.0:
+@export var ry: float = 100.0:
 	set(value):
 		ry = value
 		queue_redraw()
 		_update_collision_shape()
-		_update_handle_positions()
 		_update_text_display()
 		if Engine.is_editor_hint():
 			return
@@ -71,26 +55,7 @@ const HANDLE_SIZE: float = 32.0
 		queue_redraw()
 
 @onready var _collision_shape: CollisionShape2D = $Area2D/CollisionShape2D
-
-@onready var _handle_tl: ColorRect = $HandleTL
-
-@onready var _handle_tr: ColorRect = $HandleTR
-
-@onready var _handle_bl: ColorRect = $HandleBL
-
-@onready var _handle_br: ColorRect = $HandleBR
-
 @onready var _text_label: Label = $TextLabel
-
-
-func _ready() -> void:
-	# CanvasElement._ready() adds to "clickable" and "clickable_element" groups.
-	super()
-	modulate.a = 0.9
-	#_update_collision_shape()
-	#_update_handle_positions()
-	#_set_handles_visible(false)
-	#_update_text_display()
 
 
 func _draw() -> void:
@@ -108,13 +73,6 @@ func _draw() -> void:
 		stroke_width = 2.0
 	draw_ellipse(Vector2.ZERO, rx, ry, fill_color)
 	draw_ellipse(Vector2.ZERO, rx, ry, stroke_color, false, stroke_width)
-
-
-func _set_handles_visible(val: bool) -> void:
-	_handle_tl.visible = val
-	_handle_tr.visible = val
-	_handle_bl.visible = val
-	_handle_br.visible = val
 
 
 # ----- Text Display ---------------------------------------------------------
@@ -195,39 +153,6 @@ func _update_collision_shape() -> void:
 	var shape: CircleShape2D = CircleShape2D.new()
 	shape.radius = radius
 	_collision_shape.shape = shape
-
-
-func _update_handle_positions() -> void:
-	if not is_node_ready():
-		return
-	var half: float = HANDLE_SIZE / 2.0
-	var handle_color: Color = Color(0.85, 0.9, 1.0)  # Light blue for visibility
-	_handle_tl.position = Vector2(-rx - half, -ry - half)
-	_handle_tl.color = handle_color
-	_handle_tr.position = Vector2(rx - half, -ry - half)
-	_handle_tr.color = handle_color
-	_handle_bl.position = Vector2(-rx - half, ry - half)
-	_handle_bl.color = handle_color
-	_handle_br.position = Vector2(rx - half, ry - half)
-	_handle_br.color = handle_color
-
-
-## Returns the handle name ("tl", "tr", "bl", "br") if local_pos is within a handle rect,
-## or an empty string if no handle is hit.
-func handle_at_pos(local_pos: Vector2) -> String:
-	var half: float = HANDLE_SIZE / 2.0
-	var corners: Dictionary[String, Vector2] = {
-		"tl": Vector2(-rx - half, -ry - half),
-		"tr": Vector2(rx - half, -ry - half),
-		"bl": Vector2(-rx - half, ry - half),
-		"br": Vector2(rx - half, ry - half),
-	}
-	for key: String in corners:
-		var pos: Vector2 = corners[key]
-		var rect: Rect2 = Rect2(pos, Vector2(HANDLE_SIZE, HANDLE_SIZE))
-		if rect.has_point(local_pos):
-			return key
-	return ""
 
 
 # ----- Anchor System (overrides) ---------------------------------------------
