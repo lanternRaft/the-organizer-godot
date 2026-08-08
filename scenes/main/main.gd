@@ -5,9 +5,11 @@ extends Node
 
 ## Preload CanvasNode scenes for instantiation.
 const TRIANGLE_NODE_SCENE: PackedScene = preload("res://scenes/canvas_elements/triangle_node.tscn")
+
 const TEXT_OVERLAY_SCENE: PackedScene = preload(
 	"res://scenes/ui/text_edit_overlay/text_edit_overlay.tscn"
 )
+
 const LEGEND_PANEL_SCENE: PackedScene = preload("res://scenes/ui/legend_panel/legend_panel.tscn")
 
 ## Whether shape-placement mode is currently active.
@@ -39,21 +41,34 @@ var selected_set: Array[Node] = []
 var primary_selection: Node = null
 
 @onready var element_layer: Node2D = %ElementLayer
+
 @onready var canvas: Node2D = %Canvas
 
 @onready var click_handler: Node = $ClickHandler
+
 @onready var confirm_dialog: AcceptDialog = $UI/ConfirmDialog
+
 @onready var grid_background: ColorRect = %GridBackground
+
 @onready var camera_controller: Camera2D = %MainCamera
+
 @onready var zoom_controls: Control = $UI/ZoomControls
+
 @onready var arrow_layer: ArrowLayer = %ArrowLayer
+
 @onready var save_load_manager: SaveLoadManager = %SaveLoadManager
-@onready var _viewport: Viewport = get_viewport()
+
 @onready var ui_layer: CanvasLayer = $UI
-@onready var _text_overlay: TextEditOverlay = TEXT_OVERLAY_SCENE.instantiate()
+
 @onready var selection_menu: Node = $UI/SelectionMenu
+
 @onready var grid_toggle: Control = $UI/GridToggle
+
 @onready var legend_panel: Control = LEGEND_PANEL_SCENE.instantiate()
+
+@onready var _viewport: Viewport = get_viewport()
+
+@onready var _text_overlay: TextEditOverlay = TEXT_OVERLAY_SCENE.instantiate()
 
 
 func _ready() -> void:
@@ -63,40 +78,31 @@ func _ready() -> void:
 	#click_handler.connect("pointer_up", _on_pointer_up)
 	## Start in Select mode by default.
 	activate_select_mode()
-
 	## Connect grid toggle signal.
 	grid_background.connect("grid_toggled", _on_grid_toggled)
-
 	## Load persisted grid state — it loads inside grid_background._ready().
 	grid_enabled = grid_background.get("grid_enabled")
 	## Sync the toggle button's visual state.
 	grid_toggle.call("set_grid_visible", grid_enabled)
-
 	## Set initial theme (dark) on the grid.
 	grid_background.call("set_theme_dark", true)
-
 	## Connect zoom controls to camera controller (string-based to bypass type inference).
 	zoom_controls.connect("zoom_in_requested", _on_zoom_in_requested)
 	zoom_controls.connect("zoom_out_requested", _on_zoom_out_requested)
-
 	## Track zoom changes for the info bar.
 	camera_controller.connect("zoom_changed", _on_zoom_changed)
 	camera_controller.connect("camera_moved", _on_camera_moved)
-
 	## --- Selection Menu Setup ---
 	selection_menu.connect("delete_requested", _on_menu_delete_requested)
 	selection_menu.connect("color_selected", _on_menu_color_selected)
 	camera_controller.connect("zoom_changed", _on_menu_zoom_changed)
-
 	## --- Text Edit Overlay Setup ---
 	ui_layer.add_child(_text_overlay)
 	_text_overlay.text_committed.connect(_on_text_committed)
 	_text_overlay.text_cancelled.connect(_on_text_cancelled)
-
 	## --- Legend Panel Setup ---
 	ui_layer.add_child(legend_panel)
 	legend_panel.connect("name_changed", _on_legend_name_changed)
-
 	## Load persisted canvas state.
 	#var load_result: Dictionary = save_load_manager.load_canvas()
 	#var legend_data: Array = load_result.get("legend", [])
@@ -111,71 +117,74 @@ func _unhandled_input(event: InputEvent) -> void:
 	## Handle Escape to deactivate Oval/Node mode or clear selection.
 	## Keyboard-only — all pointer input is handled by ClickHandler.
 	if event.is_action_pressed("ui_cancel"):
-		# If text overlay is open, cancel it first.
-		if _text_overlay.get("is_open"):
-			_text_overlay.call("cancel")
-			get_viewport().set_input_as_handled()
-			return
-		if shape_tool_active:
-			deactivate_shape_mode()
-			get_viewport().set_input_as_handled()
-			return
-		if node_tool_active:
-			deactivate_node_mode()
-			get_viewport().set_input_as_handled()
-			return
-
+		_handle_cancel()
+		return
 	## G key toggles the grid on/off.
 	if event.is_action_pressed(&"grid_toggle"):
 		toggle_grid()
 		get_viewport().set_input_as_handled()
 		return
-
 	## Delete/Backspace key removes the selected element or arrow.
 	if event is InputEventKey:
-		var key_event: InputEventKey = event as InputEventKey
-		if not key_event.pressed or key_event.echo:
-			return
+		_handle_input_key(event as InputEventKey)
 
-		if key_event.keycode == KEY_DELETE or key_event.keycode == KEY_BACKSPACE:
-			# If editing text, let the overlay handle the key.
-			if _text_overlay.get("is_open"):
-				return
-			if not selected_set.is_empty():
-				_delete_selected_elements()
+
+## Handles the Escape key (ui_cancel action).
+func _handle_cancel() -> void:
+	# If text overlay is open, cancel it first.
+	if _text_overlay.get("is_open"):
+		_text_overlay.call("cancel")
+		get_viewport().set_input_as_handled()
+		return
+	if shape_tool_active:
+		deactivate_shape_mode()
+		get_viewport().set_input_as_handled()
+		return
+	if node_tool_active:
+		deactivate_node_mode()
+		get_viewport().set_input_as_handled()
+
+
+## Handles key events (Delete/Backspace, Select All, Enter, G).
+func _handle_input_key(key_event: InputEventKey) -> void:
+	if not key_event.pressed or key_event.echo:
+		return
+	if key_event.keycode == KEY_DELETE or key_event.keycode == KEY_BACKSPACE:
+		# If editing text, let the overlay handle the key.
+		if _text_overlay.get("is_open"):
+			return
+		if not selected_set.is_empty():
+			_delete_selected_elements()
+			get_viewport().set_input_as_handled()
+			return
+	# Ctrl+A or Cmd+A — Select all elements on canvas.
+	if (key_event.ctrl_pressed or key_event.meta_pressed) and key_event.keycode == KEY_A:
+		_select_all_elements()
+		get_viewport().set_input_as_handled()
+		return
+	# Enter key opens text editor on selected shape.
+	# (must come after the Delete check since both dispatch on the same event type)
+	if (
+		not key_event.ctrl_pressed
+		and not key_event.shift_pressed
+		and not key_event.meta_pressed
+		and key_event.keycode == KEY_ENTER
+	):
+		if primary_selection != null and not _text_overlay.get("is_open"):
+			if primary_selection is LabelShape:
+				open_text_editor(primary_selection as LabelShape)
 				get_viewport().set_input_as_handled()
 				return
-
-		# Ctrl+A or Cmd+A — Select all elements on canvas.
-		if (key_event.ctrl_pressed or key_event.meta_pressed) and key_event.keycode == KEY_A:
-			_select_all_elements()
-			get_viewport().set_input_as_handled()
-			return
-
-		# Enter key opens text editor on selected shape.
-		# (must come after the Delete check since both dispatch on the same event type)
-		if (
-			not key_event.ctrl_pressed
-			and not key_event.shift_pressed
-			and not key_event.meta_pressed
-		):
-			if key_event.keycode == KEY_ENTER:
-				if primary_selection != null and not _text_overlay.get("is_open"):
-					if primary_selection is LabelShape:
-						open_text_editor(primary_selection as LabelShape)
-						get_viewport().set_input_as_handled()
-						return
-
-		if (
-			key_event.keycode == KEY_G
-			and not key_event.ctrl_pressed
-			and not key_event.shift_pressed
-			and not key_event.alt_pressed
-			and key_event.pressed
-			and not key_event.echo
-		):
-			toggle_grid()
-			get_viewport().set_input_as_handled()
+	if (
+		key_event.keycode == KEY_G
+		and not key_event.ctrl_pressed
+		and not key_event.shift_pressed
+		and not key_event.alt_pressed
+		and key_event.pressed
+		and not key_event.echo
+	):
+		toggle_grid()
+		get_viewport().set_input_as_handled()
 
 
 ## Toggles the grid background on/off.
@@ -234,13 +243,10 @@ func _on_confirm_dialog_confirmed() -> void:
 ## Save after placement.
 #_save_state()
 #_refresh_legend()
-
-
 ## Activates shape-placement mode with the given sub-mode. Deactivates Select mode if active.
 func activate_shape_mode(sub_mode: String) -> void:
 	#if GameState.toolbar.select_mode_active:
 	#deactivate_select_mode()
-
 	shape_tool_active = true
 	shape_sub_mode = sub_mode
 	Input.set_default_cursor_shape(Input.CURSOR_CROSS)
@@ -259,7 +265,6 @@ func activate_node_mode(sub_mode: String) -> void:
 	#deactivate_select_mode()
 	if shape_tool_active:
 		deactivate_shape_mode()
-
 	node_tool_active = true
 	node_sub_mode = sub_mode
 	Input.set_default_cursor_shape(Input.CURSOR_CROSS)
@@ -287,7 +292,6 @@ func place_node(world_pos: Vector2) -> void:
 	node.position = world_pos
 	element_layer.add_child(node)
 	last_placed = node
-
 	# Connect signals for selection.
 	#node.connect("clicked", _on_element_clicked)
 	# Connect anchor_changed so ArrowManager updates connected arrows.
@@ -307,7 +311,6 @@ func place_node(world_pos: Vector2) -> void:
 func activate_select_mode() -> void:
 	if shape_tool_active:
 		deactivate_shape_mode()
-
 	#GameState.toolbar.select_mode_active = true
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 
@@ -346,7 +349,6 @@ func _on_select_mode_toggled(active: bool) -> void:
 #place_node(world_pos)
 #elif GameState.toolbar.select_mode_active and not Input.is_key_pressed(KEY_SHIFT):
 #clear_selection()
-
 ## Handles a click on any CanvasElement (LabelShape or CanvasNode).
 ## Connected to clicked signal on both element types.
 ## Shift-click toggles additive; single click re-selects.
@@ -354,16 +356,12 @@ func _on_select_mode_toggled(active: bool) -> void:
 #if not GameState.toolbar.select_mode_active:
 #return
 #_handle_element_clicked(element)
-
-
 ## Unified click handler for both CanvasElements and arrows.
 ## Shift-click toggles additive; no-Shift clears and selects just this element.
 func _handle_element_clicked(element: Node) -> void:
 	#if not GameState.toolbar.select_mode_active:
 	#return
-
 	var shift: bool = Input.is_key_pressed(KEY_SHIFT)
-
 	if shift:
 		if element in selected_set:
 			_deselect_element(element)
@@ -439,26 +437,20 @@ func toggle_grid() -> void:
 
 
 # ----- Text Editing ----------------------------------------------------------
-
-
 ## Opens the text edit overlay centered over the given shape.
 func open_text_editor(shape: LabelShape) -> void:
 	# Guard: shape must still be in the tree.
 	if not is_instance_valid(shape) or not shape.is_inside_tree():
 		return
-
 	var shape_center: Vector2 = shape.global_position
 	var screen_pos: Vector2 = camera_controller.get_canvas_transform() * shape_center
-
 	# Calculate overlay size to match shape visual bounds × zoom, with a minimum.
 	var overlay_width: float = max(160.0, shape.rx * 2.0 * current_zoom)
 	var overlay_height: float = max(80.0, shape.ry * 2.0 * current_zoom)
-
 	var screen_rect: Rect2 = Rect2(
 		screen_pos - Vector2(overlay_width / 2.0, overlay_height / 2.0),
 		Vector2(overlay_width, overlay_height)
 	)
-
 	_text_overlay.call("open", shape, screen_rect)
 	_update_selection_menu()
 
@@ -555,8 +547,6 @@ func _select_all_elements() -> void:
 
 
 # ----- Zoom Controls Relay ---------------------------------------------------
-
-
 ## Relays zoom-in button press to the camera controller.
 func _on_zoom_in_requested() -> void:
 	var vp_center: Vector2 = _viewport.get_visible_rect().size / 2.0
@@ -575,8 +565,6 @@ func _on_zoom_changed(level: float) -> void:
 
 
 # ----- Arrow System Interface ------------------------------------------------
-
-
 ## Called by ClickHandler as a secondary path when no Area2D shape was hit.
 ## Checks whether the click is on an arrow path. Returns true if consumed.
 ## Uses unified selection logic (Shift+click additive, no-Shift replace).
@@ -602,14 +590,11 @@ func _on_arrow_clicked_at(world_pos: Vector2) -> bool:
 #return false
 #
 #return arrow_layer.handle_dot_mousedown(world_pos)
-
 ## Called by ClickHandler's pointer_up signal to notify ArrowManager.
 #func _on_pointer_up(_world_pos: Vector2) -> void:
 #if arrow_layer == null:
 #return
 #arrow_layer.handle_dot_mouseup()
-
-
 ## Called by Main when any CanvasElement emits anchor_changed (resized or moved).
 ## Routes to ArrowManager's unified update_arrows_for_element method.
 func _on_element_anchor_changed(element: CanvasElement) -> void:
@@ -619,8 +604,6 @@ func _on_element_anchor_changed(element: CanvasElement) -> void:
 
 
 # ----- Selection Menu & Deletion ---------------------------------------------
-
-
 ## Shows/hides the selection menu based on current selection state.
 ## Menu is hidden entirely when more than one element is selected.
 func _update_selection_menu() -> void:
@@ -695,8 +678,6 @@ func _on_menu_color_selected(color: Color) -> void:
 
 
 ## Legend Panel ---------------------------------------------------------------
-
-
 ## Scans the canvas for unique fill colors from LabelShapes and updates the legend panel.
 ## CanvasNode colors are intentionally excluded — nodes are decorative markers, not categories.
 ## Called after any color-affecting mutation (placement, recolor, deletion, clear).
