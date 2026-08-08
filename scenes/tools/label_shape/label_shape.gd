@@ -11,7 +11,7 @@ extends CanvasElement
 ## Main connects to this to open the text editor.
 signal double_clicked(shape: Node)
 
-enum SHAPE_MODE { OVAL_MODEL, CIRCLE_MODE }
+enum ShapeMode { OVAL_MODEL, CIRCLE_MODE }
 
 ## Handle size in pixels.
 const HANDLE_SIZE: float = 32.0
@@ -19,7 +19,7 @@ const HANDLE_SIZE: float = 32.0
 ## Shape sub-mode: "oval" or "circle". When set to "circle", rx and ry are
 ## constrained to equal dimensions. Mode conversion snaps dimensions:
 ## oval → circle uses max(rx, ry); circle → oval keeps rx and resets ry=50.
-@export var shape_mode: SHAPE_MODE = SHAPE_MODE.OVAL_MODEL
+@export var shape_mode: ShapeMode = ShapeMode.OVAL_MODEL
 
 #@export var shape_mode: String = "oval":
 #set(value):
