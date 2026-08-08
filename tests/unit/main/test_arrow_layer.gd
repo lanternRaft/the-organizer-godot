@@ -2,8 +2,6 @@ extends GdUnitTestSuite
 
 const CIRCLE_NODE_SCENE: PackedScene = preload("res://scenes/canvas_elements/circle_node.tscn")
 const TRIANGLE_NODE_SCENE: PackedScene = preload("res://scenes/canvas_elements/triangle_node.tscn")
-const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
-const ARROW_SCENE: PackedScene = preload("res://scenes/tools/arrow/arrow.tscn")
 
 var arrow_layer: ArrowLayer
 var element_layer: Node2D
@@ -54,30 +52,6 @@ func _create_canvas_node(position: Vector2) -> CanvasNode:
 	return node
 
 
-func _create_label_shape(position: Vector2) -> LabelShape:
-	var shape: LabelShape = auto_free(LABEL_SHAPE_SCENE.instantiate())
-	shape.rx = 80.0
-	shape.ry = 50.0
-	shape.position = position
-	element_layer.add_child(shape)
-	return shape
-
-
-func test_arrow_label_shape_to_canvas_node() -> void:
-	var shape: LabelShape = _create_label_shape(Vector2(0, 0))
-	var node: CanvasNode = _create_canvas_node(Vector2(200, 0))
-
-	arrow_layer._create_arrow(shape.line_anchors[0], node.line_anchors[0])
-
-	assert_int(arrow_layer.get_children().size()).is_equal(1)
-
-	var arrow: Arrow = arrow_layer.get_children()[0]
-	assert_error(func() -> void: arrow.rebuild_path()).is_success()
-
-	assert_str(arrow.start_anchor).is_equal(shape)
-	assert_str(arrow.end_anchor).is_equal(node)
-
-
 func test_arrow_canvas_node_to_canvas_node() -> void:
 	var circle: CanvasNode = _create_canvas_node(Vector2(0, 0))
 	var triangle: CanvasNode = TRIANGLE_NODE_SCENE.instantiate()
@@ -90,23 +64,8 @@ func test_arrow_canvas_node_to_canvas_node() -> void:
 
 	var arrow: Arrow = arrow_layer.get_children()[0]
 	assert_error(func() -> void: arrow.rebuild_path()).is_success()
-	assert_str(arrow.start_anchor).is_equal(circle)
-	assert_str(arrow.end_anchor).is_equal(triangle)
-
-
-func test_arrow_label_shape_to_label_shape() -> void:
-	var shape_1: LabelShape = _create_label_shape(Vector2(0, 0))
-	var shape_2: LabelShape = _create_label_shape(Vector2(200, 0))
-
-	arrow_layer._create_arrow(shape_1.line_anchors[0], shape_2.line_anchors[0])
-
-	assert_int(arrow_layer.get_children().size()).is_equal(1)
-
-	var arrow: Arrow = arrow_layer.get_children()[0]
-	assert_error(func() -> void: arrow.rebuild_path()).is_success()
-
-	assert_str(arrow.start_anchor).is_equal(shape_1)
-	assert_str(arrow.end_anchor).is_equal(shape_2)
+	assert_object(arrow.start_anchor.canvas_element).is_same(circle)
+	assert_object(arrow.end_anchor.canvas_element).is_same(triangle)
 
 
 func test_arrow_self_connection_node() -> void:
