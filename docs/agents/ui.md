@@ -1,2 +1,1 @@
-- UI elements should always use a theme
-- **Only** override the theme with explicit permission for the user
+- Always use theme styling unless the user explicitly authorizes a custom override
