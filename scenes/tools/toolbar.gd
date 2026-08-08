@@ -16,12 +16,6 @@ enum ToolMode { NONE, SELECT, SHAPE, NODE }
 const SHAPE_SUB_MODES: Array[String] = ["oval", "circle"]
 const SHAPE_LABELS: Dictionary = {"oval": "Oval", "circle": "Circle"}
 
-## Maximum rendered size of the popup menu item icons (px).
-## The source tool icons are large (192px) so the toolbar buttons squeeze them
-## with expand_icon, but PopupMenu would otherwise show them at full size and
-## produce oversized menus. Capping them here keeps the submenus compact.
-const POPUP_ICON_MAX_WIDTH: int = 40
-
 ## Node sub-mode tracking and labels.
 const NODE_SUB_MODES: Array[String] = ["circle_node", "triangle_node"]
 const NODE_LABELS: Dictionary = {"circle_node": "Circle Node", "triangle_node": "Triangle Node"}
@@ -62,14 +56,12 @@ func _setup_tools() -> void:
 	node_popup.clear()
 	for i: int in node_tools.size():
 		node_popup.add_icon_item(node_tools[i].icon, "")
-		node_popup.set_item_icon_max_width(i, POPUP_ICON_MAX_WIDTH)
 		node_popup.set_item_tooltip(i, node_tools[i].name)
 
 	shape_popup.clear()
 	for i: int in shape_tools.size():
 		var tool: Tool = shape_tools[i]
 		shape_popup.add_icon_item(tool.icon, "")
-		shape_popup.set_item_icon_max_width(i, POPUP_ICON_MAX_WIDTH)
 		shape_popup.set_item_tooltip(i, tool.name)
 
 	_refresh()

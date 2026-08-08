@@ -52,7 +52,7 @@ Table of contents:
 | `Button/colors` | font 0.85 → white on hover/pressed |
 | `Label/font_sizes/font_size` | **35** |
 | `Panel/styles/panel` | translucent `0.12` @ 0.9 alpha, radius 8 |
-| `PopupMenu` | font_size **34**, h/v separation **10** |
+| `PopupMenu` | font_size **24**, h/v separation **8/4**, icon_max_width **40** |
 | `TooltipLabel/font_sizes/font_size` | **28** |
 
 ### Where it's applied
@@ -73,13 +73,15 @@ Godot default theme and are styled with node-level `theme_override_*` instead.
 
 ## When to use theme.tres vs per-node overrides
 
-- **theme.tres** = "all controls of this type should look like this" (e.g., a
-  new global button finish, or the app font sizes).
-- **`theme_override_*` on a node** = "this one control deviates" (e.g., the
-  compact popup menus).
-- Rule of thumb for existing UI: **do not edit a shared style to fix one
-  widget's size** — put a per-node override in that scene instead, exactly like
-  the toolbar submenus did for PopupMenu (theme default 34px → per-popup 24px).
+- **theme.tres** = "all controls of this type should look like this" (e.g., the
+  app font sizes, or the compact PopupMenu styling).
+- **`theme_override_*` on a node** = "this one control deviates" (e.g., a
+  single panel with a custom background).
+- Rule of thumb for existing UI: when *every* control of a type should match,
+  put it in **theme.tres** and let each scene inherit it (the compact PopupMenu
+  sizes are a theme-level decision — see below). Reach for a per-node override
+  only for a genuine one-off that shouldn't touch other controls of the same
+  type.
 - Common override keys you'll see: `theme_override_font_sizes/font_size`,
   `theme_override_constants/{h_separation,v_separation,margin_*}`,
   `theme_override_styles/background`, `theme_override_colors/*`, and for
@@ -92,32 +94,30 @@ Godot default theme and are styled with node-level `theme_override_*` instead.
 PopupMenu is the #1 source of confusion. Unlike Buttons/Labels it derives from
 **Window, not Control**:
 
-- **Theme overrides do not appear as typed members.** `popup.font_size` is a
-  *parse error* under this project's strict warnings, and `popup.get("font_size")`
-  returns `null`. The only reliable way to read an override in a script/test:
+- **No typed theme members.** `popup.font_size` / `popup.icon_max_width` are
+  *parse errors* under this project's strict warnings (even though 4.x surfaces
+  the theme items in IDE property lists), and `popup.get("font_size")` returns
+  `null`. There is no `get_theme_constant()` on a popup.
+- **Compact styling lives in the shared theme** (`theme.tres`, `PopupMenu/*`):
+  font_size 24, h_separation 8, v_separation 4, icon_max_width 40. This is an
+  app-wide decision — toolbar submenus and the hamburger menu all inherit it
+  with **no per-node overrides**. Read the values from the theme resource:
   ```gdscript
-  var size: int = popup.get("theme_override_font_sizes/font_size")       # 24
-  var h: int = popup.get("theme_override_constants/h_separation")        # 8
-  var v: int = popup.get("theme_override_constants/v_separation")        # 4
+  var size: int = theme.get_font_size("font_size", "PopupMenu")       # 24
+  var h: int = theme.get_constant("h_separation", "PopupMenu")        # 8
+  var v: int = theme.get_constant("v_separation", "PopupMenu")        # 4
+  var cap: int = theme.get_constant("icon_max_width", "PopupMenu")    # 40
   ```
+- **`oversampling_override = 1.0` stays per-popup** in the `.tscn` — it's a
+  Window property, not themeable.
+- **Adding items:** `popup.add_icon_item(tool.icon, "")` + a per-item tooltip.
+  Do **not** call `set_item_icon_max_width()` per item — the theme's
+  `icon_max_width` caps the big 192px source icons (an unset per-item value of
+  0 means "follow the theme").
 - **Popups are separate windows** and only open on a button press, so a plain
   screenshot of the running app never shows them. The dev-only
   `scenes/tools/menu_review.tscn` instantiates the real toolbar and pops both
   submenus open for `godot_capture` review.
-- **Compact submenu recipe** (the sanctioned pattern, used by `toolbar.tscn`):
-  keep the toolbar buttons 100×80, but override the popup to
-  `font_size` 24, `h_separation` 8, `v_separation` 4, set
-  `oversampling_override = 1.0`, and cap item icons so the big 192px source
-  icons don't balloon the menu:
-  ```gdscript
-  const POPUP_ICON_MAX_WIDTH: int = 40
-  popup.add_icon_item(tool.icon, "")
-  popup.set_item_icon_max_width(i, POPUP_ICON_MAX_WIDTH)
-  popup.set_item_tooltip(i, tool.name)
-  ```
-
-See the [Known issues](#known-issues--open-items) for the hamburger menu, which
-still hasn't had this recipe applied.
 
 <a name="icons--buttons"></a>
 
@@ -129,7 +129,8 @@ still hasn't had this recipe applied.
 - Tool icons are typed **`DPITexture`** (a Godot 4.4+ high-DPI wrapper), not
   plain `Texture2D` — see `resources/tool.gd`. Don't cast them casually.
 - The SVG sources are large (~192px). Buttons use **`expand_icon = true`** to
-  squeeze them into the button; the toolbar also caps popup item icon width (above).
+  squeeze them into the button; the shared theme caps popup item icon width via
+  `PopupMenu/constants/icon_max_width` (above).
 - Buttons are deliberately **chunky touch targets**: 80×80 (zoom, grid,
   hamburger) or **100×80** (toolbar). Keep `icon_alignment = 1` (center) and
   don't shrink these below their declared minimum.
@@ -189,13 +190,9 @@ call into Main.
 
 From `TODO.md` — do not "fix" silently, they're explicit follow-ups:
 
-- **Hamburger `PopupMenu` is still oversized.** It inherits the app theme's
-  34px font (too tall vs its 80px button). It needs the same compact treatment
-  as the toolbar popups (24px font, tight separations, icon width cap) — once
-  verified it doesn't hurt readability.
 - **Toolbar popup items are icon-only** (names live only in tooltips). Decided
   keep minimal or add item text — if adding text, re-check the compact
-  font/separation overrides still size the menu sensibly.
+  font/separation values in the shared theme still size the menu sensibly.
 
 <a name="testing-ui"></a>
 

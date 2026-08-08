@@ -5,9 +5,10 @@ extends GdUnitTestSuite
 ##   - tool configuration (shape/node tool lists, sub-mode labels)
 ##   - submenu (PopupMenu) contents, tooltips and icon-size caps
 ##   - submenu interaction (open/sub-mode select/reset to Select)
-##   - compact popup theme overrides (expected display sizes)
+##   - compact popup styling from the shared theme (expected display sizes)
 
 const TOOLBAR_SCENE: PackedScene = preload("res://scenes/tools/toolbar.tscn")
+const THEME: Theme = preload("res://resources/theme.tres")
 
 var toolbar: Toolbar
 var runner: GdUnitSceneRunner
@@ -35,10 +36,6 @@ func test_toolbar_configured_with_expected_tools() -> void:
 	assert_str(toolbar.node_tools[0].name).is_equal("Circle Node")
 	assert_str(toolbar.node_tools[1].name).is_equal("Triangle Node")
 
-	# The popup item icons are capped so the large 192px source icons don't
-	# blow up the otherwise compact submenus.
-	assert_int(Toolbar.POPUP_ICON_MAX_WIDTH).is_equal(40)
-
 
 # --- Submenu contents --------------------------------------------------------
 
@@ -48,21 +45,15 @@ func test_submenus_have_one_item_per_tool() -> void:
 	assert_int(toolbar.node_popup.item_count).is_equal(toolbar.node_tools.size()).is_equal(2)
 
 
-func test_shape_submenu_tooltips_and_icon_caps() -> void:
+func test_shape_submenu_tooltips_and_icons() -> void:
 	for i: int in toolbar.shape_tools.size():
 		assert_str(toolbar.shape_popup.get_item_tooltip(i)).is_equal(toolbar.shape_tools[i].name)
-		assert_int(toolbar.shape_popup.get_item_icon_max_width(i)).is_equal(
-			Toolbar.POPUP_ICON_MAX_WIDTH
-		)
 		assert_object(toolbar.shape_popup.get_item_icon(i)).is_same(toolbar.shape_tools[i].icon)
 
 
-func test_node_submenu_tooltips_and_icon_caps() -> void:
+func test_node_submenu_tooltips_and_icons() -> void:
 	for i: int in toolbar.node_tools.size():
 		assert_str(toolbar.node_popup.get_item_tooltip(i)).is_equal(toolbar.node_tools[i].name)
-		assert_int(toolbar.node_popup.get_item_icon_max_width(i)).is_equal(
-			Toolbar.POPUP_ICON_MAX_WIDTH
-		)
 		assert_object(toolbar.node_popup.get_item_icon(i)).is_same(toolbar.node_tools[i].icon)
 
 
@@ -81,18 +72,15 @@ func test_buttons_render_at_expected_minimum_size() -> void:
 	assert_that(toolbar.size.y <= 84.0).is_equal(true)
 
 
-func test_shape_submenu_uses_compact_theme_overrides() -> void:
-	# The app theme sizes PopupMenu at 34px; the toolbar submenus override to a
-	# more compact 24px with tighter separations so they stay near the button.
-	assert_int(toolbar.shape_popup.get("theme_override_font_sizes/font_size")).is_equal(24)
-	assert_int(toolbar.shape_popup.get("theme_override_constants/h_separation")).is_equal(8)
-	assert_int(toolbar.shape_popup.get("theme_override_constants/v_separation")).is_equal(4)
-
-
-func test_node_submenu_uses_compact_theme_overrides() -> void:
-	assert_int(toolbar.node_popup.get("theme_override_font_sizes/font_size")).is_equal(24)
-	assert_int(toolbar.node_popup.get("theme_override_constants/h_separation")).is_equal(8)
-	assert_int(toolbar.node_popup.get("theme_override_constants/v_separation")).is_equal(4)
+func test_shared_theme_styles_compact_popup_menus() -> void:
+	# The compact submenu styling lives in the shared theme so every app popup
+	# (toolbar submenus, hamburger menu) stays consistent. The toolbar popups
+	# carry no per-node overrides for these.
+	assert_int(THEME.get_font_size("font_size", "PopupMenu")).is_equal(24)
+	assert_int(THEME.get_constant("h_separation", "PopupMenu")).is_equal(8)
+	assert_int(THEME.get_constant("v_separation", "PopupMenu")).is_equal(4)
+	# The 192px source tool icons are capped so they don't balloon the menu.
+	assert_int(THEME.get_constant("icon_max_width", "PopupMenu")).is_equal(40)
 
 
 # --- Behavior ----------------------------------------------------------------

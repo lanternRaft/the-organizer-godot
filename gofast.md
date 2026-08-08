@@ -56,23 +56,29 @@ a chance for a timing bug.
 Then behavioral tests are one-liners and sizing tests can assert immediately
 without re-writing the settle boilerplate.
 
-## 4. Document how to read PopupMenu theme overrides (non-Control nodes)
+## 4. Reading PopupMenu styling (non-Control nodes)
 
-Verifying the "compact submenu" display sizes took three failed iterations:
+Verifying the "compact submenu" display sizes took several failed iterations.
+PopupMenu derives from `Window`, not `Control`, so:
 
-- `popup.font_size` / `popup.h_separation` — **not** typed members on
-  `PopupMenu` (it's a `Window`, not a `Control`) → `unsafe_property_access`
-  parse error.
-- `popup.get("font_size")` → runtime `null`.
-- **Works:** read the override key paths:
+- `popup.font_size` / `popup.h_separation` / `popup.icon_max_width` — **not**
+  typed members on `PopupMenu` → `unsafe_property_access` parse error (even
+  though 4.x lists these as theme items in the IDE).
+- `popup.get("font_size")` → runtime `null` (plain property name).
+- Per-node overrides worked at first (`popup.get("theme_override_...")`), but
+  review moved the compact sizing into the **shared theme** for consistency, so
+  display-size checks now read the theme resource directly:
   ```gdscript
-  assert_int(popup.get("theme_override_font_sizes/font_size")).is_equal(24)
-  assert_int(popup.get("theme_override_constants/h_separation")).is_equal(8)
-  assert_int(popup.get("theme_override_constants/v_separation")).is_equal(4)
+  var theme: Theme = preload("res://resources/theme.tres")
+  assert_int(theme.get_font_size("font_size", "PopupMenu")).is_equal(24)
+  assert_int(theme.get_constant("h_separation", "PopupMenu")).is_equal(8)
+  assert_int(theme.get_constant("v_separation", "PopupMenu")).is_equal(4)
+  assert_int(theme.get_constant("icon_max_width", "PopupMenu")).is_equal(40)
   ```
 
-**Action:** put this snippet in the `tests/README` (item 1) under a
-"reading theme overrides" section so display-size checks are copy-paste.
+**Action:** put the theme-resource snippet in the `tests/README` (item 1)
+under a "reading PopupMenu styling" section so display-size checks are
+copy-paste.
 
 ## 5. Verify visual display sizes with `godot_capture` + `godot_vision` early
 
