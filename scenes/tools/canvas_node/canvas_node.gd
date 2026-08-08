@@ -21,13 +21,13 @@ extends CanvasElement
 enum ShapeMode { CIRCLE_NODE, TRIANGLE_NODE }
 
 ## Circle radius in world-space pixels.
-const CIRCLE_RADIUS: float = 8.0
+const CIRCLE_RADIUS: float = 24.0
 
 ## Triangle vertices (local, inscribed in a bounding circle of 8px radius).
 const TRIANGLE_VERTICES: PackedVector2Array = [
-	Vector2(0.0, -8.0),  # top
-	Vector2(-7.0, 4.0),  # bottom-left
-	Vector2(7.0, 4.0),  # bottom-right
+	Vector2(0.0, -24.0),  # top
+	Vector2(-21.0, 12.0),  # bottom-left
+	Vector2(21.0, 12.0),  # bottom-right
 ]
 
 @export var shape_mode: ShapeMode = ShapeMode.CIRCLE_NODE

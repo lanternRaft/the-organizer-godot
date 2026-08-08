@@ -6,6 +6,7 @@ extends CanvasElement
 ## Emitted when the shape is double-clicked (two clicks within 400ms).
 ## Main connects to this to open the text editor.
 signal double_clicked(shape: Node)
+signal resized
 
 enum ShapeMode { OVAL_MODEL, CIRCLE_MODE }
 
@@ -20,7 +21,6 @@ const HANDLE_SIZE: float = 32.0
 	set(value):
 		rx = value
 		queue_redraw()
-		_update_collision_shape()
 		_update_text_display()
 		if Engine.is_editor_hint():
 			return
@@ -29,12 +29,12 @@ const HANDLE_SIZE: float = 32.0
 		if not anchor_changed.is_connected(Callable()):
 			# Delay emission to avoid mid-setter issues
 			call_deferred("emit_signal", "anchor_changed")
+		resized.emit()
 
 @export var ry: float = 100.0:
 	set(value):
 		ry = value
 		queue_redraw()
-		_update_collision_shape()
 		_update_text_display()
 		if Engine.is_editor_hint():
 			return
@@ -42,6 +42,7 @@ const HANDLE_SIZE: float = 32.0
 			return
 		if not anchor_changed.is_connected(Callable()):
 			call_deferred("emit_signal", "anchor_changed")
+		resized.emit()
 
 ## Text displayed on the shape, rendered in a centered auto-scaling Label.
 @export var text_content: String = "":
@@ -54,7 +55,6 @@ const HANDLE_SIZE: float = 32.0
 		fill_color = value
 		queue_redraw()
 
-@onready var _collision_shape: CollisionShape2D = $Area2D/CollisionShape2D
 @onready var _text_label: Label = $TextLabel
 
 
@@ -143,16 +143,6 @@ func _estimate_line_count(text: String, max_width: float, font: Font, font_size:
 			else:
 				current_line_width += space_width + word_width
 	return max(1, count)
-
-
-# ----- Resize / Position Updates --------------------------------------------
-func _update_collision_shape() -> void:
-	if not is_node_ready():
-		return
-	var radius: float = max(rx, ry)
-	var shape: CircleShape2D = CircleShape2D.new()
-	shape.radius = radius
-	_collision_shape.shape = shape
 
 
 # ----- Anchor System (overrides) ---------------------------------------------

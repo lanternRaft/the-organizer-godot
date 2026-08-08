@@ -9,17 +9,19 @@
 radius = 8.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_ty0p8"]
-radius = 23.0
+radius = 119.104996
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_utdq7"]
-radius = 8.0
+[sub_resource type="ConvexPolygonShape2D" id="ConvexPolygonShape2D_ty0p8"]
 
 [node name="CircleLabelShape" type="Node2D" unique_id=1844598271]
 modulate = Color(1, 1, 1, 0.9)
 script = ExtResource("1_mpgrw")
 shape_mode = 1
+rx = 80.0
+ry = 50.0
 
 [node name="HoverArea2D" type="Area2D" parent="." unique_id=1873259314]
+visible = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HoverArea2D" unique_id=1845053713]
 shape = SubResource("CircleShape2D_xeyld")
@@ -28,24 +30,25 @@ shape = SubResource("CircleShape2D_xeyld")
 script = ExtResource("2_1ot7t")
 
 [node name="LineAnchorTop" parent="Anchors" unique_id=2133260072 instance=ExtResource("3_i8ymp")]
-position = Vector2(0, -15)
+position = Vector2(0, -66)
 
 [node name="LineAnchorLeft" parent="Anchors" unique_id=866498722 instance=ExtResource("3_i8ymp")]
-position = Vector2(-15, 0)
+position = Vector2(-96, 0)
 rotation = 4.712389
 anchor_position = 1
 
 [node name="LineAnchorBottom" parent="Anchors" unique_id=1216750873 instance=ExtResource("3_i8ymp")]
-position = Vector2(0, 15)
+position = Vector2(-1, 66)
 rotation = 3.1415927
 anchor_position = 2
 
 [node name="LineAnchorRight" parent="Anchors" unique_id=1190308540 instance=ExtResource("3_i8ymp")]
-position = Vector2(15, 0)
+position = Vector2(96, 0)
 rotation = 1.5707964
 anchor_position = 3
 
 [node name="AnchorShowArea2D" type="Area2D" parent="." unique_id=774070203]
+visible = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AnchorShowArea2D" unique_id=1721170395]
 shape = SubResource("CircleShape2D_ty0p8")
@@ -53,5 +56,5 @@ shape = SubResource("CircleShape2D_ty0p8")
 [node name="SelectArea2D" type="Area2D" parent="." unique_id=1303631337]
 script = ExtResource("4_sm0ut")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SelectArea2D" unique_id=435742010]
-shape = SubResource("CircleShape2D_utdq7")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SelectArea2D" unique_id=703866262]
+shape = SubResource("ConvexPolygonShape2D_ty0p8")

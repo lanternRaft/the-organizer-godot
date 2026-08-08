@@ -5,52 +5,46 @@
 [ext_resource type="PackedScene" uid="uid://b4hn1afvgxgsd" path="res://scenes/canvas_elements/line_anchor.tscn" id="3_i8ymp"]
 [ext_resource type="Script" uid="uid://bkmvn3nld53p1" path="res://scripts/select_area_2d.gd" id="4_sm0ut"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_xeyld"]
-radius = 8.0
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_mpgrw"]
+radius = 128.33
+height = 425.03
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_ty0p8"]
-radius = 23.0
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_utdq7"]
-radius = 8.0
+[sub_resource type="ConvexPolygonShape2D" id="ConvexPolygonShape2D_mpgrw"]
+points = PackedVector2Array(160, 0, 159.50677, 7.8459096, 158.03014, 15.643447, 155.5792, 23.344536, 152.16904, 30.9017, 147.82072, 38.268345, 142.56105, 45.39905, 136.42242, 52.249855, 129.44272, 58.778526, 121.664955, 64.9448, 113.137085, 70.71068, 103.91169, 76.040596, 94.04564, 80.9017, 83.59977, 85.264015, 72.63848, 89.100655, 61.22935, 92.387955, 49.44272, 95.10565, 37.351257, 97.23699, 25.029514, 98.76884, 12.553455, 99.691734, 9.797174e-15, 100, -12.553455, 99.691734, -25.029514, 98.76884, -37.351257, 97.23699, -49.44272, 95.10565, -61.22935, 92.387955, -72.63848, 89.100655, -83.59977, 85.264015, -94.04564, 80.9017, -103.91169, 76.040596, -113.137085, 70.71068, -121.664955, 64.9448, -129.44272, 58.778526, -136.42242, 52.249855, -142.56105, 45.39905, -147.82072, 38.268345, -152.16904, 30.9017, -155.5792, 23.344536, -158.03014, 15.643447, -159.50677, 7.8459096, -160, 1.22464676e-14, -159.50677, -7.8459096, -158.03014, -15.643447, -155.5792, -23.344536, -152.16904, -30.9017, -147.82072, -38.268345, -142.56105, -45.39905, -136.42242, -52.249855, -129.44272, -58.778526, -121.664955, -64.9448, -113.137085, -70.71068, -103.91169, -76.040596, -94.04564, -80.9017, -83.59977, -85.264015, -72.63848, -89.100655, -61.22935, -92.387955, -49.44272, -95.10565, -37.351257, -97.23699, -25.029514, -98.76884, -12.553455, -99.691734, -2.939152e-14, -100, 12.553455, -99.691734, 25.029514, -98.76884, 37.351257, -97.23699, 49.44272, -95.10565, 61.22935, -92.387955, 72.63848, -89.100655, 83.59977, -85.264015, 94.04564, -80.9017, 103.91169, -76.040596, 113.137085, -70.71068, 121.664955, -64.9448, 129.44272, -58.778526, 136.42242, -52.249855, 142.56105, -45.39905, 147.82072, -38.268345, 152.16904, -30.9017, 155.5792, -23.344536, 158.03014, -15.643447, 159.50677, -7.8459096)
 
 [node name="OvalNode" type="Node2D" unique_id=1844598271]
 modulate = Color(1, 1, 1, 0.90000004)
 script = ExtResource("1_mpgrw")
 
-[node name="HoverArea2D" type="Area2D" parent="." unique_id=1873259314]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HoverArea2D" unique_id=1845053713]
-shape = SubResource("CircleShape2D_xeyld")
-
 [node name="Anchors" type="Node2D" parent="." unique_id=820419590]
 script = ExtResource("2_1ot7t")
 
 [node name="LineAnchorTop" parent="Anchors" unique_id=2133260072 instance=ExtResource("3_i8ymp")]
-position = Vector2(0, -15)
+position = Vector2(0, -115)
 
 [node name="LineAnchorLeft" parent="Anchors" unique_id=866498722 instance=ExtResource("3_i8ymp")]
-position = Vector2(-15, 0)
+position = Vector2(-176, 0)
 rotation = 4.712389
 anchor_position = 1
 
 [node name="LineAnchorBottom" parent="Anchors" unique_id=1216750873 instance=ExtResource("3_i8ymp")]
-position = Vector2(0, 15)
+position = Vector2(0, 116)
 rotation = 3.1415927
 anchor_position = 2
 
 [node name="LineAnchorRight" parent="Anchors" unique_id=1190308540 instance=ExtResource("3_i8ymp")]
-position = Vector2(15, 0)
+position = Vector2(177, 0)
 rotation = 1.5707964
 anchor_position = 3
 
 [node name="AnchorShowArea2D" type="Area2D" parent="." unique_id=774070203]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AnchorShowArea2D" unique_id=1721170395]
-shape = SubResource("CircleShape2D_ty0p8")
+shape = SubResource("CapsuleShape2D_mpgrw")
 
 [node name="SelectArea2D" type="Area2D" parent="." unique_id=1303631337]
 script = ExtResource("4_sm0ut")
+resize = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="SelectArea2D" unique_id=435742010]
-shape = SubResource("CircleShape2D_utdq7")
+shape = SubResource("ConvexPolygonShape2D_mpgrw")
