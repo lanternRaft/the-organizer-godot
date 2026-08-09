@@ -1,0 +1,48 @@
+name: Deploy Web to GitHub Pages
+
+# Every push to *any* branch exports the Godot web build and force-pushes it
+# to the gh-pages branch. GitHub Pages serves whatever is on that branch, so
+# the last branch to finish building wins (with the concurrency group below,
+# an in-flight build is cancelled when a newer push arrives — last one wins).
+on:
+  push:
+
+concurrency:
+  # One shared group for all branches so only a single build/deploy runs at a
+  # time, and the most recently pushed branch cancels any older build in
+  # flight. This is what makes "last branch to build wins" deterministic
+  # instead of the deploy racing on the gh-pages branch.
+  group: pages-deploy
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    name: Export web (debug) and publish to gh-pages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # needed to push to the gh-pages branch
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Godot with export templates
+        uses: chickensoft-games/setup-godot@v1
+        with:
+          version: 4.7.1
+          use-dotnet: false
+          include-templates: true
+
+      - name: Import project (warm script/asset cache)
+        run: |
+          godot --headless --import --quit > /dev/null 2>&1 || true
+
+      - name: Export debug web build
+        run: |
+          mkdir -p build/web
+          godot --headless --export-debug "Web" build/web/index.html
+
+      - name: Deploy to gh-pages (overwrite)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: build/web
+          force_orphan: true
