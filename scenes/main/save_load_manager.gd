@@ -5,7 +5,6 @@ class_name SaveLoadManager
 extends Node
 
 const SAVE_PATH: String = "user://canvas.save"
-const LABEL_SHAPE_SCENE: PackedScene = preload("res://scenes/tools/label_shape/label_shape.tscn")
 const TRIANGLE_NODE_SCENE: PackedScene = preload("res://scenes/canvas_elements/triangle_node.tscn")
 const CIRCLE_NODE_SCENE: PackedScene = preload("res://scenes/canvas_elements/circle_node.tscn")
 
@@ -101,9 +100,10 @@ func load_canvas() -> Dictionary:
 		if typeof(element_data) == TYPE_DICTIONARY:
 			var elem: Dictionary = element_data
 			if elem.get("type") == "LabelShape":
-				var shape_node: LabelShape = _instantiate_label_shape(elem)
-				if shape_node != null:
-					elements.append(shape_node)
+				#var shape_node: LabelShape = _instantiate_label_shape(elem)
+				#if shape_node != null:
+					#elements.append(shape_node)
+				pass
 			elif elem.get("type") == "CanvasNode":
 				var canvas_node: CanvasNode = _instantiate_canvas_node(elem)
 				if canvas_node != null:
@@ -115,7 +115,8 @@ func load_canvas() -> Dictionary:
 ## Instantiates a LabelShape from serialised data, adds it to ElementLayer,
 ## and returns the node for the caller to wire signals.
 func _instantiate_label_shape(data: Dictionary) -> LabelShape:
-	var shape: LabelShape = LABEL_SHAPE_SCENE.instantiate()
+	pass
+	var shape: LabelShape = CIRCLE_NODE_SCENE.instantiate()
 	@warning_ignore("unsafe_cast")
 	shape.position = Vector2(
 		data.get("position_x", 0.0) as float, data.get("position_y", 0.0) as float

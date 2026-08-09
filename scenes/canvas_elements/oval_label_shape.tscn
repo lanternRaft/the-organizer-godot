@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://bkmvn3nld53p1" path="res://scripts/select_area_2d.gd" id="4_sm0ut"]
 [ext_resource type="Script" uid="uid://bydnbdwjihgm7" path="res://scripts/anchor_show_area_2d.gd" id="5_aw2d"]
 [ext_resource type="Script" uid="uid://dxyescimmrqho" path="res://scripts/handles.gd" id="6_i8ymp"]
+[ext_resource type="PackedScene" uid="uid://b4uttvu148jb2" path="res://scenes/canvas_elements/handle.tscn" id="7_sm0ut"]
 
 [sub_resource type="ConvexPolygonShape2D" id="ConvexPolygonShape2D_anchorshow"]
 points = PackedVector2Array(208, 0, 207.35881, 10.199682, 205.43918, 20.336481, 202.25294, 30.347897, 197.81975, 40.17221, 192.16695, 49.748848, 185.32936, 59.018764, 177.34915, 67.92481, 168.27553, 76.41209, 158.16444, 84.428246, 147.07822, 91.92388, 135.08519, 98.852776, 122.25933, 105.17221, 108.6797, 110.84322, 94.43002, 115.83085, 79.59815, 120.10434, 64.275536, 123.637344, 48.556637, 126.40809, 32.53837, 128.39949, 16.319492, 129.59926, 1.2736327e-14, 130, -16.319492, 129.59926, -32.53837, 128.39949, -48.556637, 126.40809, -64.275536, 123.637344, -79.59815, 120.10434, -94.43002, 115.83085, -108.6797, 110.84322, -122.25933, 105.17221, -135.08519, 98.852776, -147.07822, 91.92388, -158.16444, 84.428246, -168.27553, 76.41209, -177.34915, 67.92481, -185.32936, 59.018764, -192.16695, 49.748848, -197.81975, 40.17221, -202.25294, 30.347897, -205.43918, 20.336481, -207.35881, 10.199682, -208, 1.5920408e-14, -207.35881, -10.199682, -205.43918, -20.336481, -202.25294, -30.347897, -197.81975, -40.17221, -192.16695, -49.748848, -185.32936, -59.018764, -177.34915, -67.92481, -168.27553, -76.41209, -158.16444, -84.428246, -147.07822, -91.92388, -135.08519, -98.852776, -122.25933, -105.17221, -108.6797, -110.84322, -94.43002, -115.83085, -79.59815, -120.10434, -64.275536, -123.637344, -48.556637, -126.40809, -32.53837, -128.39949, -16.319492, -129.59926, -3.820898e-14, -130, 16.319492, -129.59926, 32.53837, -128.39949, 48.556637, -126.40809, 64.275536, -123.637344, 79.59815, -120.10434, 94.43002, -115.83085, 108.6797, -110.84322, 122.25933, -105.17221, 135.08519, -98.852776, 147.07822, -91.92388, 158.16444, -84.428246, 168.27553, -76.41209, 177.34915, -67.92481, 185.32936, -59.018764, 192.16695, -49.748848, 197.81975, -40.17221, 202.25294, -30.347897, 205.43918, -20.336481, 207.35881, -10.199682)
@@ -58,34 +59,26 @@ shape = SubResource("ConvexPolygonShape2D_mpgrw")
 [node name="Handles" type="Node2D" parent="." unique_id=531525636]
 script = ExtResource("6_i8ymp")
 
-[node name="HandleTopLeft" type="ColorRect" parent="Handles" unique_id=193157484]
-offset_left = -171.0
-offset_top = -100.0
-offset_right = -163.0
-offset_bottom = -92.0
-mouse_filter = 2
-color = Color(0.85, 0.9, 1, 1)
+[node name="HandleTopRight" parent="Handles" unique_id=1299026613 instance=ExtResource("7_sm0ut")]
+offset_left = 151.0
+offset_top = -98.0
+offset_right = 151.0
+offset_bottom = -98.0
 
-[node name="HandleTopRight" type="ColorRect" parent="Handles" unique_id=1855621791]
-offset_left = 168.0
-offset_top = -105.0
-offset_right = 176.0
-offset_bottom = -97.0
-mouse_filter = 2
-color = Color(0.85, 0.9, 1, 1)
+[node name="HandleTopLeft" parent="Handles" unique_id=1387876586 instance=ExtResource("7_sm0ut")]
+offset_left = -157.0
+offset_top = -98.0
+offset_right = -157.0
+offset_bottom = -98.0
 
-[node name="HandleBackLeft" type="ColorRect" parent="Handles" unique_id=1427195810]
-offset_left = -159.0
-offset_top = 106.0
-offset_right = -151.0
-offset_bottom = 114.0
-mouse_filter = 2
-color = Color(0.85, 0.9, 1, 1)
+[node name="HandleBottomLeft" parent="Handles" unique_id=1255304124 instance=ExtResource("7_sm0ut")]
+offset_left = -157.0
+offset_top = 100.0
+offset_right = -157.0
+offset_bottom = 100.0
 
-[node name="HandleBackRight" type="ColorRect" parent="Handles" unique_id=1961938178]
-offset_left = 147.0
-offset_top = 105.0
-offset_right = 155.0
-offset_bottom = 113.0
-mouse_filter = 2
-color = Color(0.85, 0.9, 1, 1)
+[node name="HandleBottomRight" parent="Handles" unique_id=2123254674 instance=ExtResource("7_sm0ut")]
+offset_left = 154.0
+offset_top = 110.0
+offset_right = 154.0
+offset_bottom = 110.0
