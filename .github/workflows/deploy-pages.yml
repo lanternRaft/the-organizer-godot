@@ -4,19 +4,21 @@ name: Deploy Web to GitHub Pages
 # `export/debug/`, and this workflow simply publishes whatever is in that
 # directory to the gh-pages branch root, which GitHub Pages serves directly.
 #
-# The trigger is restricted to pushes on the `publish` branch that touch files
-# under export/debug/, so a push that doesn't change the exported files runs
-# nothing at all.
+# Any branch other than `main` can publish. The trigger is restricted to pushes
+# that touch files under export/debug/, so a push that doesn't change the
+# exported files runs nothing at all. Because every branch force-pushes to the
+# same gh-pages branch, the last branch to push wins.
 on:
   push:
-    branches:
-      - publish
+    branches-ignore:
+      - main
     paths:
       - 'export/debug/**'
 
 concurrency:
-  # One shared group so only a single deploy runs at a time, and a newer push
-  # to publish cancels any older deploy still in flight.
+  # One shared group so only a single deploy runs at a time, and the most
+  # recently pushed branch cancels any older deploy still in flight
+  # ("last branch to push wins").
   group: pages-deploy
   cancel-in-progress: true
 
