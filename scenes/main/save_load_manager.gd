@@ -102,7 +102,7 @@ func load_canvas() -> Dictionary:
 			if elem.get("type") == "LabelShape":
 				#var shape_node: LabelShape = _instantiate_label_shape(elem)
 				#if shape_node != null:
-					#elements.append(shape_node)
+				#elements.append(shape_node)
 				pass
 			elif elem.get("type") == "CanvasNode":
 				var canvas_node: CanvasNode = _instantiate_canvas_node(elem)
@@ -115,7 +115,6 @@ func load_canvas() -> Dictionary:
 ## Instantiates a LabelShape from serialised data, adds it to ElementLayer,
 ## and returns the node for the caller to wire signals.
 func _instantiate_label_shape(data: Dictionary) -> LabelShape:
-	pass
 	var shape: LabelShape = CIRCLE_NODE_SCENE.instantiate()
 	@warning_ignore("unsafe_cast")
 	shape.position = Vector2(

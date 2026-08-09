@@ -22,6 +22,7 @@ const HANDLE_SIZE: float = 32.0
 		rx = value
 		queue_redraw()
 		_update_text_display()
+		_sync_anchors()
 		if Engine.is_editor_hint():
 			return
 		if not is_inside_tree():
@@ -36,6 +37,7 @@ const HANDLE_SIZE: float = 32.0
 		ry = value
 		queue_redraw()
 		_update_text_display()
+		_sync_anchors()
 		if Engine.is_editor_hint():
 			return
 		if not is_inside_tree():
@@ -160,6 +162,52 @@ func _estimate_line_count(text: String, max_width: float, font: Font, font_size:
 			else:
 				current_line_width += space_width + word_width
 	return max(1, count)
+
+
+# ----- Resize / Selection ----------------------------------------------------
+## Repositions the LineAnchor children to the current rim (rx/ry) so connected
+## arrows stay glued to the shape while it resizes. get_anchor_positions() is
+## the source of truth for where each cardinal anchor sits.
+func _sync_anchors() -> void:
+	if not is_node_ready():
+		return
+	var anchors_node: Node = get_node_or_null("Anchors")
+	if anchors_node == null:
+		return
+	for defn: Dictionary in get_anchor_positions():
+		var label: String = str(defn.get("label", ""))
+		var offset: Vector2 = defn.get("offset", Vector2.ZERO)
+		for child: Node in anchors_node.get_children():
+			if child is LineAnchor and _anchor_matches_label(child as LineAnchor, label):
+				(child as LineAnchor).position = offset
+				break
+
+
+## Matches a LineAnchor child to a cardinal label from get_anchor_positions().
+func _anchor_matches_label(anchor: LineAnchor, label: String) -> bool:
+	match label:
+		"top":
+			return anchor.anchor_position == LineAnchor.AnchorPosition.TOP
+		"bottom":
+			return anchor.anchor_position == LineAnchor.AnchorPosition.BOTTOM
+		"left":
+			return anchor.anchor_position == LineAnchor.AnchorPosition.LEFT
+		"right":
+			return anchor.anchor_position == LineAnchor.AnchorPosition.RIGHT
+		_:
+			return false
+
+
+func _ready() -> void:
+	_sync_anchors()
+
+
+## Shows/hides the resize handles with the selection state.
+func set_selected(value: bool) -> void:
+	super.set_selected(value)
+	var handles: CanvasItem = get_node_or_null("Handles") as CanvasItem
+	if handles != null:
+		handles.visible = value
 
 
 # ----- Anchor System (overrides) ---------------------------------------------

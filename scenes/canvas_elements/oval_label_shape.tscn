@@ -57,27 +57,32 @@ resize = true
 shape = SubResource("ConvexPolygonShape2D_mpgrw")
 
 [node name="Handles" type="Node2D" parent="." unique_id=531525636]
+visible = false
 script = ExtResource("6_i8ymp")
 
 [node name="HandleTopRight" parent="Handles" unique_id=1299026613 instance=ExtResource("7_sm0ut")]
+corner = 1
 offset_left = 151.0
 offset_top = -98.0
 offset_right = 151.0
 offset_bottom = -98.0
 
 [node name="HandleTopLeft" parent="Handles" unique_id=1387876586 instance=ExtResource("7_sm0ut")]
+corner = 0
 offset_left = -157.0
 offset_top = -98.0
 offset_right = -157.0
 offset_bottom = -98.0
 
 [node name="HandleBottomLeft" parent="Handles" unique_id=1255304124 instance=ExtResource("7_sm0ut")]
+corner = 2
 offset_left = -157.0
 offset_top = 100.0
 offset_right = -157.0
 offset_bottom = 100.0
 
 [node name="HandleBottomRight" parent="Handles" unique_id=2123254674 instance=ExtResource("7_sm0ut")]
+corner = 3
 offset_left = 154.0
 offset_top = 110.0
 offset_right = 154.0
