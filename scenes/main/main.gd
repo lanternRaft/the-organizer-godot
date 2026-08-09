@@ -42,9 +42,7 @@ var primary_selection: Node = null
 
 @onready var element_layer: Node2D = %ElementLayer
 
-@onready var canvas: Node2D = %Canvas
-
-@onready var click_handler: Node = $ClickHandler
+@onready var canvas: Canvas = %Canvas
 
 @onready var confirm_dialog: AcceptDialog = $UI/ConfirmDialog
 
@@ -72,10 +70,6 @@ var primary_selection: Node = null
 
 
 func _ready() -> void:
-	## Connect ClickHandler's empty-canvas signal for mode-specific actions.
-	#click_handler.connect("empty_canvas_clicked", _on_empty_canvas_clicked)
-	## Connect ClickHandler's pointer-up signal (used by ArrowManager to end arrow drags).
-	#click_handler.connect("pointer_up", _on_pointer_up)
 	## Start in Select mode by default.
 	activate_select_mode()
 	## Connect grid toggle signal.
@@ -111,22 +105,6 @@ func _ready() -> void:
 	#for element: Node in load_result.get("elements", []):
 	#_wire_element_signals(element)
 	_refresh_legend()
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	## Handle Escape to deactivate Oval/Node mode or clear selection.
-	## Keyboard-only — all pointer input is handled by ClickHandler.
-	if event.is_action_pressed("ui_cancel"):
-		_handle_cancel()
-		return
-	## G key toggles the grid on/off.
-	if event.is_action_pressed(&"grid_toggle"):
-		toggle_grid()
-		get_viewport().set_input_as_handled()
-		return
-	## Delete/Backspace key removes the selected element or arrow.
-	if event is InputEventKey:
-		_handle_input_key(event as InputEventKey)
 
 
 ## Handles the Escape key (ui_cancel action).
@@ -485,22 +463,28 @@ func _save_state() -> void:
 	save_load_manager.save_canvas(legend_data)
 
 
-## Wires element signals after a loaded element is instantiated and parented.
-## LabelShapes get double_clicked connected; CanvasNodes do not.
+## Wires element signals after an element is instantiated and parented.
+## LabelShapes get double-click handling; all elements get selection and drag
+## bookkeeping signals.
 func _wire_element_signals(element: Node) -> void:
 	if element is LabelShape:
 		var shape: LabelShape = element as LabelShape
-		#shape.clicked.connect(_on_element_clicked)
+		shape.connect("clicked", _on_element_clicked)
 		shape.double_clicked.connect(_on_shape_double_clicked)
 		shape.anchor_changed.connect(_on_element_anchor_changed.bind(shape))
 		shape.multi_drag_moved.connect(_on_multi_drag_moved.bind(shape))
 		shape.multi_drag_ended.connect(_on_multi_drag_ended.bind(shape))
 	elif element is CanvasNode:
 		var node: CanvasNode = element as CanvasNode
-		#node.clicked.connect(_on_element_clicked)
+		node.connect("clicked", _on_element_clicked)
 		node.anchor_changed.connect(_on_element_anchor_changed.bind(node))
 		node.multi_drag_moved.connect(_on_multi_drag_moved.bind(node))
 		node.multi_drag_ended.connect(_on_multi_drag_ended.bind(node))
+
+
+## Handles a body click emitted by a canvas element.
+func _on_element_clicked(_event: InputEvent, element: Node) -> void:
+	_handle_element_clicked(element)
 
 
 ## Called when a selected element moves during a drag. Broadcasts the same delta

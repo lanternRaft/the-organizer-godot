@@ -16,6 +16,9 @@ extends Node2D
 ## ArrowManager uses this to update connected arrows.
 signal anchor_changed
 
+## Emitted when the element body receives a primary pointer click.
+signal clicked(input_event: InputEvent, element: Node)
+
 ## Emitted during a multi-drag to broadcast the per-frame incremental delta
 ## to Main so it can shift all other selected elements by the same amount.
 ## delta: per-frame movement increment in world-space pixels.
@@ -51,6 +54,12 @@ var _drag_offset: Vector2 = Vector2.ZERO
 ## Whether _drag_offset has been captured for the currently active drag.
 var _drag_offset_captured: bool = false
 
+## State used by ClickHandler's body-drag interface.
+var _drag_start_world: Vector2 = Vector2.ZERO
+var _drag_start_position: Vector2 = Vector2.ZERO
+var _last_drag_delta: Vector2 = Vector2.ZERO
+var _body_drag_active: bool = false
+
 
 ## World position where the current drag started.
 #var _drag_start_world: Vector2 = Vector2.ZERO
@@ -78,6 +87,51 @@ func set_selected(value: bool) -> void:
 	is_selected = value
 	if not value:
 		is_primary = false
+	queue_redraw()
+
+
+# ----- ClickHandler interface -----------------------------------------------
+
+
+## Handles a body click and lets Main update selection.
+func handle_click(event: Dictionary) -> bool:
+	_body_drag_active = true
+	clicked.emit(event.get("original_event", InputEventMouseButton.new()), self)
+	return true
+
+
+## Begins a body drag once the element has been selected by Main.
+func handle_drag_begin(event: Dictionary) -> bool:
+	if not is_selected:
+		return false
+	_body_drag_active = true
+	_drag_start_world = event.get("world_pos", Vector2.ZERO)
+	_drag_start_position = position
+	_last_drag_delta = Vector2.ZERO
+	return true
+
+
+## Applies the pointer delta without recentering the element under the cursor.
+func handle_drag_move(event: Dictionary) -> void:
+	if not _body_drag_active:
+		return
+	var delta: Vector2 = event.get("world_pos", Vector2.ZERO) - _drag_start_world
+	var incremental: Vector2 = delta - _last_drag_delta
+	_last_drag_delta = delta
+	position = _drag_start_position + delta
+	multi_drag_moved.emit(incremental)
+	anchor_changed.emit()
+
+
+## Ends a body drag and applies the documented 20px movement snap.
+func handle_drag_end(_event: Dictionary) -> void:
+	if not _body_drag_active:
+		return
+	position = position.snapped(Vector2(20.0, 20.0))
+	anchor_changed.emit()
+	multi_drag_ended.emit()
+	_body_drag_active = false
+	_last_drag_delta = Vector2.ZERO
 	queue_redraw()
 
 

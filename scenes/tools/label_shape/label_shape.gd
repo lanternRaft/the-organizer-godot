@@ -21,7 +21,7 @@ const HANDLE_SIZE: float = 32.0
 	set(value):
 		rx = value
 		queue_redraw()
-		_update_text_display()
+		#_update_text_display()
 		_sync_anchors()
 		if Engine.is_editor_hint():
 			return
@@ -36,7 +36,7 @@ const HANDLE_SIZE: float = 32.0
 	set(value):
 		ry = value
 		queue_redraw()
-		_update_text_display()
+		#_update_text_display()
 		_sync_anchors()
 		if Engine.is_editor_hint():
 			return
@@ -50,14 +50,14 @@ const HANDLE_SIZE: float = 32.0
 @export var text_content: String = "":
 	set(value):
 		text_content = value
-		_update_text_display()
+		#_update_text_display()
 
 @export var fill_color: Color = Color(0.231, 0.51, 0.965):
 	set(value):
 		fill_color = value
 		queue_redraw()
 
-@onready var _text_label: Label = $TextLabel
+#@onready var _text_label: Label = $TextLabel
 
 
 func _draw() -> void:
@@ -96,39 +96,39 @@ func build_collision_polygon(scale_factor: float = 1.0) -> PackedVector2Array:
 
 # ----- Text Display ---------------------------------------------------------
 ## Updates the Label text and rescales the font to fit the shape bounds.
-func _update_text_display() -> void:
-	if not is_node_ready() or _text_label == null:
-		return
-	# Position the label to fill the shape's inner area with padding.
-	var pad: float = 10.0
-	var label_size: Vector2 = Vector2(2.0 * rx - 2.0 * pad, 2.0 * ry - 2.0 * pad)
-	_text_label.position = Vector2(-rx + pad, -ry + pad)
-	_text_label.size = label_size
-	_text_label.text = text_content
-	_rescale_text_font()
+#func _update_text_display() -> void:
+	#if not is_node_ready() or _text_label == null:
+		#return
+	## Position the label to fill the shape's inner area with padding.
+	#var pad: float = 10.0
+	#var label_size: Vector2 = Vector2(2.0 * rx - 2.0 * pad, 2.0 * ry - 2.0 * pad)
+	#_text_label.position = Vector2(-rx + pad, -ry + pad)
+	#_text_label.size = label_size
+	#_text_label.text = text_content
+	#_rescale_text_font()
 
 
 ## Auto-scales font size so the full text (word-wrapped) fits vertically
 ## within the shape's inner bounds. Starts at 20px and decreases until
 ## the text fits or minimum 8px is reached.
-func _rescale_text_font() -> void:
-	if not is_node_ready() or _text_label == null:
-		return
-	var pad: float = 10.0
-	var available_width: float = max(1.0, 2.0 * rx - 2.0 * pad)
-	var available_height: float = max(1.0, 2.0 * ry - 2.0 * pad)
-	if text_content.is_empty():
-		return
-	var font: Font = _text_label.get_theme_default_font()
-	var font_size: int = 20
-	while font_size >= 8:
-		var line_height: float = font.get_height(font_size)
-		var line_count: int = _estimate_line_count(text_content, available_width, font, font_size)
-		var total_height: float = float(line_count) * line_height * 1.2
-		if total_height <= available_height:
-			break
-		font_size -= 1
-	_text_label.add_theme_font_size_override("font_size", font_size)
+#func _rescale_text_font() -> void:
+	#if not is_node_ready() or _text_label == null:
+		#return
+	#var pad: float = 10.0
+	#var available_width: float = max(1.0, 2.0 * rx - 2.0 * pad)
+	#var available_height: float = max(1.0, 2.0 * ry - 2.0 * pad)
+	#if text_content.is_empty():
+		#return
+	#var font: Font = _text_label.get_theme_default_font()
+	#var font_size: int = 20
+	#while font_size >= 8:
+		#var line_height: float = font.get_height(font_size)
+		#var line_count: int = _estimate_line_count(text_content, available_width, font, font_size)
+		#var total_height: float = float(line_count) * line_height * 1.2
+		#if total_height <= available_height:
+			#break
+		#font_size -= 1
+	#_text_label.add_theme_font_size_override("font_size", font_size)
 
 
 ## Estimates how many lines the text will wrap into given a width constraint.
