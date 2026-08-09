@@ -27,7 +27,10 @@ jobs:
       - name: Setup Godot with export templates
         uses: chickensoft-games/setup-godot@v1
         with:
-          version: 4.7.1
+          # Pin to 4.7.0 (the 4.7-stable release) matching the local editor;
+          # 4.7.1's web export keeps SIGABRT-ing on the Linux runner right after
+          # packing with no error output.
+          version: 4.7.0
           use-dotnet: false
           include-templates: true
 
@@ -36,12 +39,9 @@ jobs:
           godot --headless --import --quit > /dev/null 2>&1 || true
 
       - name: Export debug web build
-        # Run under Xvfb instead of --headless: Godot's headless web export can
-        # SIGABRT silently right after packing (flaky, seen on mac + Linux CI).
-        # Xvfb gives it a real (software) GL context to finish the export.
         run: |
           mkdir -p build/web
-          xvfb-run -a godot --export-debug "Web" build/web/index.html
+          godot --headless --export-debug "Web" build/web/index.html
 
       - name: Deploy to gh-pages (overwrite)
         uses: peaceiris/actions-gh-pages@v4
