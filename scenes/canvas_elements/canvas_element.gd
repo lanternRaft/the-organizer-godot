@@ -11,7 +11,6 @@ extends Node2D
 ##   - shows_in_legend() — true if element appears in the legend
 
 # ----- Signals ---------------------------------------------------------------
-
 ## Emitted when the element's anchor positions may have changed
 ## (after drag-end snap, resize, or position change).
 ## ArrowManager uses this to update connected arrows.
@@ -26,9 +25,10 @@ signal multi_drag_moved(delta: Vector2)
 signal multi_drag_ended
 
 signal drag_start
-signal drag_stop
-# ----- Selection State -------------------------------------------------------
 
+signal drag_stop
+
+# ----- Selection State -------------------------------------------------------
 ## Whether this element is currently selected. Controls stroke/highlight style.
 var is_selected: bool = false
 
@@ -37,26 +37,37 @@ var is_selected: bool = false
 var is_primary: bool = false
 
 # ----- Drag State ------------------------------------------------------------
-
 ## Is it being dragged?
 var dragging: bool = false
 
 var line_anchors: Array[LineAnchor]
 
+## Offset between the element's origin and the grab point (where the user
+## pressed on the shape). Captured on the first frame of each drag and
+## reapplied every frame, so the shape is grabbed from wherever it was
+## clicked instead of its center snapping to the cursor.
+var _drag_offset: Vector2 = Vector2.ZERO
+
+## Whether _drag_offset has been captured for the currently active drag.
+var _drag_offset_captured: bool = false
+
+
 ## World position where the current drag started.
 #var _drag_start_world: Vector2 = Vector2.ZERO
-
 ## Element position when the current body-drag started.
 #var _drag_start_position: Vector2 = Vector2.ZERO
-
 ## Cumulative delta from the previous frame, used to compute incremental delta
 ## for multi-drag broadcasting. Reset on each drag begin.
 #var _last_delta: Vector2 = Vector2.ZERO
-
-
 func _process(_delta: float) -> void:
 	if dragging:
-		global_position = get_global_mouse_position()
+		# Capture the grab offset on the first frame of the drag so the shape
+		# keeps its click point under the cursor rather than snapping its
+		# origin (center) to the mouse.
+		if not _drag_offset_captured:
+			_drag_offset = global_position - get_global_mouse_position()
+			_drag_offset_captured = true
+		global_position = get_global_mouse_position() + _drag_offset
 		for arrow: Arrow in get_arrows():
 			arrow.rebuild_path()
 
@@ -75,13 +86,10 @@ func get_arrows() -> Array[Arrow]:
 	var result: Array[Arrow] = []
 	for anchor: LineAnchor in line_anchors:
 		result.append_array(anchor.connected_arrows)
-
 	return result
 
 
 # ----- Anchor System (virtual) -----------------------------------------------
-
-
 ## Returns an array of anchor definitions, each a Dictionary with keys:
 ##   "label": String — unique identifier for the anchor (e.g., "top", "left")
 ##   "offset": Vector2 — local offset from the element's origin
@@ -91,8 +99,6 @@ func get_anchor_positions() -> Array[Dictionary]:
 
 
 # ----- Virtual Properties ----------------------------------------------------
-
-
 ## Whether this element supports text editing (double-click opens text overlay).
 ## Subclasses override to return true (LabelShape) or keep false (CanvasNode).
 func supports_text_editing() -> bool:
@@ -107,4 +113,5 @@ func shows_in_legend() -> bool:
 
 func dragging_stopped() -> void:
 	dragging = false
+	_drag_offset_captured = false
 	drag_stop.emit()
