@@ -37,14 +37,26 @@ jobs:
           godot --headless --import --quit > /dev/null 2>&1 || true
 
       - name: Export web build
-        # NOTE: we use --export-release, NOT --export-debug. Godot 4.7's
-        # --export-debug *web* target deterministically SIGABRTs (exit 134) on
-        # the Linux GitHub runner right after packing (3/3 attempts), whereas
-        # --export-release completes reliably. The deployed artifact is a
-        # standalone playable web build either way.
+        # TARGET: use --export-release. --export-debug of the web target has
+        # never completed on this runner (4/4 SIGABRTs). Even release is
+        # occasionally flaky (Godot headless web export intermittently SIGABRTs
+        # ~3s after packing with no output), but a retry on the same machine
+        # succeeds, so we attempt a few times. Files are rebuilt fresh each try.
+        shell: bash
         run: |
-          mkdir -p build/web
-          godot --headless --export-release "Web" build/web/index.html
+          for attempt in 1 2 3 4 5; do
+            rm -rf build/web && mkdir -p build/web
+            echo "Export attempt $attempt"
+            godot --headless --export-release "Web" build/web/index.html
+            code=$?
+            if [ $code -eq 0 ] && [ -f build/web/index.html ] && [ -f build/web/index.wasm ]; then
+              echo "✅ Export succeeded (attempt $attempt)"
+              exit 0
+            fi
+            echo "⚠️ Export attempt $attempt failed (exit $code), retrying..."
+          done
+          echo "❌ Export failed after multiple attempts"
+          exit 1
 
       - name: Deploy to gh-pages (overwrite)
         uses: peaceiris/actions-gh-pages@v4
