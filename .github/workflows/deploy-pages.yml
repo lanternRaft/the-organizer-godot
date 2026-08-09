@@ -36,9 +36,12 @@ jobs:
           godot --headless --import --quit > /dev/null 2>&1 || true
 
       - name: Export debug web build
+        # Run under Xvfb instead of --headless: Godot's headless web export can
+        # SIGABRT silently right after packing (flaky, seen on mac + Linux CI).
+        # Xvfb gives it a real (software) GL context to finish the export.
         run: |
           mkdir -p build/web
-          godot --headless --export-debug "Web" build/web/index.html
+          xvfb-run -a godot --export-debug "Web" build/web/index.html
 
       - name: Deploy to gh-pages (overwrite)
         uses: peaceiris/actions-gh-pages@v4
