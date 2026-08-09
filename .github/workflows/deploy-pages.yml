@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   build-and-deploy:
-    name: Export web (debug) and publish to gh-pages
+    name: Export web and publish to gh-pages
     runs-on: ubuntu-latest
     permissions:
       contents: write # needed to push to the gh-pages branch
@@ -27,26 +27,24 @@ jobs:
       - name: Setup Godot with export templates
         uses: chickensoft-games/setup-godot@v1
         with:
-          # Pin to 4.7.0 (the 4.7-stable release) matching the local editor;
-          # 4.7.1's web export keeps SIGABRT-ing on the Linux runner right after
-          # packing with no error output.
+          # 4.7.0 == the 4.7-stable release, matching the local editor.
           version: 4.7.0
-          use-dotnet: false
+          use-dotnet: false # project is pure GDScript
           include-templates: true
 
       - name: Import project (warm script/asset cache)
         run: |
           godot --headless --import --quit > /dev/null 2>&1 || true
 
-      - name: Export debug web build
+      - name: Export web build
+        # NOTE: we use --export-release, NOT --export-debug. Godot 4.7's
+        # --export-debug *web* target deterministically SIGABRTs (exit 134) on
+        # the Linux GitHub runner right after packing (3/3 attempts), whereas
+        # --export-release completes reliably. The deployed artifact is a
+        # standalone playable web build either way.
         run: |
           mkdir -p build/web
-          godot --headless --export-debug "Web" build/web/index.html || echo "DEBUG_EXPORT_EXIT=$?"
-          echo "--- build/web after debug ---"; ls -la build/web/ 2>/dev/null || echo "(no build/web)"
-          echo "--- template dir ---"; ls -la ~/.local/share/godot/export_templates/ 2>/dev/null
-          echo "--- trying release ---"
-          godot --headless --export-release "Web" build/web/index.html || echo "RELEASE_EXPORT_EXIT=$?"
-          echo "--- build/web after release ---"; ls -la build/web/ 2>/dev/null || echo "(no build/web)"
+          godot --headless --export-release "Web" build/web/index.html
 
       - name: Deploy to gh-pages (overwrite)
         uses: peaceiris/actions-gh-pages@v4
