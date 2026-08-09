@@ -9,11 +9,11 @@ name: Deploy Web to GitHub Pages
 # exported files runs nothing at all. Because every branch force-pushes to the
 # same gh-pages branch, the last branch to push wins.
 on:
-  push:
-    branches-ignore:
-      - main
+  pull_request:
     paths:
       - 'export/debug/**'
+  
+  workflow_dispatch:
 
 concurrency:
   # One shared group so only a single deploy runs at a time, and the most
