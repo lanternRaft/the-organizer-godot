@@ -1,67 +1,37 @@
 name: Deploy Web to GitHub Pages
 
-# Every push to *any* branch exports the Godot web build and force-pushes it
-# to the gh-pages branch. GitHub Pages serves whatever is on that branch, so
-# the last branch to finish building wins (with the concurrency group below,
-# an in-flight build is cancelled when a newer push arrives — last one wins).
+# The web build is produced locally (see README: "Web Build"), committed as
+# `export/debug/`, and this workflow simply publishes whatever is in that
+# directory to the gh-pages branch root, which GitHub Pages serves directly.
+#
+# The trigger is restricted to pushes on the `publish` branch that touch files
+# under export/debug/, so a push that doesn't change the exported files runs
+# nothing at all.
 on:
   push:
+    branches:
+      - publish
+    paths:
+      - 'export/debug/**'
 
 concurrency:
-  # One shared group for all branches so only a single build/deploy runs at a
-  # time, and the most recently pushed branch cancels any older build in
-  # flight. This is what makes "last branch to build wins" deterministic
-  # instead of the deploy racing on the gh-pages branch.
+  # One shared group so only a single deploy runs at a time, and a newer push
+  # to publish cancels any older deploy still in flight.
   group: pages-deploy
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
-    name: Export web and publish to gh-pages
+  deploy:
+    name: Publish export/debug to gh-pages
     runs-on: ubuntu-latest
     permissions:
       contents: write # needed to push to the gh-pages branch
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Godot with export templates
-        uses: chickensoft-games/setup-godot@v1
-        with:
-          # 4.7.0 == the 4.7-stable release, matching the local editor.
-          version: 4.7.0
-          use-dotnet: false # project is pure GDScript
-          include-templates: true
-
-      - name: Import project (warm script/asset cache)
-        run: |
-          godot --headless --import --quit > /dev/null 2>&1 || true
-
-      - name: Export web build
-        # TARGET: use --export-release. --export-debug of the web target has
-        # never completed on this runner (4/4 SIGABRTs). Even release is
-        # occasionally flaky (Godot headless web export intermittently SIGABRTs
-        # ~3s after packing with no output), but a retry on the same machine
-        # succeeds, so we attempt a few times. Files are rebuilt fresh each try.
-        shell: bash
-        run: |
-          set +e  # disable -e: a single export abort must not kill the retry loop
-          for attempt in 1 2 3 4 5; do
-            rm -rf build/web && mkdir -p build/web
-            echo "Export attempt $attempt"
-            godot --headless --export-release "Web" build/web/index.html
-            code=$?
-            if [ $code -eq 0 ] && [ -f build/web/index.html ] && [ -f build/web/index.wasm ]; then
-              echo "✅ Export succeeded (attempt $attempt)"
-              exit 0
-            fi
-            echo "⚠️ Export attempt $attempt failed (exit $code), retrying..."
-          done
-          echo "❌ Export failed after multiple attempts"
-          exit 1
-
       - name: Deploy to gh-pages (overwrite)
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: build/web
-          force_orphan: true
+          publish_dir: export/debug
+          force_orphan: true # wipe gh-pages and publish exactly what is in export/debug
