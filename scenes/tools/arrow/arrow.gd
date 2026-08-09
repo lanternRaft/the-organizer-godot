@@ -18,7 +18,7 @@ signal selected(arrow: Arrow)
 ## delta: raw movement offset in world-space pixels.
 signal multi_drag_moved(delta: Vector2)
 
-const ARROWHEAD_SIZE: float = 10.0
+const ARROWHEAD_SIZE: float = 30.0
 
 const ARROWHEAD_HALF_ANGLE: float = 0.4  # half-angle in radians (~23 degrees)
 
