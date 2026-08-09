@@ -44,6 +44,7 @@ jobs:
         # succeeds, so we attempt a few times. Files are rebuilt fresh each try.
         shell: bash
         run: |
+          set +e  # disable -e: a single export abort must not kill the retry loop
           for attempt in 1 2 3 4 5; do
             rm -rf build/web && mkdir -p build/web
             echo "Export attempt $attempt"
