@@ -75,6 +75,23 @@ func _draw() -> void:
 	draw_ellipse(Vector2.ZERO, rx, ry, stroke_color, false, stroke_width)
 
 
+# ----- Collision Geometry ----------------------------------------------------
+## Samples the ellipse rim into a packed polygon, optionally scaled. This is the
+## single source of truth for ellipse hit-test shapes: SelectArea2D calls it at
+## scale 1.0 and AnchorShowArea2D at 1.2 (Godot has no natively-rounded ellipse
+## 2D shape, so a sampled polygon is the closest hit-test approximation to
+## draw_ellipse()). Circle mode (rx == ry) is handled automatically.
+func build_collision_polygon(scale_factor: float = 1.0) -> PackedVector2Array:
+	# Sample the ellipse perimeter with ~half a point per pixel of radius,
+	# clamped to a sane range so tiny shapes aren't over-sampled.
+	var steps: int = clampi(int(maxf(rx, ry) * 0.5), 16, 96)
+	var points: PackedVector2Array = PackedVector2Array()
+	for i: int in steps:
+		var angle: float = TAU * float(i) / float(steps)
+		points.append(Vector2(cos(angle) * rx * scale_factor, sin(angle) * ry * scale_factor))
+	return points
+
+
 # ----- Text Display ---------------------------------------------------------
 ## Updates the Label text and rescales the font to fit the shape bounds.
 func _update_text_display() -> void:

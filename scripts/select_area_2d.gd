@@ -1,12 +1,13 @@
 @tool
 extends Area2D
 
-
 @export var resize: bool = false
+
+var label_shape: LabelShape
+
 ## The SelectArea2D's CollisionShape2D, if present. The triangle node uses a
 ## CollisionPolygon2D instead, so this may be null there.
 var _select_shape: CollisionShape2D
-var label_shape: LabelShape
 
 @onready var canvas_element: CanvasElement = $".."
 
@@ -42,21 +43,13 @@ func _on_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> voi
 
 
 ## Matches the SelectArea2D footprint to the LabelShape's ellipse by sampling
-## its rim into a ConvexPolygonShape2D (Godot has no natively-rounded ellipse
-## 2D shape, so a sampled polygon is the closest hit-test approximation to
-## draw_ellipse()). Circle mode (rx == ry) is handled automatically, and
-## non-LabelShape parents (e.g. CanvasNode) are a no-op.
+## its rim (via LabelShape.build_collision_polygon()) into a ConvexPolygonShape2D.
+## Circle mode (rx == ry) is handled automatically, and non-LabelShape parents
+## (e.g. CanvasNode) are a no-op.
 func _sync_label_shape() -> void:
-	# Sample the ellipse perimeter with ~half a point per pixel of radius,
-	# clamped to a sane range so tiny shapes aren't over-sampled.
-	var steps: int = clampi(int(maxf(label_shape.rx, label_shape.ry) * 0.5), 16, 96)
-	var points: PackedVector2Array = PackedVector2Array()
-	for i: int in steps:
-		var angle: float = TAU * float(i) / float(steps)
-		points.append(Vector2(cos(angle) * label_shape.rx, sin(angle) * label_shape.ry))
 	# Reuse an existing ConvexPolygonShape2D resource if present, else create one.
 	var shape: ConvexPolygonShape2D = _select_shape.shape as ConvexPolygonShape2D
 	if shape == null:
 		shape = ConvexPolygonShape2D.new()
 		_select_shape.shape = shape
-	shape.points = points
+	shape.points = label_shape.build_collision_polygon()
