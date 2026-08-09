@@ -41,7 +41,12 @@ jobs:
       - name: Export debug web build
         run: |
           mkdir -p build/web
-          godot --headless --export-debug "Web" build/web/index.html
+          godot --headless --export-debug "Web" build/web/index.html || echo "DEBUG_EXPORT_EXIT=$?"
+          echo "--- build/web after debug ---"; ls -la build/web/ 2>/dev/null || echo "(no build/web)"
+          echo "--- template dir ---"; ls -la ~/.local/share/godot/export_templates/ 2>/dev/null
+          echo "--- trying release ---"
+          godot --headless --export-release "Web" build/web/index.html || echo "RELEASE_EXPORT_EXIT=$?"
+          echo "--- build/web after release ---"; ls -la build/web/ 2>/dev/null || echo "(no build/web)"
 
       - name: Deploy to gh-pages (overwrite)
         uses: peaceiris/actions-gh-pages@v4
