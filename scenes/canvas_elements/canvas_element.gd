@@ -40,45 +40,43 @@ var is_selected: bool = false
 var is_primary: bool = false
 
 # ----- Drag State ------------------------------------------------------------
-## Is it being dragged?
-var dragging: bool = false
-
 var line_anchors: Array[LineAnchor]
 
-## Offset between the element's origin and the grab point (where the user
-## pressed on the shape). Captured on the first frame of each drag and
-## reapplied every frame, so the shape is grabbed from wherever it was
-## clicked instead of its center snapping to the cursor.
-var _drag_offset: Vector2 = Vector2.ZERO
-
-## Whether _drag_offset has been captured for the currently active drag.
-var _drag_offset_captured: bool = false
-
-## State used by ClickHandler's body-drag interface.
+## World position where the current body drag started.
 var _drag_start_world: Vector2 = Vector2.ZERO
+
+## Element position when the current body drag started.
 var _drag_start_position: Vector2 = Vector2.ZERO
+
+## Cumulative movement from the previous drag event. This is used to send
+## incremental deltas to the other members of a multi-selection.
 var _last_drag_delta: Vector2 = Vector2.ZERO
+
+## Last pointer position sampled while the local body drag is active.
+var _last_pointer_world: Vector2 = Vector2.ZERO
+
+## True while the local SelectArea2D owns a body drag for this element.
 var _body_drag_active: bool = false
 
+## LabelShape uses this to keep a double-click from starting a drag.
+var _body_click_drag_allowed: bool = true
 
-## World position where the current drag started.
-#var _drag_start_world: Vector2 = Vector2.ZERO
-## Element position when the current body-drag started.
-#var _drag_start_position: Vector2 = Vector2.ZERO
-## Cumulative delta from the previous frame, used to compute incremental delta
-## for multi-drag broadcasting. Reset on each drag begin.
-#var _last_delta: Vector2 = Vector2.ZERO
+
+func is_body_drag_active() -> bool:
+	return _body_drag_active
+
+
+func prevent_body_drag() -> void:
+	_body_click_drag_allowed = false
+
+
 func _process(_delta: float) -> void:
-	if dragging:
-		# Capture the grab offset on the first frame of the drag so the shape
-		# keeps its click point under the cursor rather than snapping its
-		# origin (center) to the mouse.
-		if not _drag_offset_captured:
-			_drag_offset = global_position - get_global_mouse_position()
-			_drag_offset_captured = true
-		global_position = get_global_mouse_position() + _drag_offset
-		for arrow: Arrow in get_arrows():
-			arrow.rebuild_path()
+	if not _body_drag_active:
+		return
+	var world_pos: Vector2 = get_global_mouse_position()
+	if world_pos.is_equal_approx(_last_pointer_world):
+		return
+	handle_drag_move({"world_pos": world_pos})
 
 
 ## Updates selection state and triggers visual update.
@@ -90,24 +88,35 @@ func set_selected(value: bool) -> void:
 	queue_redraw()
 
 
-# ----- ClickHandler interface -----------------------------------------------
+# ----- Local SelectArea2D interface ------------------------------------------
 
 
 ## Handles a body click and lets Main update selection.
+## The local SelectArea2D calls handle_drag_begin immediately afterward.
 func handle_click(event: Dictionary) -> bool:
-	_body_drag_active = true
+	_body_click_drag_allowed = true
 	clicked.emit(event.get("original_event", InputEventMouseButton.new()), self)
 	return true
 
 
+## Returns whether the press should begin a body drag. LabelShape sets this to
+## false for its local double-click so opening the editor does not move it.
+func should_begin_body_drag() -> bool:
+	return _body_click_drag_allowed
+
+
 ## Begins a body drag once the element has been selected by Main.
 func handle_drag_begin(event: Dictionary) -> bool:
+	if _body_drag_active:
+		return false
 	if not is_selected:
 		return false
 	_body_drag_active = true
 	_drag_start_world = event.get("world_pos", Vector2.ZERO)
 	_drag_start_position = position
 	_last_drag_delta = Vector2.ZERO
+	_last_pointer_world = _drag_start_world
+	drag_start.emit()
 	return true
 
 
@@ -115,7 +124,9 @@ func handle_drag_begin(event: Dictionary) -> bool:
 func handle_drag_move(event: Dictionary) -> void:
 	if not _body_drag_active:
 		return
-	var delta: Vector2 = event.get("world_pos", Vector2.ZERO) - _drag_start_world
+	var pointer_world: Vector2 = event.get("world_pos", Vector2.ZERO)
+	_last_pointer_world = pointer_world
+	var delta: Vector2 = pointer_world - _drag_start_world
 	var incremental: Vector2 = delta - _last_drag_delta
 	_last_drag_delta = delta
 	position = _drag_start_position + delta
@@ -132,6 +143,8 @@ func handle_drag_end(_event: Dictionary) -> void:
 	multi_drag_ended.emit()
 	_body_drag_active = false
 	_last_drag_delta = Vector2.ZERO
+	_last_pointer_world = Vector2.ZERO
+	drag_stop.emit()
 	queue_redraw()
 
 
@@ -163,9 +176,3 @@ func supports_text_editing() -> bool:
 ## Subclasses override to return true (LabelShape) or keep false (CanvasNode).
 func shows_in_legend() -> bool:
 	return false
-
-
-func dragging_stopped() -> void:
-	dragging = false
-	_drag_offset_captured = false
-	drag_stop.emit()

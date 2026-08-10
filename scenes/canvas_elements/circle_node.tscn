@@ -18,6 +18,7 @@ radius = 8.0
 script = ExtResource("1_7c70g")
 
 [node name="HoverArea2D" type="Area2D" parent="." unique_id=1873259314]
+input_pickable = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HoverArea2D" unique_id=1845053713]
 shape = SubResource("CircleShape2D_xeyld")
@@ -44,11 +45,13 @@ rotation = 1.5707964
 anchor_position = 3
 
 [node name="AnchorShowArea2D" type="Area2D" parent="." unique_id=774070203]
+input_pickable = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AnchorShowArea2D" unique_id=1721170395]
 shape = SubResource("CircleShape2D_ty0p8")
 
 [node name="SelectArea2D" type="Area2D" parent="." unique_id=1303631337]
+input_pickable = true
 script = ExtResource("4_utdq7")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="SelectArea2D" unique_id=435742010]

@@ -10,7 +10,6 @@
 [ext_resource type="Script" uid="uid://d0o5xb1imq4xn" path="res://scenes/main/camera_controller/camera_controller.gd" id="7_mpbl4"]
 [ext_resource type="PackedScene" uid="uid://cfdpemajr42cg" path="res://scenes/ui/zoom_controls/zoom_controls.tscn" id="8_i6qj"]
 [ext_resource type="PackedScene" uid="uid://c0r5whgxbsfe4" path="res://scenes/ui/selection_menu/selection_menu.tscn" id="10_4mh8d"]
-[ext_resource type="Script" uid="uid://bgqqlb21iocs3" path="res://scenes/main/save_load_manager.gd" id="11_blune"]
 [ext_resource type="PackedScene" uid="uid://b64yqge5mdqf7" path="res://scenes/ui/grid_toggle/grid_toggle.tscn" id="11_t5x6f"]
 
 [node name="Main" type="Node" unique_id=917290182]
@@ -59,11 +58,6 @@ offset_bottom = 40.0
 [node name="MainCamera" type="Camera2D" parent="." unique_id=314705835]
 unique_name_in_owner = true
 script = ExtResource("7_mpbl4")
-
-[node name="SaveLoadManager" type="Node" parent="." unique_id=1643481449]
-unique_name_in_owner = true
-script = ExtResource("11_blune")
-element_layer_path = NodePath("../Canvas/ElementLayer")
 
 [connection signal="clear_requested" from="UI/HamburgerMenu" to="." method="_on_hamburger_clear_requested"]
 [connection signal="confirmed" from="UI/ConfirmDialog" to="." method="_on_confirm_dialog_confirmed"]

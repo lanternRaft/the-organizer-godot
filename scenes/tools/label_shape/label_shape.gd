@@ -6,12 +6,16 @@ extends CanvasElement
 ## Emitted when the shape is double-clicked (two clicks within 400ms).
 ## Main connects to this to open the text editor.
 signal double_clicked(shape: Node)
+
 signal resized
 
 enum ShapeMode { OVAL_MODEL, CIRCLE_MODE }
 
 ## Handle size in pixels.
 const HANDLE_SIZE: float = 32.0
+
+## Maximum interval between local body presses for a double-click.
+const DOUBLE_CLICK_TIME_MS: int = 400
 
 ## Shape sub-mode: "oval" or "circle". When set to "circle", rx and ry are
 ## constrained to equal dimensions. Mode conversion snaps dimensions:
@@ -57,7 +61,11 @@ const HANDLE_SIZE: float = 32.0
 		fill_color = value
 		queue_redraw()
 
-#@onready var _text_label: Label = $TextLabel
+var _last_body_click_time: int = 0
+
+
+func _ready() -> void:
+	_sync_anchors()
 
 
 func _draw() -> void:
@@ -75,6 +83,22 @@ func _draw() -> void:
 		stroke_width = 2.0
 	draw_ellipse(Vector2.ZERO, rx, ry, fill_color)
 	draw_ellipse(Vector2.ZERO, rx, ry, stroke_color, false, stroke_width)
+
+
+#@onready var _text_label: Label = $TextLabel
+## Detects double-clicks at the shape's own SelectArea2D entry point. Main only
+## reacts to the resulting signal; it never performs global double-click tests.
+func handle_click(event: Dictionary) -> bool:
+	var now: int = Time.get_ticks_msec()
+	var is_double_click: bool = (
+		_last_body_click_time > 0 and now - _last_body_click_time < DOUBLE_CLICK_TIME_MS
+	)
+	_last_body_click_time = now
+	if is_double_click:
+		call("prevent_body_drag")
+		double_clicked.emit(self)
+		return true
+	return super.handle_click(event)
 
 
 # ----- Collision Geometry ----------------------------------------------------
@@ -97,40 +121,36 @@ func build_collision_polygon(scale_factor: float = 1.0) -> PackedVector2Array:
 # ----- Text Display ---------------------------------------------------------
 ## Updates the Label text and rescales the font to fit the shape bounds.
 #func _update_text_display() -> void:
-	#if not is_node_ready() or _text_label == null:
-		#return
-	## Position the label to fill the shape's inner area with padding.
-	#var pad: float = 10.0
-	#var label_size: Vector2 = Vector2(2.0 * rx - 2.0 * pad, 2.0 * ry - 2.0 * pad)
-	#_text_label.position = Vector2(-rx + pad, -ry + pad)
-	#_text_label.size = label_size
-	#_text_label.text = text_content
-	#_rescale_text_font()
-
-
+#if not is_node_ready() or _text_label == null:
+#return
+## Position the label to fill the shape's inner area with padding.
+#var pad: float = 10.0
+#var label_size: Vector2 = Vector2(2.0 * rx - 2.0 * pad, 2.0 * ry - 2.0 * pad)
+#_text_label.position = Vector2(-rx + pad, -ry + pad)
+#_text_label.size = label_size
+#_text_label.text = text_content
+#_rescale_text_font()
 ## Auto-scales font size so the full text (word-wrapped) fits vertically
 ## within the shape's inner bounds. Starts at 20px and decreases until
 ## the text fits or minimum 8px is reached.
 #func _rescale_text_font() -> void:
-	#if not is_node_ready() or _text_label == null:
-		#return
-	#var pad: float = 10.0
-	#var available_width: float = max(1.0, 2.0 * rx - 2.0 * pad)
-	#var available_height: float = max(1.0, 2.0 * ry - 2.0 * pad)
-	#if text_content.is_empty():
-		#return
-	#var font: Font = _text_label.get_theme_default_font()
-	#var font_size: int = 20
-	#while font_size >= 8:
-		#var line_height: float = font.get_height(font_size)
-		#var line_count: int = _estimate_line_count(text_content, available_width, font, font_size)
-		#var total_height: float = float(line_count) * line_height * 1.2
-		#if total_height <= available_height:
-			#break
-		#font_size -= 1
-	#_text_label.add_theme_font_size_override("font_size", font_size)
-
-
+#if not is_node_ready() or _text_label == null:
+#return
+#var pad: float = 10.0
+#var available_width: float = max(1.0, 2.0 * rx - 2.0 * pad)
+#var available_height: float = max(1.0, 2.0 * ry - 2.0 * pad)
+#if text_content.is_empty():
+#return
+#var font: Font = _text_label.get_theme_default_font()
+#var font_size: int = 20
+#while font_size >= 8:
+#var line_height: float = font.get_height(font_size)
+#var line_count: int = _estimate_line_count(text_content, available_width, font, font_size)
+#var total_height: float = float(line_count) * line_height * 1.2
+#if total_height <= available_height:
+#break
+#font_size -= 1
+#_text_label.add_theme_font_size_override("font_size", font_size)
 ## Estimates how many lines the text will wrap into given a width constraint.
 ## Uses a simple greedy word-wrap algorithm to measure line count.
 func _estimate_line_count(text: String, max_width: float, font: Font, font_size: int) -> int:
@@ -196,10 +216,6 @@ func _anchor_matches_label(anchor: LineAnchor, label: String) -> bool:
 			return anchor.anchor_position == LineAnchor.AnchorPosition.RIGHT
 		_:
 			return false
-
-
-func _ready() -> void:
-	_sync_anchors()
 
 
 ## Shows/hides the resize handles with the selection state.

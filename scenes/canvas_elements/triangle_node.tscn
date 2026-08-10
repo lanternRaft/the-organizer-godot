@@ -29,11 +29,13 @@ rotation = 2.094395
 anchor_position = 3
 
 [node name="AnchorShowArea2D" type="Area2D" parent="." unique_id=774070204]
+input_pickable = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AnchorShowArea2D" unique_id=1721170396]
 shape = SubResource("CircleShape2D_ty0p8")
 
 [node name="SelectArea2D" type="Area2D" parent="." unique_id=1303631338]
+input_pickable = true
 script = ExtResource("4_utdq7")
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="SelectArea2D" unique_id=1183397098]
