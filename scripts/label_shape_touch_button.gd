@@ -8,25 +8,20 @@ var _latest_event: InputEvent
 var _drag_active: bool = false
 var _active_touch_index: int = -1
 var _screen_drag: bool = false
+var _polygon_shape: ConvexPolygonShape2D = ConvexPolygonShape2D.new()
 
 @onready var label_shape: LabelShape = get_parent() 
 
 
 func _ready() -> void:
-	shape_centered = true
-	shape_visible = false
-	if label_shape == null:
-		return
-	if not label_shape.resized.is_connected(_sync_shape):
-		label_shape.resized.connect(_sync_shape)
-	sync_from_label_shape()
+	label_shape.resized.connect(_sync_shape)
 	pressed.connect(_on_pressed)
 	released.connect(_on_released)
+	
+	_sync_shape()
 
 
 func _draw() -> void:
-	if label_shape == null:
-		return
 	var stroke_color: Color
 	var stroke_width: float
 	if label_shape.is_selected:
@@ -43,25 +38,9 @@ func _draw() -> void:
 	draw_ellipse(Vector2.ZERO, label_shape.rx, label_shape.ry, stroke_color, false, stroke_width)
 
 
-## Called by LabelShape setters as well as by the resized signal. This keeps
-## editor-time property changes synchronized even when the tool script does not
-## emit its runtime-only resized signal.
-func sync_from_label_shape() -> void:
-	if label_shape == null:
-		label_shape = get_parent() as LabelShape
-	if label_shape == null:
-		return
-	var polygon_shape: ConvexPolygonShape2D = shape as ConvexPolygonShape2D
-	if polygon_shape == null:
-		polygon_shape = ConvexPolygonShape2D.new()
-		shape = polygon_shape
-	polygon_shape.points = label_shape.build_collision_polygon()
-	shape_centered = true
-	queue_redraw()
-
-
 func _sync_shape() -> void:
-	sync_from_label_shape()
+	_polygon_shape.points = label_shape.build_collision_polygon()
+	queue_redraw()
 
 
 func _input(event: InputEvent) -> void:

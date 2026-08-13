@@ -24,8 +24,6 @@ const DOUBLE_CLICK_TIME_MS: int = 400
 @export var rx: float = 160.0:
 	set(value):
 		rx = value
-		queue_redraw()
-		_queue_touch_button_redraw()
 		#_update_text_display()
 		_sync_anchors()
 		if Engine.is_editor_hint():
@@ -40,8 +38,6 @@ const DOUBLE_CLICK_TIME_MS: int = 400
 @export var ry: float = 100.0:
 	set(value):
 		ry = value
-		queue_redraw()
-		_queue_touch_button_redraw()
 		#_update_text_display()
 		_sync_anchors()
 		if Engine.is_editor_hint():
@@ -61,8 +57,6 @@ const DOUBLE_CLICK_TIME_MS: int = 400
 @export var fill_color: Color = Color(0.231, 0.51, 0.965):
 	set(value):
 		fill_color = value
-		queue_redraw()
-		_queue_touch_button_redraw()
 
 var _last_body_click_time: int = 0
 
@@ -72,19 +66,7 @@ func _ready() -> void:
 	var handles: CanvasItem = get_node_or_null("Handles") as CanvasItem
 	if handles != null:
 		handles.visible = false
-	_queue_touch_button_redraw()
 
-
-func _draw() -> void:
-	# The direct-child TouchScreenButton owns the ellipse's rendering and hit
-	# shape. Keeping this node draw-free prevents duplicate geometry.
-	pass
-
-
-func _queue_touch_button_redraw() -> void:
-	var touch_button: Node = get_node_or_null("TouchScreenButton")
-	if touch_button != null and touch_button.has_method("sync_from_label_shape"):
-		touch_button.call("sync_from_label_shape")
 
 
 #@onready var _text_label: Label = $TextLabel
@@ -223,7 +205,6 @@ func _anchor_matches_label(anchor: LineAnchor, label: String) -> bool:
 ## Shows/hides the resize handles with the selection state.
 func set_selected(value: bool) -> void:
 	super.set_selected(value)
-	_queue_touch_button_redraw()
 	var handles: CanvasItem = get_node_or_null("Handles") as CanvasItem
 	if handles != null:
 		handles.visible = value
