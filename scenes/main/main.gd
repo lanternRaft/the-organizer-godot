@@ -54,8 +54,6 @@ var primary_selection: Node = null
 
 @onready var arrow_layer: ArrowLayer = %ArrowLayer
 
-@onready var save_load_manager: SaveLoadManager = %SaveLoadManager
-
 @onready var ui_layer: CanvasLayer = $UI
 
 @onready var selection_menu: Node = $UI/SelectionMenu
@@ -96,7 +94,6 @@ func _ready() -> void:
 	_text_overlay.text_cancelled.connect(_on_text_cancelled)
 	## --- Legend Panel Setup ---
 	ui_layer.add_child(legend_panel)
-	legend_panel.connect("name_changed", _on_legend_name_changed)
 	## Load persisted canvas state.
 	#var load_result: Dictionary = save_load_manager.load_canvas()
 	#var legend_data: Array = load_result.get("legend", [])
@@ -192,7 +189,6 @@ func _on_hamburger_clear_requested() -> void:
 ## Called when the Clear button in the confirmation dialog is pressed.
 func _on_confirm_dialog_confirmed() -> void:
 	clear_all_elements()
-	_save_state()
 
 
 ## Creates a new shape at the given world position and parents it to ElementLayer.
@@ -281,8 +277,6 @@ func place_node(world_pos: Vector2) -> void:
 	activate_select_mode()
 	select_element(node, false)
 	set_primary_selection(node)
-	# Save after placement.
-	_save_state()
 
 
 ## Activates Select mode. Deactivates Shape mode if active.
@@ -449,18 +443,12 @@ func _on_text_committed(shape: Node, text: String) -> void:
 		var label_shape: LabelShape = shape as LabelShape
 		if label_shape != null:
 			label_shape.text_content = text
-	_save_state()
 	_update_selection_menu()
 
 
 ## Called when text editing is cancelled. No changes are saved.
 func _on_text_cancelled(_shape: Node) -> void:
 	_update_selection_menu()
-
-
-func _save_state() -> void:
-	var legend_data: Array = legend_panel.call("get_legend_data")
-	save_load_manager.save_canvas(legend_data)
 
 
 ## Wires element signals after an element is instantiated and parented.
@@ -629,7 +617,6 @@ func _delete_selected_elements() -> void:
 				primary_selection = null
 			arrow_layer.call("delete_arrow", element)
 	clear_selection()
-	_save_state()
 	# Legend refresh uses only LabelShape colors, so deletion of nodes doesn't affect it.
 	# But we still call it in case a shape was deleted.
 	_refresh_legend()
@@ -653,12 +640,10 @@ func _on_menu_color_selected(color: Color) -> void:
 		if primary_selection is LabelShape:
 			var shape: LabelShape = primary_selection as LabelShape
 			shape.fill_color = color
-			_save_state()
 			_refresh_legend()
 		elif primary_selection is CanvasNode:
 			var node: CanvasNode = primary_selection as CanvasNode
 			node.fill_color = color
-			_save_state()
 
 
 ## Legend Panel ---------------------------------------------------------------
@@ -672,11 +657,6 @@ func _refresh_legend() -> void:
 			var shape: LabelShape = child as LabelShape
 			colors.append(shape.fill_color)
 	legend_panel.call("set_colors_in_use", colors)
-
-
-## Called when the user edits a legend label. Saves the canvas to persist the name.
-func _on_legend_name_changed(_color: Color, _new_name: String) -> void:
-	_save_state()
 
 
 ## Repositions the selection menu when the camera zooms.

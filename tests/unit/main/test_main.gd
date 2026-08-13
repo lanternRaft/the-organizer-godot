@@ -14,7 +14,7 @@ func before_test() -> void:
 
 
 func test_oval_label_can_be_added_and_dragged() -> void:
-	await get_tree().process_frame
+	runner.simulate_frames(1)
 	# Use the same tool resource as the Oval toolbar item, then place through the
 	# canvas input path so this exercises the real main scene.
 	var canvas: Canvas = main.get_node("Canvas") as Canvas
@@ -22,8 +22,7 @@ func test_oval_label_can_be_added_and_dragged() -> void:
 	var start_screen: Vector2 = Vector2(600.0, 400.0)
 	runner.simulate_mouse_move(start_screen)
 	runner.simulate_mouse_button_pressed(MOUSE_BUTTON_LEFT)
-	await get_tree().process_frame
-	await get_tree().physics_frame
+	runner.simulate_frames(1)
 
 	var oval: LabelShape = canvas.find_child("OvalNode", true, false) as LabelShape
 	assert_object(oval).is_not_null()
@@ -32,14 +31,13 @@ func test_oval_label_can_be_added_and_dragged() -> void:
 	var drag_delta: Vector2 = Vector2(120.0, 80.0)
 	runner.simulate_mouse_move(start_screen)
 	runner.simulate_mouse_button_press(MOUSE_BUTTON_LEFT)
-	await get_tree().process_frame
-	await get_tree().physics_frame
+	runner.simulate_frames(1)
 	runner.simulate_mouse_move(start_screen + Vector2(1.0, 1.0))
-	await get_tree().process_frame
+	runner.simulate_frames(1)
 	runner.simulate_mouse_move(start_screen + drag_delta)
-	await get_tree().process_frame
+	runner.simulate_frames(1)
 	assert_vector(oval.position).is_equal(start_position + drag_delta)
 	runner.simulate_mouse_button_release(MOUSE_BUTTON_LEFT)
-	await get_tree().process_frame
+	runner.simulate_frames(1)
 
 	assert_vector(oval.position).is_equal(start_position + drag_delta)
