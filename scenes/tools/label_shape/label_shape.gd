@@ -25,6 +25,7 @@ const DOUBLE_CLICK_TIME_MS: int = 400
 	set(value):
 		rx = value
 		queue_redraw()
+		_queue_touch_button_redraw()
 		#_update_text_display()
 		_sync_anchors()
 		if Engine.is_editor_hint():
@@ -40,6 +41,7 @@ const DOUBLE_CLICK_TIME_MS: int = 400
 	set(value):
 		ry = value
 		queue_redraw()
+		_queue_touch_button_redraw()
 		#_update_text_display()
 		_sync_anchors()
 		if Engine.is_editor_hint():
@@ -60,33 +62,33 @@ const DOUBLE_CLICK_TIME_MS: int = 400
 	set(value):
 		fill_color = value
 		queue_redraw()
+		_queue_touch_button_redraw()
 
 var _last_body_click_time: int = 0
 
 
 func _ready() -> void:
 	_sync_anchors()
+	var handles: CanvasItem = get_node_or_null("Handles") as CanvasItem
+	if handles != null:
+		handles.visible = false
+	_queue_touch_button_redraw()
 
 
 func _draw() -> void:
-	var stroke_color: Color
-	var stroke_width: float
-	if is_selected:
-		if is_primary:
-			stroke_color = fill_color.lightened(0.4)
-			stroke_width = 3.0
-		else:
-			stroke_color = fill_color.lightened(0.25)
-			stroke_width = 2.5
-	else:
-		stroke_color = fill_color.darkened(0.4)
-		stroke_width = 2.0
-	draw_ellipse(Vector2.ZERO, rx, ry, fill_color)
-	draw_ellipse(Vector2.ZERO, rx, ry, stroke_color, false, stroke_width)
+	# The direct-child TouchScreenButton owns the ellipse's rendering and hit
+	# shape. Keeping this node draw-free prevents duplicate geometry.
+	pass
+
+
+func _queue_touch_button_redraw() -> void:
+	var touch_button: Node = get_node_or_null("TouchScreenButton")
+	if touch_button != null and touch_button.has_method("sync_from_label_shape"):
+		touch_button.call("sync_from_label_shape")
 
 
 #@onready var _text_label: Label = $TextLabel
-## Detects double-clicks at the shape's own SelectArea2D entry point. Main only
+## Detects double-clicks at the shape's own local pointer adapter entry point. Main only
 ## reacts to the resulting signal; it never performs global double-click tests.
 func handle_click(event: Dictionary) -> bool:
 	var now: int = Time.get_ticks_msec()
@@ -103,8 +105,8 @@ func handle_click(event: Dictionary) -> bool:
 
 # ----- Collision Geometry ----------------------------------------------------
 ## Samples the ellipse rim into a packed polygon, optionally scaled. This is the
-## single source of truth for ellipse hit-test shapes: SelectArea2D calls it at
-## scale 1.0 and AnchorShowArea2D at 1.2 (Godot has no natively-rounded ellipse
+## single source of truth for ellipse hit-test shapes: the touch button calls it
+## at scale 1.0 and AnchorShowArea2D at 1.2 (Godot has no natively-rounded ellipse
 ## 2D shape, so a sampled polygon is the closest hit-test approximation to
 ## draw_ellipse()). Circle mode (rx == ry) is handled automatically.
 func build_collision_polygon(scale_factor: float = 1.0) -> PackedVector2Array:
@@ -221,6 +223,7 @@ func _anchor_matches_label(anchor: LineAnchor, label: String) -> bool:
 ## Shows/hides the resize handles with the selection state.
 func set_selected(value: bool) -> void:
 	super.set_selected(value)
+	_queue_touch_button_redraw()
 	var handles: CanvasItem = get_node_or_null("Handles") as CanvasItem
 	if handles != null:
 		handles.visible = value

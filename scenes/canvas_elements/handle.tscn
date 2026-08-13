@@ -8,9 +8,17 @@ size = Vector2(16, 16)
 [node name="Handle" type="Control" unique_id=1299026613]
 layout_mode = 3
 anchors_preset = 0
+offset_left = -16.0
+offset_top = -16.0
+offset_right = 16.0
+offset_bottom = 16.0
+mouse_default_cursor_shape = 11
 script = ExtResource("1_pys6x")
 
 [node name="Area2D" type="Area2D" parent="." unique_id=2145851457]
+collision_layer = 0
+collision_mask = 0
+input_pickable = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=1979194347]
 shape = SubResource("RectangleShape2D_f26sd")

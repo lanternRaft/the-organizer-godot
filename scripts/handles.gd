@@ -18,8 +18,6 @@ var _shape: LabelShape = null
 var _handles: Array[ResizeHandle] = []
 var _active_corner: int = -1
 
-@onready var touch_screen_button: TouchScreenButton = $TouchScreenButton
-
 
 func _ready() -> void:
 	_shape = get_parent() as LabelShape
@@ -32,11 +30,8 @@ func _ready() -> void:
 	if not _shape.resized.is_connected(_sync_handles):
 		_shape.resized.connect(_sync_handles)
 	_sync_handles()
-	touch_screen_button.pressed.connect(_button_pressed)
 
 
-func _button_pressed() -> void:
-	print("hhhi")
 # ----- Input interface (called by each ResizeHandle) -------------------------
 
 

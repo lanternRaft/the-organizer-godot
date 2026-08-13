@@ -45,6 +45,32 @@ func test_handles_hidden_until_selected() -> void:
 	assert_bool(handles.visible).is_equal(false)
 
 
+func test_oval_uses_centered_touch_button_shape() -> void:
+	var button: TouchScreenButton = shape.get_node("TouchScreenButton") as TouchScreenButton
+	assert_object(button).is_not_null()
+	assert_bool(button.shape_centered).is_equal(true)
+	assert_int(button.visibility_mode).is_equal(TouchScreenButton.VISIBILITY_ALWAYS)
+	assert_bool(button.shape is ConvexPolygonShape2D).is_equal(true)
+	var polygon: ConvexPolygonShape2D = button.shape as ConvexPolygonShape2D
+	var expected: PackedVector2Array = shape.build_collision_polygon()
+	assert_int(polygon.points.size()).is_equal(expected.size())
+	for i: int in expected.size():
+		assert_vector(polygon.points[i]).is_equal(expected[i])
+
+
+func test_touch_button_shape_tracks_resize() -> void:
+	var button: TouchScreenButton = shape.get_node("TouchScreenButton") as TouchScreenButton
+	shape.rx = 200.0
+	shape.ry = 140.0
+	runner.simulate_frames(1)
+	var polygon: ConvexPolygonShape2D = button.shape as ConvexPolygonShape2D
+	var expected: PackedVector2Array = shape.build_collision_polygon()
+	assert_int(polygon.points.size()).is_equal(expected.size())
+	for i: int in expected.size():
+		assert_vector(polygon.points[i]).is_equal(expected[i])
+	assert_vector(button.position).is_equal(Vector2.ZERO)
+
+
 func test_resize_bottom_right_keeps_opposite_corner_fixed() -> void:
 	handles.call("handle_resize_start", ResizeHandle.BOTTOM_RIGHT)
 	handles.call("resize_to_pointer", ResizeHandle.BOTTOM_RIGHT, Vector2(240, 170))

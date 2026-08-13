@@ -33,11 +33,19 @@ signal drag_stop
 
 # ----- Selection State -------------------------------------------------------
 ## Whether this element is currently selected. Controls stroke/highlight style.
-var is_selected: bool = false
+var is_selected: bool = false:
+	set(value):
+		is_selected = value
+		queue_redraw()
+		_queue_local_pointer_redraw()
 
 ## Whether this element is the primary (last-clicked) selection.
 ## When true, uses stronger highlight; when false, uses dimmer highlight.
-var is_primary: bool = false
+var is_primary: bool = false:
+	set(value):
+		is_primary = value
+		queue_redraw()
+		_queue_local_pointer_redraw()
 
 # ----- Drag State ------------------------------------------------------------
 var line_anchors: Array[LineAnchor]
@@ -55,8 +63,12 @@ var _last_drag_delta: Vector2 = Vector2.ZERO
 ## Last pointer position sampled while the local body drag is active.
 var _last_pointer_world: Vector2 = Vector2.ZERO
 
-## True while the local SelectArea2D owns a body drag for this element.
+## True while the element's local pointer adapter owns a body drag.
 var _body_drag_active: bool = false
+
+## True while a screen-touch drag is providing authoritative pointer positions.
+## This prevents the mouse fallback from overwriting touch input in the same frame.
+var _screen_pointer_drag_active: bool = false
 
 ## LabelShape uses this to keep a double-click from starting a drag.
 var _body_click_drag_allowed: bool = true
@@ -71,12 +83,22 @@ func prevent_body_drag() -> void:
 
 
 func _process(_delta: float) -> void:
-	if not _body_drag_active:
+	if not _body_drag_active or _screen_pointer_drag_active:
 		return
 	var world_pos: Vector2 = get_global_mouse_position()
 	if world_pos.is_equal_approx(_last_pointer_world):
 		return
 	handle_drag_move({"world_pos": world_pos})
+
+
+func set_screen_pointer_drag_active(active: bool) -> void:
+	_screen_pointer_drag_active = active
+
+
+func _queue_local_pointer_redraw() -> void:
+	var adapter: Node = get_node_or_null("TouchScreenButton")
+	if adapter != null and adapter.has_method("queue_redraw"):
+		adapter.call("queue_redraw")
 
 
 ## Updates selection state and triggers visual update.
@@ -88,11 +110,11 @@ func set_selected(value: bool) -> void:
 	queue_redraw()
 
 
-# ----- Local SelectArea2D interface ------------------------------------------
+# ----- Local pointer adapter interface ----------------------------------------
 
 
 ## Handles a body click and lets Main update selection.
-## The local SelectArea2D calls handle_drag_begin immediately afterward.
+## The local pointer adapter calls handle_drag_begin immediately afterward.
 func handle_click(event: Dictionary) -> bool:
 	_body_click_drag_allowed = true
 	clicked.emit(event.get("original_event", InputEventMouseButton.new()), self)
@@ -142,6 +164,7 @@ func handle_drag_end(_event: Dictionary) -> void:
 	anchor_changed.emit()
 	multi_drag_ended.emit()
 	_body_drag_active = false
+	_screen_pointer_drag_active = false
 	_last_drag_delta = Vector2.ZERO
 	_last_pointer_world = Vector2.ZERO
 	drag_stop.emit()

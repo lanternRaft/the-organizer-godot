@@ -40,4 +40,7 @@ func test_oval_label_can_be_added_and_dragged() -> void:
 	runner.simulate_mouse_button_release(MOUSE_BUTTON_LEFT)
 	runner.simulate_frames(1)
 
-	assert_vector(oval.position).is_equal(start_position + drag_delta)
+	# Body release applies the documented 20px movement snap.
+	assert_vector(oval.position).is_equal(
+		(start_position + drag_delta).snapped(Vector2(20.0, 20.0))
+	)
