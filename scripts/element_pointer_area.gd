@@ -86,13 +86,19 @@ func _handle_mouse_button(mouse_event: InputEventMouseButton) -> void:
 			_begin_capture(MOUSE_POINTER_INDEX, false, mouse_event)
 			get_viewport().set_input_as_handled()
 		return
-	if _captured and not _screen_pointer:
+	if _captured:
+		# A mouse release can be the emulated counterpart of a screen-touch
+		# release. Finish here as well as in _handle_screen_touch so either
+		# input-emulation direction has a complete capture lifecycle.
 		_finish_capture(mouse_event)
 		get_viewport().set_input_as_handled()
 
 
 func _handle_mouse_motion(motion_event: InputEventMouseMotion) -> void:
-	if _drag_active and not _screen_pointer:
+	if _drag_active:
+		# Mouse motion is also the fallback for a screen touch that Godot
+		# emulates from a mouse event. _screen_pointer_drag_active only disables
+		# CanvasElement's polling fallback; it must not suppress these events.
 		_move_pointer(motion_event)
 		get_viewport().set_input_as_handled()
 

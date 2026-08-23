@@ -68,7 +68,6 @@ func _ready() -> void:
 		handles.visible = false
 
 
-
 #@onready var _text_label: Label = $TextLabel
 ## Detects double-clicks at the shape's own local pointer adapter entry point. Main only
 ## reacts to the resulting signal; it never performs global double-click tests.
