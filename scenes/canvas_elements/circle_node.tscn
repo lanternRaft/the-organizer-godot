@@ -50,7 +50,11 @@ input_pickable = false
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AnchorShowArea2D" unique_id=1721170395]
 shape = SubResource("CircleShape2D_ty0p8")
 
-[node name="ShapeButton" type="TouchScreenButton" parent="." unique_id=1303631337]
-shape = SubResource("CircleShape2D_shape_button")
-shape_visible = false
+[node name="ShapeButton" type="Area2D" parent="." unique_id=1303631337]
+collision_layer = 0
+collision_mask = 0
+input_pickable = false
 script = ExtResource("4_touchbutton")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ShapeButton" unique_id=1303631339]
+shape = SubResource("CircleShape2D_shape_button")

@@ -96,9 +96,9 @@ func set_screen_pointer_drag_active(active: bool) -> void:
 
 
 func _queue_local_pointer_redraw() -> void:
-	var adapter: Node = get_node_or_null("TouchScreenButton")
-	if adapter != null and adapter.has_method("queue_redraw"):
-		adapter.call("queue_redraw")
+	var adapter: CanvasItem = get_node_or_null("ShapeButton") as CanvasItem
+	if adapter != null:
+		adapter.queue_redraw()
 
 
 ## Updates selection state and triggers visual update.
